@@ -1,0 +1,4575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v18 Section-Aware Live Roster)</title>
+<!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  if (typeof XLSX === 'undefined') {
+    document.write('<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof XLSX === 'undefined') {
+    document.write('<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');
+  }
+</script>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --border: #cbd5e1;
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: #0f172a;
+  }
+
+  /* Top Admin / Roster Upload Bar */
+  .top-bar {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+    padding: 14px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.16);
+  }
+
+  .brand-title {
+    display: flex;
+    flex-direction: column;
+  }
+  .brand-title h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-title span {
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .upload-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .live-sync-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.16);
+    border: 1px solid rgba(52, 211, 153, 0.45);
+    color: #a7f3d0;
+    padding: 6px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .live-sync-pill.syncing {
+    background: rgba(59, 130, 246, 0.22);
+    border-color: rgba(147, 197, 253, 0.5);
+    color: #dbeafe;
+  }
+  .live-sync-pill.sync-error {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(252, 165, 165, 0.45);
+    color: #fecaca;
+  }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 6px #10b981;
+  }
+  .live-sync-pill.syncing .live-dot {
+    background: #60a5fa;
+    box-shadow: 0 0 6px #60a5fa;
+  }
+  .live-sync-pill.sync-error .live-dot {
+    background: #f87171;
+    box-shadow: none;
+  }
+
+  .btn-live-refresh {
+    background: #0ea5e9;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s ease;
+  }
+  .btn-live-refresh:hover {
+    background: #0284c7;
+  }
+  .btn-live-refresh:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .file-label {
+    background: #334155;
+    border: 1px solid #475569;
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s ease;
+  }
+  .file-label:hover {
+    background: #475569;
+  }
+  .file-label input[type="file"] {
+    display: none;
+  }
+
+  select.sheet-select {
+    padding: 8px 11px;
+    border-radius: 8px;
+    border: 1px solid #475569;
+    background: #1e293b;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 600;
+    outline: none;
+    max-width: 240px;
+  }
+
+  .btn-print {
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-print:hover {
+    background: #15803d;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 18px auto;
+    padding: 0 12px 50px;
+  }
+
+  /* Search Card */
+  .search-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 16px;
+  }
+
+  .search-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 220px;
+  }
+
+  .input-group label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .staff-input {
+    padding: 11px 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    outline: none;
+    color: #0f172a;
+    transition: border-color 0.15s ease;
+  }
+  .staff-input:focus {
+    border-color: #2563eb;
+  }
+
+  .btn-search {
+    padding: 12px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn-search:hover {
+    background: #1d4ed8;
+  }
+
+  .status-msg {
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: #475569;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sample-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .chip-btn {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .chip-btn:hover {
+    background: #dbeafe;
+  }
+
+  /* Staff Profile Header Card */
+  .profile-card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.14);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .profile-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .avatar-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.25);
+  }
+
+  .profile-details h2 {
+    margin: 0 0 6px 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+
+  .profile-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .p-badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .p-badge span {
+    color: #93c5fd;
+    margin-right: 4px;
+  }
+  .p-badge-roster {
+    background: rgba(34, 197, 94, 0.22);
+    border-color: rgba(74, 222, 128, 0.45);
+    color: #bbf7d0;
+  }
+  .p-badge-non3x3 {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(251, 191, 36, 0.45);
+    color: #fde68a;
+  }
+
+  /* Summary Pills */
+  .summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .stat-pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 7px 11px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 70px;
+  }
+  .stat-pill .num {
+    font-size: 17px;
+    font-weight: 800;
+    display: block;
+  }
+  .stat-pill .lbl {
+    font-size: 10px;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Calendar Card */
+  .calendar-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e2e8f0;
+  }
+
+  .cal-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .month-nav button {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    height: 34px;
+    min-width: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .month-nav button:hover {
+    background: #e2e8f0;
+  }
+  .btn-today {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    font-size: 12px !important;
+  }
+  .month-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    min-width: 155px;
+    text-align: center;
+  }
+
+  /* Projected / Actual Banner */
+  .mode-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 9px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .mode-actual {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+  }
+  .mode-projected {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    color: #1e40af;
+  }
+  .cycle-pill {
+    background: rgba(255,255,255,0.75);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .swap-hint-bar {
+    background: #fefce8;
+    border: 1px solid #fde047;
+    color: #854d0e;
+    padding: 8px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .swap-hint-warn {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+  }
+
+  /* Legend */
+  .legend-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .leg-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+  .leg-morn { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+  .leg-night { background: #e2e8f0; color: #1e293b; border: 1px solid #94a3b8; }
+  .leg-off { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+  .leg-rot { background: #ffedd5; color: #9a3412; border: 1px solid #fb923c; }
+  .leg-leave { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+  /* Calendar Grid Wrapper */
+  .cal-scroll-wrap {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(44px, 1fr));
+    gap: 6px;
+  }
+
+  .cal-day-name {
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    padding: 6px 2px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .cal-cell {
+    min-height: 96px;
+    border-radius: 10px;
+    padding: 7px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .cell-swap-btn {
+    margin-top: 4px;
+    padding: 2px 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(15, 23, 42, 0.22);
+    background: rgba(255, 255, 255, 0.82);
+    color: #0f172a;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.2;
+    width: 100%;
+  }
+  .cell-swap-btn:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+  }
+  .cal-cell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  }
+
+  .cal-cell.swappable-cell {
+    cursor: pointer;
+  }
+
+  .cal-cell.pressing {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 3px #2563eb;
+  }
+
+  .cal-cell.swap-selected-cell {
+    box-shadow: 0 0 0 3px #16a34a, 0 8px 20px rgba(22, 163, 74, 0.25);
+    z-index: 2;
+  }
+
+  .cal-cell.empty {
+    background: #f8fafc;
+    border: 1px dashed #e2e8f0;
+    pointer-events: none;
+  }
+
+  .cal-cell.today-cell {
+    box-shadow: 0 0 0 2.5px #2563eb;
+  }
+
+  .cal-cell.projected-cell {
+    border-style: dashed;
+  }
+
+  .cell-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .date-num {
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .shift-icon {
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .cell-body {
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shift-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+  }
+
+  .shift-time {
+    font-size: 10.5px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+
+  .rot-pill {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 800;
+    background: #9a3412;
+    color: #ffffff;
+    letter-spacing: 0.2px;
+    width: fit-content;
+  }
+
+  .est-tag {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 8.5px;
+    font-weight: 800;
+    background: rgba(15, 23, 42, 0.12);
+    color: inherit;
+    width: fit-content;
+    text-transform: uppercase;
+  }
+
+  /* Shift Theme Styles */
+  .cell-morning {
+    background: linear-gradient(145deg, #fefce8 0%, #fef08a 100%);
+    border-color: #eab308;
+    color: #713f12;
+  }
+  .cell-morning .date-num {
+    color: #854d0e;
+  }
+
+  .cell-night {
+    background: linear-gradient(145deg, #cbd5e1 0%, #94a3b8 100%);
+    border-color: #64748b;
+    color: #0f172a;
+  }
+  .cell-night .date-num {
+    color: #0f172a;
+  }
+  .grey-moon {
+    filter: grayscale(100%) contrast(115%);
+    opacity: 0.85;
+  }
+
+  /* OFF Days - Red */
+  .cell-off {
+    background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #ef4444;
+    color: #991b1b;
+  }
+  .cell-off .date-num {
+    color: #b91c1c;
+  }
+
+  .cell-leave {
+    background: #dbeafe;
+    border-color: #60a5fa;
+    color: #1e3a8a;
+  }
+
+  .cell-nodata {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+  }
+
+  /* Long-Press Popup Menu */
+  .context-popup {
+    position: fixed;
+    z-index: 9999;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+    border: 1px solid #334155;
+    min-width: 235px;
+    display: none;
+    animation: popIn 0.14s ease-out;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .context-popup-header {
+    font-size: 11.5px;
+    color: #93c5fd;
+    font-weight: 700;
+    padding: 2px 6px 8px;
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 6px;
+  }
+  .context-action-btn {
+    width: 100%;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .context-action-btn:hover {
+    background: #1d4ed8;
+  }
+
+  /* Duty Swap Results Panel */
+  .swap-results-panel {
+    margin-top: 18px;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 2px solid #2563eb;
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+    overflow: hidden;
+    display: none;
+  }
+
+  .swap-panel-header {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+    color: #ffffff;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .swap-panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .swap-panel-sub {
+    font-size: 12px;
+    color: #dbeafe;
+    margin-top: 3px;
+  }
+  .btn-close-swap {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-close-swap:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .swap-rules-strip {
+    background: #eff6ff;
+    padding: 10px 18px;
+    border-bottom: 1px solid #bfdbfe;
+    font-size: 11.5px;
+    color: #1e3a8a;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .swap-filter-bar {
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .swap-filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .s-tab {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .s-tab.active {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+  }
+
+  .swap-cards-list {
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+    gap: 14px;
+  }
+
+  .swap-candidate-card {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 14px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .swap-candidate-card:hover {
+    border-color: #2563eb;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+  .swap-candidate-card.mutual-match {
+    border-color: #16a34a;
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 35%);
+  }
+
+  .cand-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .cand-name {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .cand-meta {
+    font-size: 11.5px;
+    color: #475569;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .sec-priority-pill {
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .sec-tier-1 {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+  }
+  .sec-tier-2 {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+  }
+  .sec-tier-3 {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+  .sec-tier-4 {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+  }
+  .role-lock-pill {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: #f8fafc;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+  }
+  .off-pos-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .pos-first {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+  }
+  .pos-last {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+
+  .cand-status-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+    color: #334155;
+  }
+
+  .repay-section {
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 8px;
+  }
+  .repay-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #065f46;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .repay-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .repay-chip {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .repay-chip small {
+    display: block;
+    font-size: 9.5px;
+    color: #047857;
+    font-weight: 600;
+  }
+  .no-repay-warn {
+    font-size: 11px;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  /* Dual Synchronized Horizontal Roster Comparison Sliders inside Swap Card */
+  .dual-slider-box {
+    margin-top: 10px;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 9px 10px;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .dual-slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 7px;
+  }
+
+  .dual-slider-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .slider-nav-btns {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-slide-step {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  .btn-slide-step:hover {
+    background: #e2e8f0;
+  }
+  .btn-slide-center {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+
+  .slider-row-block {
+    margin-bottom: 7px;
+  }
+  .slider-row-block:last-child {
+    margin-bottom: 0;
+  }
+
+  .slider-row-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lbl-partner {
+    color: #1e3a8a;
+  }
+  .lbl-me {
+    color: #065f46;
+  }
+
+  .roster-h-track {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 4px 2px 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #64748b #e2e8f0;
+  }
+  .roster-h-track.is-dragging {
+    cursor: grabbing;
+  }
+  .roster-h-track::-webkit-scrollbar {
+    height: 6px;
+  }
+  .roster-h-track::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 999px;
+  }
+  .roster-h-track::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+  }
+
+  .mini-day-pill {
+    flex: 0 0 64px;
+    min-width: 64px;
+    border-radius: 8px;
+    padding: 5px 4px;
+    text-align: center;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    position: relative;
+  }
+
+  .mini-day-pill.m-morning {
+    background: linear-gradient(180deg, #fefce8 0%, #fef08a 100%);
+    border-color: #eab308;
+    color: #713f12;
+  }
+  .mini-day-pill.m-night {
+    background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+    border-color: #64748b;
+    color: #0f172a;
+  }
+  .mini-day-pill.m-off {
+    background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #ef4444;
+    color: #991b1b;
+  }
+  .mini-day-pill.m-leave {
+    background: #dbeafe;
+    border-color: #60a5fa;
+    color: #1e3a8a;
+  }
+
+  .mini-day-pill.swap-target-mark {
+    border: 2.5px solid #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.28), 0 4px 10px rgba(37, 99, 235, 0.22);
+    transform: translateY(-1px);
+    z-index: 2;
+  }
+
+  .mini-day-pill.repay-target-mark {
+    border: 2.5px solid #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.24);
+  }
+
+  .mini-date-top {
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .mini-wd {
+    font-size: 8.5px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .mini-duty-tag {
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 1px;
+  }
+  .mini-time-sub {
+    font-size: 7.5px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .mini-mark-badge {
+    font-size: 7.5px;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    margin-top: 1px;
+  }
+  .badge-swap-day {
+    background: #2563eb;
+    color: #ffffff;
+  }
+  .badge-repay-day {
+    background: #16a34a;
+    color: #ffffff;
+  }
+  .badge-rot-mini {
+    background: #9a3412;
+    color: #ffffff;
+  }
+
+  .btn-copy-swap {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .btn-copy-swap:hover {
+    background: #e2e8f0;
+  }
+
+  @media (max-width: 720px) {
+    .cal-grid {
+      gap: 4px;
+    }
+    .cal-day-name {
+      font-size: 10px;
+      padding: 5px 1px;
+    }
+    .cal-cell {
+      min-height: 78px;
+      padding: 4px;
+      border-radius: 8px;
+    }
+    .date-num { font-size: 11.5px; }
+    .shift-icon { font-size: 13px; }
+    .shift-label { font-size: 9.5px; }
+    .shift-time { font-size: 8.5px; }
+    .rot-pill { font-size: 8px; padding: 1px 3px; }
+    .est-tag { font-size: 7.5px; }
+    .swap-cards-list {
+      grid-template-columns: 1fr;
+      padding: 12px;
+    }
+  }
+
+  @media print {
+    .top-bar, .search-card, .month-nav button, .swap-hint-bar, .context-popup {
+      display: none !important;
+    }
+    body {
+      background: #fff !important;
+    }
+    .container {
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .profile-card {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      box-shadow: none;
+    }
+    .cal-cell {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      min-height: 82px;
+    }
+  }
+
+  /* Creator & Version Pill in Header */
+  .creator-version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 12px;
+    padding: 7px 14px 7px 8px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.22);
+  }
+  .ver-pill-box {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-size: 13.5px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.45);
+  }
+  .creator-text-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+  }
+  .creator-lbl-top {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #cbd5e1;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .creator-name-gold {
+    font-size: 13.5px;
+    font-weight: 900;
+    color: #facc15;
+    letter-spacing: 0.4px;
+    margin-top: 2px;
+  }
+
+  /* Add to Desktop / Home Screen Button */
+  .btn-desktop-app {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: #ffffff;
+    border: 1px solid rgba(196, 181, 253, 0.35);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  .btn-desktop-app:hover {
+    background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+  }
+
+  /* Search Autocomplete Dropdown */
+  .search-input-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .staff-input {
+    width: 100%;
+    padding-right: 38px;
+  }
+  .btn-clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #e2e8f0;
+    border: none;
+    color: #475569;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-clear-search:hover {
+    background: #cbd5e1;
+    color: #0f172a;
+  }
+  .search-dropdown-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 2px solid #2563eb;
+    border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
+    max-height: 310px;
+    overflow-y: auto;
+    z-index: 999;
+    display: none;
+  }
+  .dd-header-info {
+    padding: 7px 12px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 11px;
+    font-weight: 800;
+    border-bottom: 1px solid #dbeafe;
+    position: sticky;
+    top: 0;
+  }
+  .dd-item {
+    padding: 10px 13px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.1s ease;
+  }
+  .dd-item:last-child {
+    border-bottom: none;
+  }
+  .dd-item:hover, .dd-item.dd-active {
+    background: #eff6ff;
+  }
+  .dd-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .dd-item-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dd-item-sub {
+    font-size: 11px;
+    color: #475569;
+    font-weight: 600;
+  }
+  .dd-item-badge {
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .dd-elig {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+  }
+  .dd-nonelig {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+
+  /* Add to Desktop / PWA Modal */
+  .app-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(2px);
+  }
+  .app-modal-card {
+    background: #ffffff;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.35);
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+    animation: popIn 0.16s ease-out;
+  }
+  .app-modal-head {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    padding: 15px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .app-modal-head h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .app-modal-body {
+    padding: 18px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.55;
+  }
+  .app-action-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .btn-app-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .btn-app-primary:hover {
+    background: #1d4ed8;
+  }
+  .btn-app-secondary {
+    background: #f1f5f9;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .btn-app-secondary:hover {
+    background: #e2e8f0;
+  }
+  .install-steps-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 11px 13px;
+    margin-top: 12px;
+    font-size: 12px;
+  }
+  .install-steps-box strong {
+    color: #0f172a;
+  }
+
+  /* Live Roster Loading Progress Overlay */
+  .live-loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.84);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    transition: opacity 0.25s ease;
+  }
+  .live-loader-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .live-loader-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 26px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    border: 1px solid #cbd5e1;
+    text-align: center;
+  }
+  .loader-icon-spin {
+    font-size: 32px;
+    display: inline-block;
+    animation: spinPulse 1.4s linear infinite;
+    margin-bottom: 8px;
+  }
+  @keyframes spinPulse {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.08); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  .live-loader-title {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+  }
+  .live-loader-sub {
+    font-size: 12.5px;
+    color: #475569;
+    font-weight: 600;
+    margin: 0 0 14px 0;
+    min-height: 18px;
+  }
+  .progress-track-outer {
+    width: 100%;
+    height: 14px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .progress-fill-inner {
+    height: 100%;
+    width: 10%;
+    background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 50%, #10b981 100%);
+    background-size: 200% 100%;
+    border-radius: 999px;
+    transition: width 0.25s ease;
+    animation: shimmerBar 1.8s linear infinite;
+  }
+  @keyframes shimmerBar {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .progress-pct-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #1e3a8a;
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- Live Roster Loading Progress Overlay -->
+  <div class="live-loader-overlay" id="liveLoaderOverlay">
+    <div class="live-loader-card">
+      <div class="loader-icon-spin">🔄</div>
+      <h3 class="live-loader-title" id="liveLoaderTitle">Live Roster Syncing...</h3>
+      <div class="live-loader-sub" id="liveLoaderSub">Google Drive se latest roster fetch ho raha hai...</div>
+      <div class="progress-track-outer">
+        <div class="progress-fill-inner" id="liveProgressFill"></div>
+      </div>
+      <div class="progress-pct-row">
+        <span id="liveProgressStep">Step 1/4: Connecting...</span>
+        <span id="liveProgressPct">10%</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Top Header -->
+  <div class="top-bar">
+    <div class="brand-title">
+      <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span> &amp; 3x3 / 4x4 Duty Swap</h1>
+      <span>Live SharePoint → Google Drive Auto-Sync • Same Role Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
+    </div>
+    <div class="creator-version-badge" title="Application Version & Creator">
+      <div class="ver-pill-box">v18</div>
+      <div class="creator-text-box">
+        <span class="creator-lbl-top">CREATED BY</span>
+        <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
+      </div>
+    </div>
+    <div class="upload-controls">
+      <div id="liveSyncBadge" class="live-sync-pill syncing" title="Live Roster Connection Status">
+        <span class="live-dot"></span>
+        <span id="liveSyncLabel">Connecting Live Roster...</span>
+      </div>
+      <select id="liveFileSelect" class="sheet-select" style="display:none;" title="Available Monthly Rosters in Google Drive"></select>
+      <button type="button" class="btn-live-refresh" id="btnRefreshLiveRoster" title="Fetch the latest roster from Google Drive">🔄 Sync Live</button>
+      <label class="file-label" title="Upload manual Excel roster file (Offline Backup)">
+        📂 Upload Excel
+        <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv">
+      </label>
+      <select id="sheetSelect" class="sheet-select" style="display:none;"></select>
+      <button type="button" class="btn-desktop-app" id="btnAddToDesktop" title="Save this page to your Desktop / Home Screen as an App">📲 Add to Desktop / App</button>
+      <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Staff Search Box -->
+    <div class="search-card">
+      <div class="search-row">
+        <div class="input-group">
+          <label for="staffIdInput">Search Staff by ID Number OR Name (Full Roster Search)</label>
+          <div class="search-input-wrap">
+            <input type="text" id="staffIdInput" class="staff-input" placeholder="Enter Staff ID (e.g. 497038) or Staff Name (e.g. ADEEL)..." autocomplete="off">
+            <button type="button" class="btn-clear-search" id="btnClearSearch" title="Clear Search">✕</button>
+            <div class="search-dropdown-list" id="staffSearchDropdown"></div>
+          </div>
+        </div>
+        <button type="button" class="btn-search" id="btnViewRoster">🔍 View My Roster</button>
+      </div>
+      <div class="status-msg">
+        <div id="rosterStatusText">🔄 Loading Live Google Drive Roster...</div>
+        <div class="sample-chips" id="sampleChipsBox"></div>
+      </div>
+    </div>
+
+    <!-- Staff Profile Card -->
+    <div class="profile-card" id="profileCard">
+      <div class="profile-main">
+        <div class="avatar-circle" id="avatarInitials">AA</div>
+        <div class="profile-details">
+          <h2 id="profName">ADEEL ASGHAR</h2>
+          <div class="profile-badges">
+            <div class="p-badge"><span>ID:</span><strong id="profId">497038</strong></div>
+            <div class="p-badge"><span>SHIFT:</span><strong id="profShift">SHIFT-2</strong></div>
+            <div class="p-badge"><span>ROLE / AREA:</span><strong id="profRole">EO • EO CMT</strong></div>
+            <div class="p-badge p-badge-roster" id="profRosterType">✅ 3x3 ROSTER (SWAP ELIGIBLE)</div>
+            <button type="button" id="btnForceSwapMode" style="display:none; background:#2563eb; color:#fff; border:1px solid #93c5fd; padding:4px 9px; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer;">🔓 Enable 3x3/4x4 Swap</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-pills">
+        <div class="stat-pill">
+          <span class="num" id="statMorning" style="color:#fde047;">0</span>
+          <span class="lbl">☀️ Morning</span>
+        </div>
+        <div class="stat-pill">
+          <span class="num" id="statNight" style="color:#cbd5e1;">0</span>
+          <span class="lbl">🌙 Night</span>
+        </div>
+        <div class="stat-pill">
+          <span class="num" id="statOff" style="color:#fca5a5;">0</span>
+          <span class="lbl">🔴 OFF Days</span>
+        </div>
+        <div class="stat-pill" id="statRotPill">
+          <span class="num" id="statRot" style="color:#fdba74;">0</span>
+          <span class="lbl">🔥 ROT (OT)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Calendar Card -->
+    <div class="calendar-card">
+      <div class="cal-header">
+        <div class="month-nav">
+          <button type="button" id="btnPrevMonth" title="Previous Month">◀</button>
+          <div class="month-title" id="monthYearTitle">November 2026</div>
+          <button type="button" id="btnNextMonth" title="Next Month">▶</button>
+          <button type="button" id="btnRosterMonth" class="btn-today" title="Return to Current Roster Month">📌 Current Roster</button>
+        </div>
+
+        <div class="legend-bar">
+          <span class="leg-item leg-morn">☀️ Morning Duty</span>
+          <span class="leg-item leg-night"><span class="grey-moon">🌙</span> Night Duty</span>
+          <span class="leg-item leg-off">🔴 OFF Day</span>
+          <span class="leg-item leg-rot" id="legendRotItem">🔥 Morning / Night ROT</span>
+          <span class="leg-item leg-leave">📘 Leave / Trg</span>
+        </div>
+      </div>
+
+      <div id="modeBanner" class="mode-banner mode-actual"></div>
+
+      <div class="swap-hint-bar" id="swapHintBar">
+        <span>💡 <strong>Duty Swap Rule (3x3 &amp; 4x4 Only):</strong> <strong>Long Press</strong> (or click <strong>🔄 Swap</strong>) on the duty day you want OFF. 3x3 (9-to-9) and 4x2 staff cannot swap. After a swap/repay, both staff must maintain <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>!</span>
+      </div>
+
+      <div class="cal-scroll-wrap">
+        <div class="cal-grid" id="calendarGrid"></div>
+      </div>
+    </div>
+
+    <!-- Duty Swap Results Panel -->
+    <div class="swap-results-panel" id="swapResultsPanel">
+      <div class="swap-panel-header">
+        <div>
+          <h3 id="swapPanelTitle">🔄 Duty Swap Matches</h3>
+          <div class="swap-panel-sub" id="swapPanelSub"></div>
+        </div>
+        <button type="button" class="btn-close-swap" id="btnCloseSwap">✖ Close Swap Panel</button>
+      </div>
+
+      <div class="swap-rules-strip">
+        <span>✅ <strong>Rule 1 (Strict Same Role Only):</strong> <strong>EO (Equipment Operator) can only swap with EO</strong>, <strong>Team Leader only with Team Leader</strong>, and every role can only swap with staff of the <strong>Exact Same Role</strong> (cross-role swaps are not allowed).</span>
+        <span>✅ <strong>Rule 2 (Section Priority — CMT First → PK15 Fallback):</strong> Matches from your <strong>Same Section (CMT)</strong> are prioritized at the top. If no match is found in <strong>CMT</strong>, same-role staff in the <strong>PK15</strong> area are checked next.</span>
+        <span>✅ <strong>Rule 3 (Same Month + 12h Rest Gap + Max 4 Duties &amp; Min 2 OFF):</strong> Repayment must occur within the same month. <strong>1st OFF = 🌙 Night Only</strong> and <strong>Last OFF = ☀️ Morning Only</strong> (12h rest gap), and both staff must retain <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>.</span>
+      </div>
+
+      <div class="swap-filter-bar">
+        <div class="swap-filter-tabs">
+          <button type="button" class="s-tab active" data-filter="ALL" onclick="setSwapFilter('ALL', this)">👷 All Same-Role Matches (<span id="cntAll">0</span>)</button>
+          <button type="button" class="s-tab" data-filter="SAME_SECTION" onclick="setSwapFilter('SAME_SECTION', this)">🏢 Priority 1: Same Section / CMT (<span id="cntSameSection">0</span>)</button>
+          <button type="button" class="s-tab" data-filter="PK15" onclick="setSwapFilter('PK15', this)">📍 Priority 2: PK15 Area (<span id="cntPk15">0</span>)</button>
+          <button type="button" class="s-tab" data-filter="MUTUAL" onclick="setSwapFilter('MUTUAL', this)">🤝 Mutual Repay Match (<span id="cntMutual">0</span>)</button>
+        </div>
+        <div style="font-size:11.5px; color:#475569; font-weight:700;" id="myEligibleOffSummary"></div>
+      </div>
+
+      <div class="swap-cards-list" id="swapCardsList"></div>
+    </div>
+  </div>
+
+  <!-- Long-Press Context Menu -->
+  <div class="context-popup" id="swapContextPopup">
+    <div class="context-popup-header" id="ctxHeaderText">15 Nov 2026 • Morning Duty</div>
+    <button type="button" class="context-action-btn" id="btnTriggerSwapSearch">
+      🔄 Find Duty Swap for This Day
+    </button>
+  </div>
+
+<script>
+  // =========================================================================
+  // LIVE GOOGLE APPS SCRIPT WEB APP URL (GOOGLE DRIVE AUTO-SYNC)
+  // =========================================================================
+  const LIVE_ROSTER_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNFmGiBl3e8JZpLizM2ZGNO00eKNNCTBdruGXESLRml9KjMeqxsJZf8BZKlgBxtlK2Pw/exec';
+  let currentLiveLastUpdated = null;
+  let currentLiveFileName = '';
+
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  let workbook = null;
+  let staffRecords = [];
+  let activeStaff = null;
+  let baseRosterYear = 2026;
+  let baseRosterMonth = 10;
+  let currentYear = 2026;
+  let currentMonth = 10;
+
+  let pendingSwapIso = null;
+  let selectedSwapIso = null;
+  let currentSwapMatches = [];
+  let currentSwapFilter = 'ALL';
+
+  function base64ToUint8Array(base64Str) {
+    const binaryString = window.atob(base64Str);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  function formatSyncTimestamp(isoStr) {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' +
+             d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  }
+
+
+  let progressCrawlTimer = null;
+  let currentProgressVal = 10;
+
+  function showLiveProgressBar(titleText, subText, stepText, targetPct) {
+    const overlay = document.getElementById('liveLoaderOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+    if (titleText) document.getElementById('liveLoaderTitle').innerText = titleText;
+    if (subText) document.getElementById('liveLoaderSub').innerText = subText;
+    if (stepText) document.getElementById('liveProgressStep').innerText = stepText;
+    if (typeof targetPct === 'number') {
+      setLiveProgressTarget(targetPct);
+    }
+  }
+
+  function setLiveProgressTarget(targetPct) {
+    if (progressCrawlTimer) {
+      clearInterval(progressCrawlTimer);
+      progressCrawlTimer = null;
+    }
+    const fillEl = document.getElementById('liveProgressFill');
+    const pctEl = document.getElementById('liveProgressPct');
+    if (!fillEl || !pctEl) return;
+
+    if (targetPct > currentProgressVal) {
+      currentProgressVal = targetPct;
+    }
+    fillEl.style.width = Math.min(100, Math.round(currentProgressVal)) + '%';
+    pctEl.innerText = Math.min(100, Math.round(currentProgressVal)) + '%';
+
+    const softCap = targetPct < 45 ? 42 : (targetPct < 80 ? 78 : (targetPct < 96 ? 95 : 100));
+    if (currentProgressVal < softCap) {
+      progressCrawlTimer = setInterval(function() {
+        if (currentProgressVal < softCap) {
+          currentProgressVal += 1.5;
+          fillEl.style.width = Math.min(100, Math.round(currentProgressVal)) + '%';
+          pctEl.innerText = Math.min(100, Math.round(currentProgressVal)) + '%';
+        } else {
+          clearInterval(progressCrawlTimer);
+          progressCrawlTimer = null;
+        }
+      }, 180);
+    }
+  }
+
+  function hideLiveProgressBar() {
+    if (progressCrawlTimer) {
+      clearInterval(progressCrawlTimer);
+      progressCrawlTimer = null;
+    }
+    const fillEl = document.getElementById('liveProgressFill');
+    const pctEl = document.getElementById('liveProgressPct');
+    if (fillEl) fillEl.style.width = '100%';
+    if (pctEl) pctEl.innerText = '100%';
+
+    const overlay = document.getElementById('liveLoaderOverlay');
+    if (!overlay) return;
+    setTimeout(function() {
+      overlay.classList.add('hidden');
+      setTimeout(function() {
+        overlay.style.display = 'none';
+        currentProgressVal = 10;
+      }, 260);
+    }, 220);
+  }
+
+  function setLiveSyncBadgeState(state, text) {
+    const pill = document.getElementById('liveSyncBadge');
+    const lbl = document.getElementById('liveSyncLabel');
+    if (!pill || !lbl) return;
+    pill.classList.remove('syncing', 'sync-error');
+    if (state === 'syncing') pill.classList.add('syncing');
+    else if (state === 'error') pill.classList.add('sync-error');
+    lbl.innerText = text;
+  }
+
+  const ROSTER_CACHE_KEY = 'cmt_live_roster_cache_v16';
+
+  function ensureXlsxReady() {
+    if (typeof XLSX !== 'undefined') return Promise.resolve(true);
+    return new Promise(function(resolve) {
+      const cdnUrls = [
+        'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+        'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+        'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+      ];
+      let idx = 0;
+      function tryNext() {
+        if (typeof XLSX !== 'undefined') return resolve(true);
+        if (idx >= cdnUrls.length) return resolve(false);
+        const s = document.createElement('script');
+        s.src = cdnUrls[idx++];
+        s.onload = function() { resolve(typeof XLSX !== 'undefined'); };
+        s.onerror = tryNext;
+        document.head.appendChild(s);
+      }
+      tryNext();
+    });
+  }
+
+
+  function extractSectionNameFromSheet(sheetObj, sheetName) {
+    if (!sheetObj) return sheetName || '';
+    const textGrid = XLSX.utils.sheet_to_json(sheetObj, { header: 1, defval: '', raw: false });
+    if (!textGrid || textGrid.length === 0) return sheetName || '';
+
+    // Find table header row (where Employee Number / Name / Dates appear)
+    let headerRowIdx = 0;
+    let bestScore = -1;
+    for (let i = 0; i < Math.min(25, textGrid.length); i++) {
+      let score = 0;
+      let dateHits = 0;
+      for (let c = 0; c < textGrid[i].length; c++) {
+        const txt = String(textGrid[i][c] || '').toUpperCase();
+        if (txt.includes('EMPLOYEE') || txt.includes('STAFF') || txt === 'ID') score += 3;
+        if (txt.includes('NAME')) score += 3;
+        if (parseHeaderToDateObj(null, textGrid[i][c])) {
+          dateHits++;
+          score += 2;
+        }
+      }
+      if (dateHits >= 3) score += 10;
+      if (score > bestScore) {
+        bestScore = score;
+        headerRowIdx = i;
+      }
+    }
+
+    // 1. Scan top banner/metadata rows (rows above headerRowIdx) for Section / Department / Unit / Area title
+    let explicitSection = '';
+    let bannerCandidates = [];
+
+    for (let r = 0; r < headerRowIdx; r++) {
+      const row = textGrid[r] || [];
+      for (let c = 0; c < row.length; c++) {
+        const rawCell = String(row[c] || '').replace(/_x000D_/g, ' ').replace(/[\r\n]+/g, ' ').trim();
+        if (!rawCell) continue;
+        const upperCell = rawCell.toUpperCase();
+
+        // Check if cell has explicit label like "Section: Cargo Handling EK" or "Department : ..."
+        const labelMatch = rawCell.match(/(?:section|dept|department|unit|cost\s*center|area|business\s*unit)\s*[:\-]\s*(.+)/i);
+        if (labelMatch && labelMatch[1] && labelMatch[1].trim().length >= 2) {
+          explicitSection = labelMatch[1].trim();
+          break;
+        }
+
+        // Check if previous cell is a label like "Section" / "Department" / "Unit"
+        if (c > 0) {
+          const prevUpper = String(row[c - 1] || '').toUpperCase().replace(/[:\-]/g, '').trim();
+          if (['SECTION', 'DEPARTMENT', 'DEPT', 'UNIT', 'AREA', 'COST CENTER', 'DIVISION'].indexOf(prevUpper) !== -1) {
+            explicitSection = rawCell;
+            break;
+          }
+        }
+
+        // Collect meaningful descriptive banner strings (exclude pure dates, numbers, generic words like "Shift Schedule")
+        if (
+          rawCell.length >= 3 &&
+          !/^\d+$/.test(rawCell) &&
+          !parseHeaderToDateObj(null, rawCell) &&
+          !upperCell.startsWith('SHIFT SCHEDULE') &&
+          !upperCell.startsWith('PRINTED ON') &&
+          !upperCell.startsWith('FROM ') &&
+          !upperCell.startsWith('TO ') &&
+          !upperCell.startsWith('PAGE ')
+        ) {
+          // If cell contains both sheet number/code and name, e.g. "2534 - Cargo Handling EK"
+          const dashSplit = rawCell.match(/^\d{3,6}\s*[\-–:]\s*(.+)$/);
+          if (dashSplit && dashSplit[1]) {
+            bannerCandidates.unshift(dashSplit[1].trim());
+          } else {
+            bannerCandidates.push(rawCell);
+          }
+        }
+      }
+      if (explicitSection) break;
+    }
+
+    if (explicitSection) return explicitSection;
+    if (bannerCandidates.length > 0) return bannerCandidates[0];
+
+    // 2. Fallback: Check if sheetName itself has "2534 - Cargo Handling EK" pattern
+    const sheetDashMatch = String(sheetName || '').match(/^\d{3,6}\s*[\-–:]\s*(.+)$/);
+    if (sheetDashMatch && sheetDashMatch[1] && !sheetDashMatch[1].toLowerCase().includes('shift schedule')) {
+      return sheetDashMatch[1].trim();
+    }
+
+    // 3. Fallback: Detect most frequent Team / Area column value in the staff rows
+    const headerTxt = textGrid[headerRowIdx] || [];
+    let teamCol = -1;
+    for (let c = 0; c < Math.min(12, headerTxt.length); c++) {
+      const u = String(headerTxt[c] || '').toUpperCase().trim();
+      if (u.includes('TEAM') || u.includes('AREA') || u.includes('SECTION')) {
+        teamCol = c;
+        break;
+      }
+    }
+    if (teamCol !== -1) {
+      const freq = {};
+      let topTeam = '';
+      let topCnt = 0;
+      for (let r = headerRowIdx + 1; r < Math.min(headerRowIdx + 60, textGrid.length); r++) {
+        const val = String((textGrid[r] || [])[teamCol] || '').trim();
+        if (val && val.length >= 2) {
+          freq[val] = (freq[val] || 0) + 1;
+          if (freq[val] > topCnt) {
+            topCnt = freq[val];
+            topTeam = val;
+          }
+        }
+      }
+      if (topTeam) return topTeam;
+    }
+
+    return sheetName || '';
+  }
+
+  let sheetSectionMap = {};
+
+  function populateSheetDropdownWithSections(wb) {
+    const sheetSel = document.getElementById('sheetSelect');
+    if (!sheetSel || !wb) return;
+    sheetSel.innerHTML = '';
+    sheetSectionMap = {};
+
+    let defaultSelectedIdx = 0;
+    wb.SheetNames.forEach(function(sName, idx) {
+      const secName = extractSectionNameFromSheet(wb.Sheets[sName], sName);
+      sheetSectionMap[sName] = secName;
+
+      const opt = document.createElement('option');
+      opt.value = sName;
+      // Format: "Section Name (Shift Schedule 2534)" — avoid duplicate text if secName === sName
+      if (secName && secName.toLowerCase() !== sName.toLowerCase()) {
+        opt.textContent = secName + ' (' + sName + ')';
+      } else {
+        opt.textContent = sName;
+      }
+
+      if (sName.toLowerCase().includes('schedule') || sName.includes('2534')) {
+        defaultSelectedIdx = idx;
+      }
+      sheetSel.appendChild(opt);
+    });
+
+    if (sheetSel.options.length > 0) {
+      sheetSel.selectedIndex = defaultSelectedIdx;
+    }
+    sheetSel.style.display = wb.SheetNames.length > 0 ? 'inline-block' : 'none';
+  }
+
+  function updateHeaderSectionDisplay(sheetName) {
+    const badge = document.getElementById('headerSectionBadge');
+    if (!badge) return;
+    const secName = sheetSectionMap[sheetName] || sheetName || '';
+    if (secName) {
+      badge.innerText = '— ' + secName;
+      badge.style.display = 'inline-block';
+      document.title = 'Staff Monthly Roster Calendar — ' + secName;
+    } else {
+      badge.innerText = '';
+      badge.style.display = 'none';
+    }
+  }
+
+  function applyRosterPayload(payload, isFromCache) {
+    if (!payload || payload.status !== 'success' || !payload.data) return false;
+    if (typeof XLSX === 'undefined') return false;
+
+    currentLiveLastUpdated = payload.lastUpdated || null;
+    currentLiveFileName = payload.fileName || 'Live_Roster.xlsx';
+
+    // Populate multi-month live files dropdown if available
+    const liveSel = document.getElementById('liveFileSelect');
+    if (liveSel && Array.isArray(payload.availableFiles) && payload.availableFiles.length > 0) {
+      liveSel.innerHTML = '';
+      payload.availableFiles.forEach(function(fItem) {
+        const opt = document.createElement('option');
+        opt.value = fItem.name;
+        opt.textContent = '📅 ' + fItem.name.replace(/\.xlsx$/i, '');
+        if (fItem.name === currentLiveFileName) opt.selected = true;
+        liveSel.appendChild(opt);
+      });
+      liveSel.style.display = payload.availableFiles.length > 1 ? 'inline-block' : 'none';
+    }
+
+    const bytes = base64ToUint8Array(payload.data);
+    workbook = XLSX.read(bytes, { type: 'array', cellDates: false });
+
+    const sheetSel = document.getElementById('sheetSelect');
+    populateSheetDropdownWithSections(workbook);
+
+    parseExcelSheet(sheetSel.value, currentLiveFileName);
+
+    const timeTag = formatSyncTimestamp(currentLiveLastUpdated);
+    if (isFromCache) {
+      setLiveSyncBadgeState('syncing', 'Syncing Live... (Cached: ' + currentLiveFileName.replace(/\.xlsx$/i, '') + ')');
+    } else {
+      setLiveSyncBadgeState('live', 'LIVE: ' + currentLiveFileName.replace(/\.xlsx$/i, '') + (timeTag ? ' (' + timeTag + ')' : ''));
+    }
+    return true;
+  }
+
+  async function fetchLiveJsonWithRetry(url, maxRetries) {
+    let lastErr = null;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timerId = controller ? setTimeout(function() { controller.abort(); }, 20000) : null;
+        const fetchOpts = {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store',
+          redirect: 'follow'
+        };
+        if (controller) fetchOpts.signal = controller.signal;
+
+        const sep = url.indexOf('?') === -1 ? '?' : '&';
+        const response = await fetch(url + sep + '_t=' + Date.now() + '&_try=' + attempt, fetchOpts);
+        if (timerId) clearTimeout(timerId);
+
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        const text = await response.text();
+        const json = JSON.parse(text);
+        return json;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < maxRetries) {
+          await new Promise(function(r) { setTimeout(r, 900 * attempt); });
+        }
+      }
+    }
+    throw lastErr || new Error('Network request failed');
+  }
+
+  async function loadLiveRosterFromDrive(requestedFileName, isSilentBackgroundCheck) {
+    const refreshBtn = document.getElementById('btnRefreshLiveRoster');
+    if (!isSilentBackgroundCheck) {
+      setLiveSyncBadgeState('syncing', 'Connecting Live Roster...');
+      if (refreshBtn) refreshBtn.disabled = true;
+      currentProgressVal = 12;
+      showLiveProgressBar(
+        'Live Roster Loading...',
+        'Google Drive se latest roster fetch ho raha hai...',
+        'Step 1/4: Connecting to Google Drive...',
+        18
+      );
+    }
+
+    try {
+      const xlsxOk = await ensureXlsxReady();
+      if (!xlsxOk) {
+        throw new Error('Failed to load SheetJS (XLSX) library.');
+      }
+
+      if (isSilentBackgroundCheck && currentLiveLastUpdated) {
+        const checkUrl = LIVE_ROSTER_SCRIPT_URL + '?checkOnly=true' +
+          (requestedFileName ? '&file=' + encodeURIComponent(requestedFileName) : '');
+        const checkJson = await fetchLiveJsonWithRetry(checkUrl, 2);
+        if (checkJson.status === 'success' && checkJson.lastUpdated === currentLiveLastUpdated) {
+          return false; // No new update yet
+        }
+      }
+
+      if (!isSilentBackgroundCheck) {
+        showLiveProgressBar(
+          'Downloading Live Roster...',
+          'Downloading Latest Excel roster file...',
+          'Step 2/4: Fetching Excel data...',
+          45
+        );
+      }
+
+      const fetchUrl = LIVE_ROSTER_SCRIPT_URL +
+        (requestedFileName ? '?file=' + encodeURIComponent(requestedFileName) : '');
+
+      const payload = await fetchLiveJsonWithRetry(fetchUrl, 3);
+      if (payload.status !== 'success' || !payload.data) {
+        throw new Error(payload.message || 'Live roster data not found');
+      }
+
+      if (!isSilentBackgroundCheck) {
+        const cleanName = (payload.fileName || 'Live Roster').replace(/\.xlsx$/i, '');
+        showLiveProgressBar(
+          'Processing Staff Schedule...',
+          cleanName + ' read ho rahi hai...',
+          'Step 3/4: Parsing staff & duties...',
+          78
+        );
+        await new Promise(function(r) { setTimeout(r, 30); });
+      }
+
+      const applied = applyRosterPayload(payload, false);
+      if (!applied) {
+        throw new Error('Could not parse live roster workbook');
+      }
+
+      // Save latest live roster to localStorage for instant startup on next visit
+      try {
+        localStorage.setItem(ROSTER_CACHE_KEY, JSON.stringify({
+          status: 'success',
+          fileName: payload.fileName,
+          lastUpdated: payload.lastUpdated,
+          availableFiles: payload.availableFiles || [],
+          data: payload.data
+        }));
+      } catch (storageErr) {}
+
+      if (!isSilentBackgroundCheck) {
+        showLiveProgressBar(
+          'Live Roster Ready!',
+          'Calendar mukammal load ho gaya hai',
+          'Step 4/4: Complete!',
+          100
+        );
+        hideLiveProgressBar();
+      }
+
+      return true;
+    } catch (err) {
+      console.warn('Live roster fetch error:', err);
+      if (!isSilentBackgroundCheck) {
+        if (staffRecords.length > 0 && currentLiveFileName) {
+          const timeTag = formatSyncTimestamp(currentLiveLastUpdated);
+          setLiveSyncBadgeState('live', 'CACHED: ' + currentLiveFileName.replace(/\.xlsx$/i, '') + (timeTag ? ' (' + timeTag + ')' : ''));
+        } else {
+          setLiveSyncBadgeState('error', 'Live Offline (Click Sync Live)');
+        }
+        hideLiveProgressBar();
+      }
+      return false;
+    } finally {
+      if (refreshBtn) refreshBtn.disabled = false;
+    }
+  }
+
+  document.getElementById('btnRefreshLiveRoster').addEventListener('click', function() {
+    const liveSel = document.getElementById('liveFileSelect');
+    const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : '';
+    loadLiveRosterFromDrive(chosen, false);
+  });
+
+  document.getElementById('liveFileSelect').addEventListener('change', function() {
+    loadLiveRosterFromDrive(this.value, false);
+  });
+
+  function formatDisplayName(rawName) {
+    if (!rawName) return '';
+    const clean = String(rawName).trim();
+    if (clean.includes(',')) {
+      const parts = clean.split(',');
+      const last = parts[0].trim();
+      const first = parts.slice(1).join(' ').trim();
+      return (first + ' ' + last).toUpperCase();
+    }
+    return clean.toUpperCase();
+  }
+
+  function getInitials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'ST';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function toIsoDate(year, month0, day) {
+    return year + '-' + String(month0 + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+  }
+
+  function parseIsoToUtcMs(iso) {
+    const p = iso.split('-');
+    return Date.UTC(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+  }
+
+  function addDaysIso(iso, deltaDays) {
+    const ms = parseIsoToUtcMs(iso) + deltaDays * 86400000;
+    const d = new Date(ms);
+    return toIsoDate(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+
+  function formatHumanDate(iso) {
+    const p = iso.split('-');
+    const day = parseInt(p[2], 10);
+    const m0 = parseInt(p[1], 10) - 1;
+    const y = p[0];
+    const dt = new Date(Date.UTC(parseInt(y, 10), m0, day));
+    const wd = DAY_NAMES[dt.getUTCDay()];
+    return day + ' ' + MONTH_SHORT[m0] + ' (' + wd + ')';
+  }
+
+  function excelSerialToDateObj(serial) {
+    const utcDays = Math.floor(serial - 25569);
+    const d = new Date(utcDays * 86400 * 1000);
+    if (isNaN(d.getTime())) return null;
+    const y = d.getUTCFullYear();
+    const m0 = d.getUTCMonth();
+    const day = d.getUTCDate();
+    return { year: y, month0: m0, day: day, iso: toIsoDate(y, m0, day) };
+  }
+
+  function parseHeaderToDateObj(rawVal, formattedVal) {
+    if (typeof rawVal === 'number' && rawVal > 40000 && rawVal < 65000) {
+      return excelSerialToDateObj(rawVal);
+    }
+    const str = String(formattedVal || rawVal || '')
+      .replace(/_x000D_/g, ' ')
+      .replace(/[\r\n]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!str) return null;
+
+    let m = str.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (m) {
+      const day = parseInt(m[1], 10);
+      const m0 = parseInt(m[2], 10) - 1;
+      const y = parseInt(m[3], 10);
+      if (m0 >= 0 && m0 <= 11 && day >= 1 && day <= 31) {
+        return { year: y, month0: m0, day: day, iso: toIsoDate(y, m0, day) };
+      }
+    }
+
+    m = str.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (m) {
+      const y = parseInt(m[1], 10);
+      const m0 = parseInt(m[2], 10) - 1;
+      const day = parseInt(m[3], 10);
+      return { year: y, month0: m0, day: day, iso: toIsoDate(y, m0, day) };
+    }
+
+    const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+    m = str.match(/(\d{1,2})[-/ ](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-/ ](\d{2,4})/i);
+    if (m) {
+      const day = parseInt(m[1], 10);
+      const m0 = months[m[2].toLowerCase()];
+      let y = parseInt(m[3], 10);
+      if (y < 100) y += 2000;
+      return { year: y, month0: m0, day: day, iso: toIsoDate(y, m0, day) };
+    }
+
+    return null;
+  }
+
+  function parseRosterDutyCell(cellVal) {
+    const clean = String(cellVal || '')
+      .replace(/_x000D_/g, ' ')
+      .replace(/[\r\n]+/g, ' | ')
+      .trim();
+
+    if (!clean) {
+      return { category: 'EMPTY', label: '', time: '', isOT: false };
+    }
+
+    const parts = clean.split('|').map(function(s) { return s.trim(); }).filter(Boolean);
+    const code = (parts[0] || '').toUpperCase();
+    const upper = clean.toUpperCase();
+
+    if (code === 'OFF' || code === 'DO' || code === 'RO' || code === 'REST' || code === 'PD') {
+      return { category: 'OFF', label: code === 'PD' ? 'PD / OFF' : 'OFF', time: '', isOT: false };
+    }
+
+    if (code.includes('LV') || upper.includes('LEAVE') || upper.includes('ANNUAL') || upper.includes('SICK')) {
+      return { category: 'LEAVE', label: 'LEAVE', time: code, isOT: false };
+    }
+    if (code === 'TLI' || upper.includes('TRAINING') || upper.includes('TRG')) {
+      return { category: 'LEAVE', label: 'TRAINING', time: code, isOT: false };
+    }
+    if (code === 'A' || upper === 'ABSENT') {
+      return { category: 'LEAVE', label: 'ABSENT', time: '', isOT: false };
+    }
+
+    let startStr = '', endStr = '';
+    const colonMatch = clean.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+    const compactMatch = clean.match(/\b(\d{2})(\d{2})\s*-\s*(\d{2})(\d{2})\b/);
+
+    if (colonMatch) {
+      startStr = colonMatch[1].padStart(2, '0') + ':' + colonMatch[2];
+      endStr = colonMatch[3].padStart(2, '0') + ':' + colonMatch[4];
+    } else if (compactMatch) {
+      startStr = compactMatch[1] + ':' + compactMatch[2];
+      endStr = compactMatch[3] + ':' + compactMatch[4];
+    }
+
+    const isOT = upper.includes('OT') || upper.includes('ROT') || upper.includes('PREMIUM');
+
+    if (!startStr || !endStr) {
+      if (upper === 'M' || upper === 'D' || upper === 'MORNING' || upper.startsWith('S1')) {
+        return { category: 'MORNING', label: 'Morning Duty', time: '05:00-17:00', isOT: isOT };
+      }
+      if (upper === 'N' || upper === 'NIGHT' || upper.startsWith('S2')) {
+        return { category: 'NIGHT', label: 'Night Duty', time: '17:00-05:00', isOT: isOT };
+      }
+      return { category: 'OFF', label: code || 'OFF', time: '', isOT: false };
+    }
+
+    const timeRange = startStr + '-' + endStr;
+    if (timeRange === '00:00-00:00') {
+      return { category: 'OFF', label: 'OFF', time: '', isOT: false };
+    }
+
+    const startHour = parseInt(startStr.split(':')[0], 10);
+    const isMorning = (startHour >= 4 && startHour < 16);
+
+    return {
+      category: isMorning ? 'MORNING' : 'NIGHT',
+      label: isMorning ? 'Morning Duty' : 'Night Duty',
+      time: timeRange,
+      isOT: isOT
+    };
+  }
+
+  function isNineToNineTime(timeStr) {
+    if (!timeStr) return false;
+    const t = String(timeStr).trim();
+    return t.startsWith('09:00-21:00') || t.startsWith('21:00-09:00') || t.startsWith('9:00-21:00');
+  }
+
+  function detectRegularCyclePattern(scheduleByIsoDate, shiftSeqHint, teamHint) {
+    const sortedIsos = Object.keys(scheduleByIsoDate).sort();
+    if (sortedIsos.length === 0) return null;
+
+    let nineToNineHits = 0;
+    let totalRegularDuties = 0;
+
+    const seq = sortedIsos.map(function(iso) {
+      const d = scheduleByIsoDate[iso];
+      if (!d) return null;
+      if (d.isOT) {
+        return { category: 'OFF', label: 'OFF', time: '', isOT: false };
+      }
+      if (d.category === 'MORNING' || d.category === 'NIGHT' || d.category === 'OFF') {
+        if (d.category === 'MORNING' || d.category === 'NIGHT') {
+          totalRegularDuties++;
+          if (isNineToNineTime(d.time)) nineToNineHits++;
+        }
+        return {
+          category: d.category,
+          label: d.category === 'MORNING' ? 'Morning Duty' : (d.category === 'NIGHT' ? 'Night Duty' : 'OFF'),
+          time: d.time || (d.category === 'MORNING' ? '05:00-17:00' : (d.category === 'NIGHT' ? '17:00-05:00' : '')),
+          isOT: false
+        };
+      }
+      return null;
+    });
+
+    const N = seq.length;
+    const candidateLengths = [6, 8, 9, 10, 12, 7, 14, 4, 5];
+    let bestLen = 6;
+    let bestScore = -1;
+
+    for (let idx = 0; idx < candidateLengths.length; idx++) {
+      const L = candidateLengths[idx];
+      if (N < L + 1) continue;
+
+      let matches = 0;
+      let comparisons = 0;
+      for (let i = 0; i < N - L; i++) {
+        if (seq[i] && seq[i + L]) {
+          comparisons++;
+          const w1 = (seq[i].category === 'MORNING' || seq[i].category === 'NIGHT') ? 'W' : 'O';
+          const w2 = (seq[i + L].category === 'MORNING' || seq[i + L].category === 'NIGHT') ? 'W' : 'O';
+          if (seq[i].category === seq[i + L].category) {
+            matches += 1.0;
+          } else if (w1 === w2) {
+            matches += 0.85;
+          }
+        }
+      }
+
+      if (comparisons >= 1) {
+        const accuracy = matches / comparisons;
+        const bonus = (L === 6 || L === 8) ? 0.02 : 0;
+        if (accuracy + bonus > bestScore) {
+          bestScore = accuracy + bonus;
+          bestLen = L;
+        }
+      }
+    }
+
+    const template = [];
+    for (let pos = 0; pos < bestLen; pos++) {
+      const counts = { MORNING: 0, NIGHT: 0, OFF: 0 };
+      const sampleObj = { MORNING: null, NIGHT: null, OFF: null };
+
+      for (let i = pos; i < N; i += bestLen) {
+        if (seq[i]) {
+          counts[seq[i].category]++;
+          if (!sampleObj[seq[i].category]) {
+            sampleObj[seq[i].category] = seq[i];
+          }
+        }
+      }
+
+      let winner = 'OFF';
+      if (counts.MORNING >= counts.NIGHT && counts.MORNING >= counts.OFF && counts.MORNING > 0) {
+        winner = 'MORNING';
+      } else if (counts.NIGHT >= counts.MORNING && counts.NIGHT >= counts.OFF && counts.NIGHT > 0) {
+        winner = 'NIGHT';
+      }
+
+      template.push(sampleObj[winner] || { category: 'OFF', label: 'OFF', time: '', isOT: false });
+    }
+
+    const doubledWO = template.concat(template).map(function(t) {
+      return (t.category === 'MORNING' || t.category === 'NIGHT') ? 'W' : 'O';
+    }).join('');
+
+    let workCount = 0;
+    let offCount = 0;
+    let template9to9Count = 0;
+    template.forEach(function(item) {
+      if (item.category === 'MORNING' || item.category === 'NIGHT') {
+        workCount++;
+        if (isNineToNineTime(item.time)) template9to9Count++;
+      } else if (item.category === 'OFF') {
+        offCount++;
+      }
+    });
+
+    const runLengthsW = [];
+    const runLengthsO = [];
+    let curType = null;
+    let curLen = 0;
+    for (let i = 0; i < seq.length; i++) {
+      if (!seq[i]) {
+        if (curType && curLen > 0) {
+          if (curType === 'W') runLengthsW.push(curLen);
+          else runLengthsO.push(curLen);
+        }
+        curType = null;
+        curLen = 0;
+        continue;
+      }
+      const t = (seq[i].category === 'MORNING' || seq[i].category === 'NIGHT') ? 'W' : 'O';
+      if (t === curType) {
+        curLen++;
+      } else {
+        if (curType && curLen > 0) {
+          if (curType === 'W') runLengthsW.push(curLen);
+          else runLengthsO.push(curLen);
+        }
+        curType = t;
+        curLen = 1;
+      }
+    }
+    if (curType && curLen > 0) {
+      if (curType === 'W') runLengthsW.push(curLen);
+      else runLengthsO.push(curLen);
+    }
+
+    const innerW = runLengthsW.length > 2 ? runLengthsW.slice(1, -1) : runLengthsW;
+    const innerO = runLengthsO.length > 2 ? runLengthsO.slice(1, -1) : runLengthsO;
+
+    const countW3 = innerW.filter(function(x) { return x === 3; }).length;
+    const countO3 = innerO.filter(function(x) { return x === 3; }).length;
+    const countW4 = innerW.filter(function(x) { return x === 4; }).length;
+    const countO4 = innerO.filter(function(x) { return x === 4; }).length;
+    const countO2 = innerO.filter(function(x) { return x === 2; }).length;
+
+    const hintUpper = (String(shiftSeqHint || '') + ' ' + String(teamHint || '')).toUpperCase();
+    const is9to9Shift = (template9to9Count > 0) ||
+      (totalRegularDuties > 0 && (nineToNineHits / totalRegularDuties) >= 0.35) ||
+      hintUpper.includes('9-9') || hintUpper.includes('9TO9') || hintUpper.includes('09:00-21:00');
+
+    let rosterType = 'OTHER';
+    let swapEligible = false;
+    let rosterBadgeText = '⚠️ NON-ELIGIBLE ROSTER (SWAP NOT ALLOWED)';
+
+    if (bestLen === 6 && workCount === 3 && offCount === 3 && doubledWO.indexOf('WWWOOO') !== -1) {
+      if (is9to9Shift) {
+        rosterType = '3x3_9TO9';
+        swapEligible = false;
+        rosterBadgeText = '🚫 3x3 (9 TO 9) — SWAP NOT ALLOWED';
+      } else {
+        rosterType = '3x3';
+        swapEligible = true;
+        rosterBadgeText = '✅ 3x3 ROSTER (SWAP ELIGIBLE)';
+      }
+    } else if (bestLen === 8 && workCount === 4 && offCount === 4 && doubledWO.indexOf('WWWWOOOO') !== -1) {
+      rosterType = '4x4';
+      swapEligible = true;
+      rosterBadgeText = '✅ 4x4 ROSTER (SWAP ELIGIBLE)';
+    } else if (bestLen === 6 && workCount === 4 && offCount === 2 && doubledWO.indexOf('WWWWOO') !== -1) {
+      rosterType = '4x2';
+      swapEligible = false;
+      rosterBadgeText = '🚫 4x2 ROSTER (4 DUTY / 2 OFF) — SWAP NOT ALLOWED';
+    }
+    else if (countW4 >= 1 && countO2 >= 1 && countO4 === 0 && countO3 === 0) {
+      rosterType = '4x2';
+      swapEligible = false;
+      rosterBadgeText = '🚫 4x2 ROSTER (4 DUTY / 2 OFF) — SWAP NOT ALLOWED';
+    } else if (!is9to9Shift && (countW4 >= 1 && countO4 >= 1)) {
+      rosterType = '4x4';
+      swapEligible = true;
+      rosterBadgeText = '✅ 4x4 ROSTER (SWAP ELIGIBLE)';
+    } else if (!is9to9Shift && (countW3 >= 1 || countO3 >= 1) && countO2 === 0) {
+      rosterType = '3x3';
+      swapEligible = true;
+      rosterBadgeText = '✅ 3x3 ROSTER (SWAP ELIGIBLE)';
+    } else if (is9to9Shift && (countW3 >= 1 || countO3 >= 1)) {
+      rosterType = '3x3_9TO9';
+      swapEligible = false;
+      rosterBadgeText = '🚫 3x3 (9 TO 9) — SWAP NOT ALLOWED';
+    } else if (!is9to9Shift && totalRegularDuties > 0 && bestScore >= 0.45) {
+      if (bestLen === 8 && workCount >= 3 && offCount >= 3) {
+        rosterType = '4x4';
+        swapEligible = true;
+        rosterBadgeText = '✅ 4x4 ROSTER (SWAP ELIGIBLE)';
+      } else if (bestLen === 6 && workCount >= 2 && offCount >= 2 && !(workCount === 4 && offCount === 2)) {
+        rosterType = '3x3';
+        swapEligible = true;
+        rosterBadgeText = '✅ 3x3 ROSTER (SWAP ELIGIBLE)';
+      }
+    }
+
+    const summaryParts = [];
+    let runCat = template[0].category;
+    let runLen = 1;
+    for (let k = 1; k < template.length; k++) {
+      if (template[k].category === runCat) {
+        runLen++;
+      } else {
+        summaryParts.push(runLen + ' ' + (runCat === 'MORNING' ? 'Morning' : (runCat === 'NIGHT' ? 'Night' : 'OFF')));
+        runCat = template[k].category;
+        runLen = 1;
+      }
+    }
+    summaryParts.push(runLen + ' ' + (runCat === 'MORNING' ? 'Morning' : (runCat === 'NIGHT' ? 'Night' : 'OFF')));
+
+    const firstNonEmptyIdx = seq.findIndex(function(item) { return item !== null; });
+    if (firstNonEmptyIdx === -1) return null;
+    const anchorIsoDate = sortedIsos[firstNonEmptyIdx];
+
+    return {
+      anchorIso: anchorIsoDate,
+      anchorUtcMs: parseIsoToUtcMs(anchorIsoDate),
+      lastActualIso: sortedIsos[sortedIsos.length - 1],
+      cycleLength: bestLen,
+      template: template,
+      patternText: summaryParts.join(' → ') + (is9to9Shift ? ' [9 TO 9]' : ''),
+      rosterType: rosterType,
+      swapEligible: swapEligible,
+      rosterBadgeText: rosterBadgeText,
+      is9to9Shift: is9to9Shift
+    };
+  }
+
+  function getDutyForDate(staff, isoDate) {
+    if (staff.scheduleByIsoDate && staff.scheduleByIsoDate[isoDate]) {
+      return {
+        duty: staff.scheduleByIsoDate[isoDate],
+        isProjected: false
+      };
+    }
+
+    const pat = staff.cyclePattern;
+    if (!pat) {
+      return { duty: null, isProjected: false };
+    }
+
+    const targetMs = parseIsoToUtcMs(isoDate);
+    const diffDays = Math.round((targetMs - pat.anchorUtcMs) / 86400000);
+    const idx = ((diffDays % pat.cycleLength) + pat.cycleLength) % pat.cycleLength;
+    const baseItem = pat.template[idx];
+
+    return {
+      duty: {
+        category: baseItem.category,
+        label: baseItem.label,
+        time: baseItem.time,
+        isOT: false
+      },
+      isProjected: true
+    };
+  }
+
+  function getNormalizedRoleKey(staff) {
+    const raw = String((staff && staff.title) || '').toUpperCase().trim();
+    if (!raw) return 'UNKNOWN';
+    if (raw.includes('EQUIPMENT OPERATOR') || /^0493\b/.test(raw) || raw === 'EO') return 'EO';
+    if (raw.includes('TEAM LEADER') || /^6032\b/.test(raw) || /^7015\b/.test(raw) || raw === 'TL') return 'TEAM_LEADER';
+    if (raw.includes('LOADER') || /^7033\b/.test(raw)) return 'LOADER';
+    if (raw.includes('AIRSIDE AGENT') || /^A866\b/.test(raw)) return 'AIRSIDE_AGENT';
+    if (raw.includes('RESOURCE ALLOCATOR') || /^3551\b/.test(raw)) return 'RESOURCE_ALLOCATOR';
+    if (raw.includes('DEPARTMENT OFFICER') || /^6067\b/.test(raw)) return 'DEPARTMENT_OFFICER';
+    if (raw.includes('SUPERVISOR') || /^4837\b/.test(raw) || /^2133\b/.test(raw)) return 'SUPERVISOR';
+    if (raw.includes('CHIEF DRIVER') || /^0322\b/.test(raw)) return 'CHIEF_DRIVER';
+    if (raw.includes('DRIVER') || /^7124\b/.test(raw)) return 'DRIVER';
+    return raw.replace(/^\d+\./, '').trim();
+  }
+
+  function areSameNormalizedRole(staffA, staffB) {
+    const rA = getNormalizedRoleKey(staffA);
+    const rB = getNormalizedRoleKey(staffB);
+    if (rA === 'UNKNOWN' || rB === 'UNKNOWN') return false;
+    return rA === rB;
+  }
+
+  function classifyOperationalZone(staff) {
+    const teamRaw = String((staff && staff.teamId) || '').toUpperCase().replace(/\s+/g, ' ').trim();
+    const isCMT = /\bCMT\b/.test(teamRaw);
+    const isPK15 = /PK\s*15/.test(teamRaw);
+    return {
+      teamRaw: teamRaw,
+      isCMT: isCMT,
+      isPK15: isPK15
+    };
+  }
+
+  function evaluateSectionPriority(requesterStaff, partnerStaff) {
+    const reqZ = classifyOperationalZone(requesterStaff);
+    const parZ = classifyOperationalZone(partnerStaff);
+
+    if (reqZ.teamRaw && parZ.teamRaw && reqZ.teamRaw === parZ.teamRaw) {
+      return {
+        tier: 1,
+        badgeText: '⭐ Priority 1: Exact Same Section (' + parZ.teamRaw + ')',
+        badgeClass: 'sec-tier-1',
+        isSameSectionOrCmt: true,
+        isPk15Fallback: parZ.isPK15
+      };
+    }
+
+    if (reqZ.isCMT && parZ.isCMT) {
+      return {
+        tier: 2,
+        badgeText: '🏢 Priority 1: Same CMT Section (' + (parZ.teamRaw || 'CMT') + ')',
+        badgeClass: 'sec-tier-2',
+        isSameSectionOrCmt: true,
+        isPk15Fallback: false
+      };
+    }
+
+    if (reqZ.isCMT && parZ.isPK15) {
+      return {
+        tier: 3,
+        badgeText: '📍 Priority 2: PK15 Area (' + (parZ.teamRaw || 'PK 15') + ')',
+        badgeClass: 'sec-tier-3',
+        isSameSectionOrCmt: false,
+        isPk15Fallback: true
+      };
+    }
+
+    if (parZ.isPK15) {
+      return {
+        tier: 3,
+        badgeText: '📍 PK15 Area (' + (parZ.teamRaw || 'PK 15') + ')',
+        badgeClass: 'sec-tier-3',
+        isSameSectionOrCmt: false,
+        isPk15Fallback: true
+      };
+    }
+
+    return {
+      tier: 4,
+      badgeText: '🌐 Other Area (' + (parZ.teamRaw || 'General') + ')',
+      badgeClass: 'sec-tier-4',
+      isSameSectionOrCmt: false,
+      isPk15Fallback: false
+    };
+  }
+
+  function isWorkingDuty(duty) {
+    return duty && (duty.category === 'MORNING' || duty.category === 'NIGHT');
+  }
+
+  function isOffDay(duty) {
+    return duty && duty.category === 'OFF';
+  }
+
+  function isSwapEligibleStaff(staff) {
+    return Boolean(staff && staff.cyclePattern && staff.cyclePattern.swapEligible);
+  }
+
+  function hasMinimum12HourRest(prevDuty, nextDuty) {
+    if (!isWorkingDuty(prevDuty) || !isWorkingDuty(nextDuty)) return true;
+    if (prevDuty.category === 'NIGHT' && nextDuty.category === 'MORNING') {
+      return false;
+    }
+
+    function parseWindow(d) {
+      const t = String(d.time || '').trim();
+      const m = t.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+      if (m) {
+        let s = parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+        let e = parseInt(m[3], 10) + parseInt(m[4], 10) / 60;
+        if (e <= s) e += 24;
+        return { start: s, end: e };
+      }
+      return d.category === 'MORNING' ? { start: 5, end: 17 } : { start: 17, end: 29 };
+    }
+
+    const w1 = parseWindow(prevDuty);
+    const w2 = parseWindow(nextDuty);
+    const restHours = (24 + w2.start) - w1.end;
+    return restHours >= 11.5;
+  }
+
+  function evaluateOffSlotForSwapOrRepay(staff, targetIso, incomingDutyObj, overridesMap) {
+    if (!isSwapEligibleStaff(staff)) {
+      const rType = staff && staff.cyclePattern ? staff.cyclePattern.rosterType : 'OTHER';
+      return { valid: false, reason: 'Roster type (' + rType + ') is not eligible for swap' };
+    }
+
+    function getSimDuty(iso) {
+      if (overridesMap && Object.prototype.hasOwnProperty.call(overridesMap, iso)) {
+        return overridesMap[iso];
+      }
+      return getDutyForDate(staff, iso).duty;
+    }
+
+    const targetDuty = getSimDuty(targetIso);
+    if (!isOffDay(targetDuty)) {
+      return { valid: false, reason: 'Not an OFF day on this date' };
+    }
+
+    let offBefore = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isOffDay(getSimDuty(addDaysIso(targetIso, -i)))) offBefore++;
+      else break;
+    }
+
+    let offAfter = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isOffDay(getSimDuty(addDaysIso(targetIso, i)))) offAfter++;
+      else break;
+    }
+
+    const totalOffBlock = offBefore + 1 + offAfter;
+
+    if (totalOffBlock < 3) {
+      return {
+        valid: false,
+        reason: 'Only ' + totalOffBlock + ' OFF days available — at least 2 consecutive OFF days would not remain after duty'
+      };
+    }
+
+    if (offBefore > 0 && offAfter > 0) {
+      return {
+        valid: false,
+        reason: 'Working on the middle OFF day would break the 2 consecutive OFF days requirement'
+      };
+    }
+
+    const isFirstOff = (offBefore === 0);
+    const isLastOff = (offAfter === 0);
+
+    if (incomingDutyObj && isWorkingDuty(incomingDutyObj)) {
+      if (isFirstOff && incomingDutyObj.category !== 'NIGHT') {
+        return {
+          valid: false,
+          reason: 'Only a Night duty can be covered/repaid on the 1st OFF day (Morning duty violates the 12h rest gap)'
+        };
+      }
+      if (isLastOff && incomingDutyObj.category !== 'MORNING') {
+        return {
+          valid: false,
+          reason: 'Only a Morning duty can be covered/repaid on the Last OFF day (Night duty violates the 12h rest gap before next day Morning)'
+        };
+      }
+
+      const prevDayDuty = getSimDuty(addDaysIso(targetIso, -1));
+      const nextDayDuty = getSimDuty(addDaysIso(targetIso, 1));
+      if (!hasMinimum12HourRest(prevDayDuty, incomingDutyObj)) {
+        return { valid: false, reason: 'Less than 12 hours rest gap after the previous day duty' };
+      }
+      if (!hasMinimum12HourRest(incomingDutyObj, nextDayDuty)) {
+        return { valid: false, reason: 'Less than 12 hours rest gap before the next day duty' };
+      }
+    }
+
+    let workBefore = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isWorkingDuty(getSimDuty(addDaysIso(targetIso, -i)))) workBefore++;
+      else break;
+    }
+
+    let workAfter = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isWorkingDuty(getSimDuty(addDaysIso(targetIso, i)))) workAfter++;
+      else break;
+    }
+
+    const newConsecutiveDuties = workBefore + 1 + workAfter;
+    if (newConsecutiveDuties > 4) {
+      return {
+        valid: false,
+        reason: 'Results in ' + newConsecutiveDuties + ' consecutive duties (Max 4 duties followed by 2 OFF days required)'
+      };
+    }
+
+    const remainingConsecutiveOff = isFirstOff ? offAfter : offBefore;
+    if (remainingConsecutiveOff < 2) {
+      return {
+        valid: false,
+        reason: 'Only ' + remainingConsecutiveOff + ' OFF day remaining after duty (At least 2 consecutive OFF days required)'
+      };
+    }
+
+    const offPositionLabel = isFirstOff
+      ? '1st OFF (of ' + totalOffBlock + ')'
+      : 'Last OFF (' + totalOffBlock + 'th of ' + totalOffBlock + ')';
+
+    return {
+      valid: true,
+      isFirstOff: isFirstOff,
+      isLastOff: isLastOff,
+      requiredDutyCategory: isFirstOff ? 'NIGHT' : 'MORNING',
+      offPositionLabel: offPositionLabel,
+      totalOffBlock: totalOffBlock,
+      remainingOff: remainingConsecutiveOff,
+      workBefore: workBefore,
+      workAfter: workAfter,
+      newStreak: newConsecutiveDuties
+    };
+  }
+
+  function findSwapMatchesForDate(requesterStaff, swapIso) {
+    const reqDutyObj = getDutyForDate(requesterStaff, swapIso).duty;
+    if (!isWorkingDuty(reqDutyObj) || !isSwapEligibleStaff(requesterStaff)) {
+      return { matches: [], myEligibleOffDates: [] };
+    }
+
+    const swapParts = swapIso.split('-');
+    const swapYear = parseInt(swapParts[0], 10);
+    const swapMonth0 = parseInt(swapParts[1], 10) - 1;
+    const swapYearMonthPrefix = swapParts[0] + '-' + swapParts[1];
+    const daysInSwapMonth = new Date(swapYear, swapMonth0 + 1, 0).getDate();
+
+    const sameMonthIsos = [];
+    for (let d = 1; d <= daysInSwapMonth; d++) {
+      sameMonthIsos.push(toIsoDate(swapYear, swapMonth0, d));
+    }
+
+    const reqBaseOverride = {};
+    reqBaseOverride[swapIso] = { category: 'OFF', label: 'OFF (Swapped)', time: '', isOT: false };
+
+    const myEligibleOffDates = [];
+    sameMonthIsos.forEach(function(iso) {
+      if (iso === swapIso) return;
+      if (!iso.startsWith(swapYearMonthPrefix)) return;
+
+      const probeNight = evaluateOffSlotForSwapOrRepay(requesterStaff, iso, { category: 'NIGHT', time: '17:00-05:00' }, reqBaseOverride);
+      if (probeNight.valid) {
+        myEligibleOffDates.push({
+          iso: iso,
+          requiredCategory: 'NIGHT',
+          offPositionLabel: probeNight.offPositionLabel,
+          newStreak: probeNight.newStreak,
+          remainingOff: probeNight.remainingOff
+        });
+        return;
+      }
+
+      const probeMorning = evaluateOffSlotForSwapOrRepay(requesterStaff, iso, { category: 'MORNING', time: '05:00-17:00' }, reqBaseOverride);
+      if (probeMorning.valid) {
+        myEligibleOffDates.push({
+          iso: iso,
+          requiredCategory: 'MORNING',
+          offPositionLabel: probeMorning.offPositionLabel,
+          newStreak: probeMorning.newStreak,
+          remainingOff: probeMorning.remainingOff
+        });
+      }
+    });
+
+    const matches = [];
+
+    staffRecords.forEach(function(other) {
+      if (String(other.empId) === String(requesterStaff.empId)) return;
+      if (!isSwapEligibleStaff(other)) return;
+
+      const coverCheck = evaluateOffSlotForSwapOrRepay(other, swapIso, reqDutyObj, null);
+      if (!coverCheck.valid) return;
+
+      const mutualRepayOptions = [];
+      myEligibleOffDates.forEach(function(myOff) {
+        if (!myOff.iso.startsWith(swapYearMonthPrefix)) return;
+
+        const otherDutyOnRepay = getDutyForDate(other, myOff.iso).duty;
+        if (!isWorkingDuty(otherDutyOnRepay) || otherDutyOnRepay.isOT) return;
+        if (otherDutyOnRepay.category !== myOff.requiredCategory) return;
+
+        const exactReqCheck = evaluateOffSlotForSwapOrRepay(requesterStaff, myOff.iso, otherDutyOnRepay, reqBaseOverride);
+        if (!exactReqCheck.valid) return;
+
+        const otherSim = {};
+        otherSim[swapIso] = {
+          category: reqDutyObj.category,
+          label: reqDutyObj.label,
+          time: reqDutyObj.time,
+          isOT: false
+        };
+        otherSim[myOff.iso] = { category: 'OFF', label: 'OFF (Repaid)', time: '', isOT: false };
+
+        let oWorkBefore = 0;
+        for (let i = 1; i <= 8; i++) {
+          const dObj = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(swapIso, -i))
+            ? otherSim[addDaysIso(swapIso, -i)]
+            : getDutyForDate(other, addDaysIso(swapIso, -i)).duty;
+          if (isWorkingDuty(dObj)) oWorkBefore++;
+          else break;
+        }
+        let oWorkAfter = 0;
+        for (let i = 1; i <= 8; i++) {
+          const dObj = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(swapIso, i))
+            ? otherSim[addDaysIso(swapIso, i)]
+            : getDutyForDate(other, addDaysIso(swapIso, i)).duty;
+          if (isWorkingDuty(dObj)) oWorkAfter++;
+          else break;
+        }
+        const oTotalStreak = oWorkBefore + 1 + oWorkAfter;
+
+        let oOffBefore = 0;
+        for (let i = 1; i <= 8; i++) {
+          const dObj = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(myOff.iso, -i))
+            ? otherSim[addDaysIso(myOff.iso, -i)]
+            : getDutyForDate(other, addDaysIso(myOff.iso, -i)).duty;
+          if (isOffDay(dObj)) oOffBefore++;
+          else break;
+        }
+        let oOffAfter = 0;
+        for (let i = 1; i <= 8; i++) {
+          const dObj = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(myOff.iso, i))
+            ? otherSim[addDaysIso(myOff.iso, i)]
+            : getDutyForDate(other, addDaysIso(myOff.iso, i)).duty;
+          if (isOffDay(dObj)) oOffAfter++;
+          else break;
+        }
+        const oOffBlock = oOffBefore + 1 + oOffAfter;
+
+        const oPrevDuty = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(swapIso, -1))
+          ? otherSim[addDaysIso(swapIso, -1)]
+          : getDutyForDate(other, addDaysIso(swapIso, -1)).duty;
+        const oNextDuty = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(swapIso, 1))
+          ? otherSim[addDaysIso(swapIso, 1)]
+          : getDutyForDate(other, addDaysIso(swapIso, 1)).duty;
+
+        if (
+          oTotalStreak <= 4 &&
+          oOffBlock >= 2 &&
+          hasMinimum12HourRest(oPrevDuty, otherSim[swapIso]) &&
+          hasMinimum12HourRest(otherSim[swapIso], oNextDuty)
+        ) {
+          mutualRepayOptions.push({
+            repayIso: myOff.iso,
+            repayHuman: formatHumanDate(myOff.iso),
+            myOffLabel: exactReqCheck.offPositionLabel,
+            myNewStreak: exactReqCheck.newStreak,
+            myRemainingOff: exactReqCheck.remainingOff,
+            otherDutyType: otherDutyOnRepay.category === 'MORNING' ? '☀️ Morning' : '🌙 Night',
+            otherDutyTime: otherDutyOnRepay.time || (otherDutyOnRepay.category === 'MORNING' ? '05:00-17:00' : '17:00-05:00')
+          });
+        }
+      });
+
+      if (!areSameNormalizedRole(requesterStaff, other)) {
+        return;
+      }
+
+      const sectionInfo = evaluateSectionPriority(requesterStaff, other);
+
+      matches.push({
+        staff: other,
+        coverCheck: coverCheck,
+        mutualRepayOptions: mutualRepayOptions,
+        sameRole: true,
+        sectionTier: sectionInfo.tier,
+        sectionBadgeText: sectionInfo.badgeText,
+        sectionBadgeClass: sectionInfo.badgeClass,
+        isSameSectionOrCmt: sectionInfo.isSameSectionOrCmt,
+        isPk15Fallback: sectionInfo.isPk15Fallback,
+        hasMutualRepay: mutualRepayOptions.length > 0
+      });
+    });
+
+    matches.sort(function(a, b) {
+      if (a.sectionTier !== b.sectionTier) {
+        return a.sectionTier - b.sectionTier;
+      }
+      if (a.hasMutualRepay !== b.hasMutualRepay) {
+        return (b.hasMutualRepay ? 1 : 0) - (a.hasMutualRepay ? 1 : 0);
+      }
+      return a.staff.name.localeCompare(b.staff.name);
+    });
+
+    return {
+      matches: matches,
+      myEligibleOffDates: myEligibleOffDates
+    };
+  }
+
+  // =========================================================================
+  // DEMO SAMPLE DATA (FALLBACK IF LIVE DRIVE & OFFLINE CACHE UNAVAILABLE)
+  // =========================================================================
+  function loadSampleDemoData() {
+    const cycle3x3 = [
+      { category: 'MORNING', label: 'Morning Duty', time: '05:00-17:00', isOT: false },
+      { category: 'NIGHT',   label: 'Night Duty',   time: '17:00-05:00', isOT: false },
+      { category: 'NIGHT',   label: 'Night Duty',   time: '17:00-05:00', isOT: false },
+      { category: 'OFF',     label: 'OFF',          time: '',            isOT: false },
+      { category: 'OFF',     label: 'OFF',          time: '',            isOT: false },
+      { category: 'OFF',     label: 'OFF',          time: '',            isOT: false }
+    ];
+
+    const cycle3x3_9to9 = [
+      { category: 'MORNING', label: 'Morning Duty', time: '09:00-21:00', isOT: false },
+      { category: 'NIGHT',   label: 'Night Duty',   time: '21:00-09:00', isOT: false },
+      { category: 'NIGHT',   label: 'Night Duty',   time: '21:00-09:00', isOT: false },
+      { category: 'OFF',     label: 'OFF',          time: '',            isOT: false },
+      { category: 'OFF',     label: 'OFF',          time: '',            isOT: false },
+      { category: 'OFF',     label: 'OFF',          time: '',            isOT: false }
+    ];
+
+    const sampleStaff = [
+      { empId: '497038', name: 'ADEEL ASGHAR',       title: '0493.EQUIPMENT OPERATOR', teamId: 'EO CMT',          shiftSeq: 'SHIFT-2', type: '3x3',      patternOffset: 0, rotDays: [6] },
+      { empId: '447581', name: 'MUHAMMAD WAJID',     title: '0493.EQUIPMENT OPERATOR', teamId: 'EO CMT E & F',    shiftSeq: 'SHIFT-1', type: '3x3',      patternOffset: 2, rotDays: [] },
+      { empId: '473915', name: 'ZAHID MEHMOOD',      title: '0493.EQUIPMENT OPERATOR', teamId: 'EO CMT',          shiftSeq: 'SHIFT-4', type: '3x3',      patternOffset: 3, rotDays: [] },
+      { empId: '624051', name: 'FOJLE RABBI',        title: '0493.EQUIPMENT OPERATOR', teamId: 'EO AREA 1 PK 15', shiftSeq: 'SHIFT-1', type: '3x3',      patternOffset: 3, rotDays: [] },
+      { empId: '457870', name: 'RAHUL RAJAKRISHNAN', title: '6032.TEAM LEADER',        teamId: 'PM DEP EK',       shiftSeq: 'SHIFT-4', type: '3x3',      patternOffset: 3, rotDays: [] },
+      { empId: '402943', name: 'LATIF REHMAN',       title: '6032.TEAM LEADER',        teamId: 'TL CMT',          shiftSeq: 'SHIFT-2', type: '3x3',      patternOffset: 0, rotDays: [] },
+      { empId: '270992', name: 'MOHAMMED HASSAN',    title: '0493.EQUIPMENT OPERATOR', teamId: 'ULD DOLLY',       shiftSeq: 'CU170',   type: '3x3_9TO9', patternOffset: 4, rotDays: [] }
+    ];
+
+    staffRecords = sampleStaff.map(function(st) {
+      const sched = {};
+      const baseCycle = st.type === '3x3_9TO9' ? cycle3x3_9to9 : cycle3x3;
+      const cLen = baseCycle.length;
+      for (let d = 1; d <= 30; d++) {
+        const iso = toIsoDate(2026, 10, d);
+        const base = Object.assign({}, baseCycle[(d - 1 + st.patternOffset) % cLen]);
+        if (st.rotDays.indexOf(d) !== -1) {
+          base.category = 'MORNING';
+          base.label = 'Morning Duty';
+          base.time = '05:00-17:00';
+          base.isOT = true;
+        }
+        sched[iso] = base;
+      }
+      return {
+        empId: st.empId,
+        name: st.name,
+        title: st.title,
+        teamId: st.teamId,
+        shiftSeq: st.shiftSeq,
+        scheduleByIsoDate: sched,
+        cyclePattern: detectRegularCyclePattern(sched)
+      };
+    });
+
+    sheetSectionMap['Sample'] = 'Cargo Handling EK';
+    updateHeaderSectionDisplay('Sample');
+    renderSampleChips();
+    baseRosterYear = 2026;
+    baseRosterMonth = 10;
+    currentYear = 2026;
+    currentMonth = 10;
+    const startId = getRequestedStaffFromUrl() || '497038';
+    selectStaffById(startId, true);
+  }
+
+  function renderSampleChips() {
+    const chipsBox = document.getElementById('sampleChipsBox');
+    chipsBox.innerHTML = '';
+    staffRecords.slice(0, 6).forEach(function(st) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip-btn';
+      const tag = st.cyclePattern ? st.cyclePattern.rosterType : '';
+      b.textContent = st.empId + ' (' + st.name.split(' ')[0] + (tag ? ' • ' + tag : '') + ')';
+      b.onclick = function() { quickLookup(st.empId); };
+      chipsBox.appendChild(b);
+    });
+  }
+
+  // Manual Excel File Upload (Offline / Backup)
+  document.getElementById('rosterFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (typeof XLSX === 'undefined') {
+      alert('Excel library could not be loaded. Please check your internet connection.');
+      return;
+    }
+
+    document.getElementById('rosterStatusText').innerText = 'Reading Excel file: ' + file.name + '...';
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        workbook = XLSX.read(data, { type: 'array', cellDates: false });
+
+        const sheetSel = document.getElementById('sheetSelect');
+        populateSheetDropdownWithSections(workbook);
+
+        parseExcelSheet(sheetSel.value, file.name);
+        setLiveSyncBadgeState('live', 'Manual File: ' + file.name);
+      } catch (err) {
+        alert('Error reading file: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  document.getElementById('sheetSelect').addEventListener('change', function() {
+    parseExcelSheet(this.value, currentLiveFileName || 'Uploaded Roster');
+  });
+
+  function parseExcelSheet(sheetName, sourceFileLabel) {
+    if (!workbook || !sheetName) return;
+    updateHeaderSectionDisplay(sheetName);
+    const sheet = workbook.Sheets[sheetName];
+    const rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+    const textGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+
+    if (!rawGrid || rawGrid.length === 0) return;
+
+    let headerRowIdx = 0;
+    let bestScore = -1;
+    for (let i = 0; i < Math.min(25, rawGrid.length); i++) {
+      let score = 0;
+      let dateHits = 0;
+      for (let c = 0; c < rawGrid[i].length; c++) {
+        const txt = String(textGrid[i][c] || '').toUpperCase();
+        if (txt.includes('EMPLOYEE') || txt.includes('STAFF') || txt === 'ID') score += 3;
+        if (txt.includes('NAME')) score += 3;
+        if (parseHeaderToDateObj(rawGrid[i][c], textGrid[i][c])) {
+          dateHits++;
+          score += 2;
+        }
+      }
+      if (dateHits >= 3) score += 10;
+      if (score > bestScore) {
+        bestScore = score;
+        headerRowIdx = i;
+      }
+    }
+
+    const headerRaw = rawGrid[headerRowIdx] || [];
+    const headerTxt = textGrid[headerRowIdx] || [];
+
+    const dateCols = [];
+    let firstDateCol = 999;
+    for (let c = 0; c < Math.max(headerRaw.length, headerTxt.length); c++) {
+      const dObj = parseHeaderToDateObj(headerRaw[c], headerTxt[c]);
+      if (dObj) {
+        if (c < firstDateCol) firstDateCol = c;
+        dateCols.push({ colIdx: c, dateObj: dObj });
+      }
+    }
+
+    const metaLimit = firstDateCol < 999 ? firstDateCol : Math.min(10, headerTxt.length);
+    let idCol = -1, nameCol = -1, titleCol = -1, seqCol = -1, teamCol = -1;
+
+    for (let c = 0; c < metaLimit; c++) {
+      const u = String(headerTxt[c] || '').toUpperCase().trim();
+      if (!u) continue;
+      if (idCol === -1 && (u.includes('EMPLOYEE NUMBER') || u.includes('EMP NO') || u.includes('EMP ID') || u.includes('STAFF') || u === 'ID')) idCol = c;
+      else if (nameCol === -1 && (u.includes('NAME') || u === 'EMPLOYEE')) nameCol = c;
+      else if (titleCol === -1 && (u.includes('TITLE') || u.includes('JOB') || u.includes('ROLE'))) titleCol = c;
+      else if (teamCol === -1 && (u.includes('TEAM') || u.includes('AREA') || u.includes('SECTION'))) teamCol = c;
+      else if (seqCol === -1 && (u.includes('SEQ') || u.includes('PATTERN') || u.includes('SHIFT') || u.includes('GROUP') || u.includes('LINE'))) seqCol = c;
+    }
+
+    const sampleRows = textGrid.slice(headerRowIdx + 1, headerRowIdx + 20);
+    let bestIdCol = -1, bestIdHits = 0, bestNameCol = -1, bestNameHits = 0;
+    for (let c = 0; c < metaLimit; c++) {
+      let idHits = 0, nameHits = 0;
+      for (let r = 0; r < sampleRows.length; r++) {
+        const val = String((sampleRows[r] || [])[c] || '').trim();
+        if (/^\d{5,8}$/.test(val)) idHits++;
+        if (val.length >= 6 && /[A-Za-z]{3,}/.test(val) && (val.includes(' ') || val.includes(',')) && !/^CU\d+/i.test(val)) nameHits++;
+      }
+      if (idHits > bestIdHits) { bestIdHits = idHits; bestIdCol = c; }
+      if (nameHits > bestNameHits) { bestNameHits = nameHits; bestNameCol = c; }
+    }
+    if (bestIdCol !== -1 && bestIdHits >= 2) idCol = bestIdCol;
+    if (bestNameCol !== -1 && bestNameHits >= 2) nameCol = bestNameCol;
+    if (idCol === -1) idCol = 2;
+    if (nameCol === -1) nameCol = 3;
+    if (titleCol === -1) titleCol = 4;
+    if (seqCol === -1 && metaLimit > 5) seqCol = 5;
+    if (teamCol === -1 && metaLimit > 6) teamCol = 6;
+
+    const parsed = [];
+    for (let r = headerRowIdx + 1; r < textGrid.length; r++) {
+      const row = textGrid[r] || [];
+      const empId = String(row[idCol] || '').trim();
+      const rawName = String(row[nameCol] || '').trim();
+      if (!empId && !rawName) continue;
+
+      const title = titleCol !== -1 ? String(row[titleCol] || '').trim() : '';
+      const teamId = teamCol !== -1 ? String(row[teamCol] || '').trim() : '';
+      const rawSeq = seqCol !== -1 ? String(row[seqCol] || '').trim() : '';
+
+      const sched = {};
+      dateCols.forEach(function(dc) {
+        sched[dc.dateObj.iso] = parseRosterDutyCell(row[dc.colIdx]);
+      });
+
+      const shiftLabel = rawSeq ? (rawSeq.toUpperCase().startsWith('SHIFT') ? rawSeq.toUpperCase() : 'SHIFT-' + rawSeq.toUpperCase()) : 'ROSTER STAFF';
+
+      parsed.push({
+        empId: empId,
+        name: formatDisplayName(rawName),
+        title: title,
+        teamId: teamId,
+        shiftSeq: shiftLabel,
+        scheduleByIsoDate: sched,
+        cyclePattern: detectRegularCyclePattern(sched, shiftLabel, teamId)
+      });
+    }
+
+    if (parsed.length > 0) {
+      staffRecords = parsed;
+      if (dateCols.length > 0) {
+        baseRosterYear = dateCols[0].dateObj.year;
+        baseRosterMonth = dateCols[0].dateObj.month0;
+        currentYear = baseRosterYear;
+        currentMonth = baseRosterMonth;
+      }
+
+      const countEligible = staffRecords.filter(isSwapEligibleStaff).length;
+      const srcTag = sourceFileLabel ? (' [' + sourceFileLabel + ']') : '';
+      renderSampleChips();
+      document.getElementById('rosterStatusText').innerText =
+        '✅ Live Roster Loaded' + srcTag + ' (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible 3x3/4x4 Staff) — Long Press on any Duty Day to find swap matches:';
+
+      closeSwapPanel();
+      const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
+      if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
+        selectStaffById(preferredId, true);
+      } else {
+        const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
+        selectStaffById(firstEligible.empId, true);
+      }
+    }
+  }
+
+  function quickLookup(id) {
+    document.getElementById('staffIdInput').value = id;
+    hideStaffDropdown();
+    selectStaffById(id, false);
+  }
+
+  function findStaffByIdOrName(queryText) {
+    const clean = String(queryText || '').trim();
+    if (!clean) return null;
+
+    let found = staffRecords.find(function(s) {
+      return String(s.empId).trim().toLowerCase() === clean.toLowerCase();
+    });
+    if (found) return found;
+
+    const idPrefixMatch = clean.match(/^(\d{4,10})\b/);
+    if (idPrefixMatch) {
+      found = staffRecords.find(function(s) {
+        return String(s.empId).trim() === idPrefixMatch[1];
+      });
+      if (found) return found;
+    }
+
+    found = staffRecords.find(function(s) {
+      return String(s.name).trim().toLowerCase() === clean.toLowerCase();
+    });
+    if (found) return found;
+
+    const qLower = clean.toLowerCase();
+    const partials = staffRecords.filter(function(s) {
+      return String(s.empId).toLowerCase().includes(qLower) ||
+             String(s.name).toLowerCase().includes(qLower);
+    });
+    if (partials.length > 0) return partials[0];
+
+    return null;
+  }
+
+  function selectStaffById(queryId, isAutoInit) {
+    const clean = String(queryId || '').trim();
+    if (!clean) {
+      alert('Please enter your Staff ID or Name first.');
+      return;
+    }
+
+    const found = findStaffByIdOrName(clean);
+
+    if (!found) {
+      if (!isAutoInit) {
+        alert('Staff "' + clean + '" was not found in the roster. Please check the Staff ID or Name.');
+      }
+      return;
+    }
+
+    try {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', '#staff=' + encodeURIComponent(found.empId));
+      }
+    } catch (e) {}
+
+    activeStaff = found;
+    closeSwapPanel();
+    hideStaffDropdown();
+    document.getElementById('staffIdInput').value = found.empId + ' - ' + found.name;
+    const clearBtnEl = document.getElementById('btnClearSearch');
+    if (clearBtnEl) clearBtnEl.style.display = 'flex';
+    document.getElementById('avatarInitials').innerText = getInitials(found.name);
+    document.getElementById('profName').innerText = found.name || 'STAFF MEMBER';
+    document.getElementById('profId').innerText = found.empId;
+    document.getElementById('profShift').innerText = found.shiftSeq || 'SHIFT-2';
+
+    const roleParts = [found.title, found.teamId].filter(Boolean);
+    document.getElementById('profRole').innerText = roleParts.length ? roleParts.join(' • ') : 'OPERATIONS';
+
+    const rBadge = document.getElementById('profRosterType');
+    const forceBtn = document.getElementById('btnForceSwapMode');
+    const hintBar = document.getElementById('swapHintBar');
+    const pat = found.cyclePattern;
+
+    if (isSwapEligibleStaff(found)) {
+      rBadge.className = 'p-badge p-badge-roster';
+      rBadge.innerText = pat ? pat.rosterBadgeText : '✅ SWAP ELIGIBLE ROSTER';
+      forceBtn.style.display = 'none';
+      hintBar.className = 'swap-hint-bar';
+      hintBar.innerHTML = '<span>💡 <strong>Duty Swap Rule (3x3 &amp; 4x4 Only):</strong> <strong>Long Press</strong> (or click <strong>🔄 Swap</strong>) on the duty day you want OFF. After a swap/repay, both staff must maintain <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>!</span>';
+    } else {
+      rBadge.className = 'p-badge p-badge-non3x3';
+      rBadge.innerText = pat ? pat.rosterBadgeText : '⚠️ SWAP NOT ALLOWED';
+      if (pat && (pat.rosterType === '3x3_9TO9' || pat.rosterType === '4x2')) {
+        forceBtn.style.display = 'none';
+      } else {
+        forceBtn.style.display = 'inline-block';
+      }
+      hintBar.className = 'swap-hint-bar swap-hint-warn';
+      let reasonMsg = 'This staff member is not on an eligible 3x3 or 4x4 roster.';
+      if (pat && pat.rosterType === '3x3_9TO9') {
+        reasonMsg = 'Duty swap is not allowed for 3x3 (9 TO 9 — 09:00-21:00 / 21:00-09:00) staff.';
+      } else if (pat && pat.rosterType === '4x2') {
+        reasonMsg = 'Duty swap is not allowed for 4x2 roster (4 Duty / 2 OFF) staff.';
+      }
+      hintBar.innerHTML = '<span>⚠️ <strong>Swap Not Available:</strong> ' + reasonMsg + ' Only 3x3 (Non-9-to-9) and 4x4 roster staff can swap/repay duties.</span>';
+    }
+
+    renderCalendar();
+  }
+
+  document.getElementById('btnForceSwapMode').addEventListener('click', function() {
+    if (!activeStaff) return;
+    if (!activeStaff.cyclePattern) {
+      activeStaff.cyclePattern = { rosterType: '3x3', swapEligible: true, rosterBadgeText: '✅ 3x3 ROSTER (MANUAL ENABLED)' };
+    } else {
+      activeStaff.cyclePattern.rosterType = '3x3';
+      activeStaff.cyclePattern.swapEligible = true;
+      activeStaff.cyclePattern.rosterBadgeText = '✅ 3x3 / 4x4 ROSTER (SWAP ELIGIBLE)';
+    }
+    selectStaffById(activeStaff.empId, false);
+  });
+
+  let suppressNextOutsideClick = false;
+
+  function attachLongPressHandlers(cellEl, isoDate, dutyObj) {
+    let pressTimer = null;
+    let startX = 0;
+    let startY = 0;
+    let didLongPressTrigger = false;
+
+    function startPress(clientX, clientY) {
+      startX = clientX;
+      startY = clientY;
+      didLongPressTrigger = false;
+      cellEl.classList.add('pressing');
+      if (pressTimer) clearTimeout(pressTimer);
+      pressTimer = setTimeout(function() {
+        didLongPressTrigger = true;
+        suppressNextOutsideClick = true;
+        cellEl.classList.remove('pressing');
+        if (navigator.vibrate) {
+          try { navigator.vibrate(40); } catch (e) {}
+        }
+        openSwapContextPopup(isoDate, dutyObj, clientX, clientY);
+        setTimeout(function() { suppressNextOutsideClick = false; }, 600);
+      }, 420);
+    }
+
+    function cancelPress() {
+      cellEl.classList.remove('pressing');
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    }
+
+    cellEl.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      if (e.target && e.target.classList.contains('cell-swap-btn')) return;
+      startPress(e.clientX, e.clientY);
+    });
+    cellEl.addEventListener('mousemove', function(e) {
+      if (Math.abs(e.clientX - startX) > 15 || Math.abs(e.clientY - startY) > 15) {
+        cancelPress();
+      }
+    });
+    cellEl.addEventListener('mouseup', cancelPress);
+    cellEl.addEventListener('mouseleave', cancelPress);
+
+    cellEl.addEventListener('touchstart', function(e) {
+      if (e.target && e.target.classList.contains('cell-swap-btn')) return;
+      if (e.touches.length === 1) {
+        startPress(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    cellEl.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 1) {
+        if (Math.abs(e.touches[0].clientX - startX) > 18 || Math.abs(e.touches[0].clientY - startY) > 18) {
+          cancelPress();
+        }
+      }
+    }, { passive: true });
+    cellEl.addEventListener('touchend', function(e) {
+      cancelPress();
+      if (didLongPressTrigger) {
+        e.preventDefault();
+        didLongPressTrigger = false;
+      }
+    });
+    cellEl.addEventListener('touchcancel', cancelPress);
+
+    cellEl.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelPress();
+      suppressNextOutsideClick = true;
+      const rect = cellEl.getBoundingClientRect();
+      const cx = e.clientX || (rect.left + rect.width / 2);
+      const cy = e.clientY || (rect.top + rect.height / 2);
+      openSwapContextPopup(isoDate, dutyObj, cx, cy);
+      setTimeout(function() { suppressNextOutsideClick = false; }, 600);
+    });
+
+    const swapMiniBtn = cellEl.querySelector('.cell-swap-btn');
+    if (swapMiniBtn) {
+      swapMiniBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cancelPress();
+        const rect = swapMiniBtn.getBoundingClientRect();
+        openSwapContextPopup(isoDate, dutyObj, rect.left + rect.width / 2, rect.bottom);
+      });
+    }
+  }
+
+  function openSwapContextPopup(isoDate, dutyObj, clientX, clientY) {
+    if (!isSwapEligibleStaff(activeStaff)) {
+      alert('Only 3x3 (Non-9-to-9) and 4x4 roster staff can swap duties. 3x3 (9-to-9) and 4x2 staff are not eligible.');
+      return;
+    }
+
+    pendingSwapIso = isoDate;
+    const popup = document.getElementById('swapContextPopup');
+    const shiftStr = dutyObj.category === 'MORNING' ? '☀️ Morning Duty' : '🌙 Night Duty';
+    document.getElementById('ctxHeaderText').innerText = formatHumanDate(isoDate) + ' • ' + shiftStr;
+
+    popup.style.display = 'block';
+    const rect = popup.getBoundingClientRect();
+    let left = clientX - 40;
+    let top = clientY + 10;
+
+    if (left + rect.width > window.innerWidth - 12) {
+      left = window.innerWidth - rect.width - 12;
+    }
+    if (left < 12) left = 12;
+    if (top + rect.height > window.innerHeight - 12) {
+      top = clientY - rect.height - 12;
+    }
+    if (top < 12) top = 12;
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+  }
+
+  function hideSwapContextPopup() {
+    document.getElementById('swapContextPopup').style.display = 'none';
+  }
+
+  document.addEventListener('pointerdown', function(e) {
+    if (suppressNextOutsideClick) return;
+    const popup = document.getElementById('swapContextPopup');
+    if (popup.style.display === 'block' && !popup.contains(e.target)) {
+      hideSwapContextPopup();
+    }
+  });
+
+  document.getElementById('btnTriggerSwapSearch').addEventListener('click', function() {
+    hideSwapContextPopup();
+    if (!pendingSwapIso || !activeStaff) return;
+    executeSwapSearch(pendingSwapIso);
+  });
+
+  function executeSwapSearch(swapIso) {
+    selectedSwapIso = swapIso;
+    renderCalendar();
+
+    const dutyObj = getDutyForDate(activeStaff, swapIso).duty;
+    const result = findSwapMatchesForDate(activeStaff, swapIso);
+    currentSwapMatches = result.matches;
+    currentSwapFilter = 'ALL';
+
+    document.querySelectorAll('.s-tab').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-filter') === 'ALL');
+    });
+
+    const shiftText = dutyObj.category === 'MORNING'
+      ? '☀️ Morning Duty (' + (dutyObj.time || '05:00-17:00') + ')'
+      : '🌙 Night Duty (' + (dutyObj.time || '17:00-05:00') + ')';
+
+    const myRType = activeStaff.cyclePattern ? activeStaff.cyclePattern.rosterType : '3x3';
+
+    document.getElementById('swapPanelTitle').innerText =
+      '🔄 Duty Swap Options for ' + formatHumanDate(swapIso) + ' — ' + shiftText;
+    document.getElementById('swapPanelSub').innerText =
+      'Requester: ' + activeStaff.name + ' (' + activeStaff.empId + ' • ' + activeStaff.shiftSeq + ' • ' + (activeStaff.title || 'Staff') + ' • ' + myRType + ' Roster)';
+
+    const sameSectionCount = currentSwapMatches.filter(function(m) { return m.isSameSectionOrCmt; }).length;
+    const pk15Count = currentSwapMatches.filter(function(m) { return m.isPk15Fallback; }).length;
+    const mutualCount = currentSwapMatches.filter(function(m) { return m.hasMutualRepay; }).length;
+
+    document.getElementById('cntAll').innerText = currentSwapMatches.length;
+    document.getElementById('cntSameSection').innerText = sameSectionCount;
+    document.getElementById('cntPk15').innerText = pk15Count;
+    document.getElementById('cntMutual').innerText = mutualCount;
+
+    const swapMonthName = MONTH_NAMES[parseInt(swapIso.split('-')[1], 10) - 1];
+    const offDatesPreview = result.myEligibleOffDates.map(function(o) {
+      const allowedShiftTxt = o.requiredCategory === 'NIGHT' ? '🌙 Night Only' : '☀️ Morning Only';
+      return formatHumanDate(o.iso) + ' [' + o.offPositionLabel + ' → ' + allowedShiftTxt + ']';
+    }).join(', ');
+    document.getElementById('myEligibleOffSummary').innerText =
+      swapMonthName + ' Valid Repay OFF Dates (Same Month + 12h Gap Safe): ' + (offDatesPreview || 'No eligible OFF slots remaining in this month');
+
+    renderSwapCards();
+
+    const panel = document.getElementById('swapResultsPanel');
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setSwapFilter(filterKey, btnEl) {
+    currentSwapFilter = filterKey;
+    document.querySelectorAll('.s-tab').forEach(function(b) { b.classList.remove('active'); });
+    btnEl.classList.add('active');
+    renderSwapCards();
+  }
+
+  function buildDualRosterSliderHtml(partnerStaff, requesterStaff, swapIso, repayOptions) {
+    const repayIsoSet = {};
+    (repayOptions || []).forEach(function(r) {
+      repayIsoSet[r.repayIso] = true;
+    });
+
+    const windowIsos = [];
+    for (let offset = -10; offset <= 10; offset++) {
+      windowIsos.push(addDaysIso(swapIso, offset));
+    }
+
+    function renderTrackPills(staffObj, isRequesterTrack) {
+      return windowIsos.map(function(iso) {
+        const res = getDutyForDate(staffObj, iso);
+        const duty = res.duty;
+        const p = iso.split('-');
+        const dayNum = parseInt(p[2], 10);
+        const m0 = parseInt(p[1], 10) - 1;
+        const dt = new Date(Date.UTC(parseInt(p[0], 10), m0, dayNum));
+        const wd = DAY_NAMES[dt.getUTCDay()];
+
+        let catClass = 'm-off';
+        let iconAndName = '🔴 OFF';
+        let timeShort = 'Rest';
+
+        if (!duty || duty.category === 'EMPTY') {
+          catClass = '';
+          iconAndName = '—';
+          timeShort = 'Empty';
+        } else if (duty.category === 'OFF') {
+          catClass = 'm-off';
+          iconAndName = '🔴 OFF';
+          timeShort = 'OFF';
+        } else if (duty.category === 'MORNING') {
+          catClass = 'm-morning';
+          iconAndName = duty.isOT ? '🔥 M-ROT' : '☀️ Morn';
+          timeShort = (duty.time || '05:00-17:00').replace(':00', '').replace(':00', '');
+        } else if (duty.category === 'NIGHT') {
+          catClass = 'm-night';
+          iconAndName = duty.isOT ? '🔥 N-ROT' : '🌙 Night';
+          timeShort = (duty.time || '17:00-05:00').replace(':00', '').replace(':00', '');
+        } else {
+          catClass = 'm-leave';
+          iconAndName = '📘 ' + (duty.label || 'LV');
+          timeShort = '';
+        }
+
+        const isSwapTarget = (iso === swapIso);
+        const isRepayTarget = Boolean(repayIsoSet[iso]);
+
+        let extraCls = '';
+        let markerHtml = '';
+        if (isSwapTarget) {
+          extraCls = ' swap-target-mark';
+          markerHtml = isRequesterTrack
+            ? '<span class="mini-mark-badge badge-swap-day">SWAP OFF</span>'
+            : '<span class="mini-mark-badge badge-swap-day">COVER DAY</span>';
+        } else if (isRepayTarget) {
+          extraCls = ' repay-target-mark';
+          markerHtml = isRequesterTrack
+            ? '<span class="mini-mark-badge badge-repay-day">REPAY</span>'
+            : '<span class="mini-mark-badge badge-repay-day">GET OFF</span>';
+        } else if (duty && duty.isOT) {
+          markerHtml = '<span class="mini-mark-badge badge-rot-mini">ROT</span>';
+        }
+
+        return (
+          '<div class="mini-day-pill ' + catClass + extraCls + '" data-iso="' + iso + '">' +
+            '<div class="mini-date-top">' + dayNum + ' ' + MONTH_SHORT[m0] + ' <span class="mini-wd">(' + wd + ')</span></div>' +
+            '<div class="mini-duty-tag">' + iconAndName + '</div>' +
+            (timeShort ? '<div class="mini-time-sub">' + timeShort + '</div>' : '') +
+            markerHtml +
+          '</div>'
+        );
+      }).join('');
+    }
+
+    const partnerShortName = partnerStaff.name.split(' ').slice(0, 2).join(' ');
+    const myShortName = requesterStaff.name.split(' ').slice(0, 2).join(' ');
+
+    return (
+      '<div class="dual-slider-box">' +
+        '<div class="dual-slider-header">' +
+          '<span class="dual-slider-title">↔️ Roster Comparison Slider (Slide Left / Right to Compare)</span>' +
+          '<div class="slider-nav-btns">' +
+            '<button type="button" class="btn-slide-step" data-dir="-1" title="Slide Backward">◀</button>' +
+            '<button type="button" class="btn-slide-step btn-slide-center" data-dir="0" title="Center on Swap Day">🎯 Swap Day</button>' +
+            '<button type="button" class="btn-slide-step" data-dir="1" title="Slide Forward">▶</button>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="slider-row-block">' +
+          '<div class="slider-row-label lbl-partner">' +
+            '<span>👤 ' + partnerShortName + ' (' + partnerStaff.shiftSeq + ')</span>' +
+            '<span>🔵 Swap Day Marked</span>' +
+          '</div>' +
+          '<div class="roster-h-track track-partner">' +
+            renderTrackPills(partnerStaff, false) +
+          '</div>' +
+        '</div>' +
+
+        '<div class="slider-row-block">' +
+          '<div class="slider-row-label lbl-me">' +
+            '<span>🙋 My Roster — ' + myShortName + ' (' + requesterStaff.shiftSeq + ')</span>' +
+            '<span>🟢 Repay Days Marked</span>' +
+          '</div>' +
+          '<div class="roster-h-track track-me">' +
+            renderTrackPills(requesterStaff, true) +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderSwapCards() {
+    const listEl = document.getElementById('swapCardsList');
+    listEl.innerHTML = '';
+
+    const filtered = currentSwapMatches.filter(function(item) {
+      if (currentSwapFilter === 'SAME_SECTION') return item.isSameSectionOrCmt;
+      if (currentSwapFilter === 'PK15') return item.isPk15Fallback;
+      if (currentSwapFilter === 'MUTUAL') return item.hasMutualRepay;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML =
+        '<div style="grid-column: 1 / -1; padding: 20px; text-align:center; color:#64748b; font-weight:700;">' +
+        '⚠️ No eligible 3x3 (Non-9-to-9) or 4x4 staff found for this date (or the max 4 consecutive duties + min 2 consecutive OFF rule could not be met).' +
+        '</div>';
+      return;
+    }
+
+    const reqDuty = getDutyForDate(activeStaff, selectedSwapIso).duty;
+    const reqDutyShort = reqDuty.category === 'MORNING' ? 'Morning (' + (reqDuty.time || '05:00-17:00') + ')' : 'Night (' + (reqDuty.time || '17:00-05:00') + ')';
+
+    filtered.forEach(function(item) {
+      const st = item.staff;
+      const stType = st.cyclePattern ? st.cyclePattern.rosterType : '3x3';
+      const isFirst = item.coverCheck.offPositionLabel.startsWith('1st');
+
+      const card = document.createElement('div');
+      card.className = 'swap-candidate-card' + (item.hasMutualRepay ? ' mutual-match' : '');
+
+      let repayHtml = '';
+      if (item.mutualRepayOptions.length > 0) {
+        const chips = item.mutualRepayOptions.slice(0, 6).map(function(rep) {
+          return '<div class="repay-chip">' +
+            rep.repayHuman + ' (' + rep.otherDutyType + ')' +
+            '<small>Your ' + rep.myOffLabel + ' • Streak: ' + rep.myNewStreak + '/4 • ' + rep.myRemainingOff + ' OFF safe</small>' +
+          '</div>';
+        }).join('');
+        repayHtml =
+          '<div class="repay-section">' +
+            '<div class="repay-title">🤝 Days You Can Repay Their Duty:</div>' +
+            '<div class="repay-chips">' + chips + '</div>' +
+          '</div>';
+      } else {
+        repayHtml =
+          '<div class="repay-section">' +
+            '<div class="no-repay-warn">⚠️ No matching duty found on your valid OFF days (1st OFF = Night / Last OFF = Morning) within this month</div>' +
+          '</div>';
+      }
+
+      const bestRepayText = item.mutualRepayOptions.length > 0
+        ? item.mutualRepayOptions[0].repayHuman + ' (' + item.mutualRepayOptions[0].otherDutyType + ')'
+        : 'Next valid OFF slot';
+
+      const copyMsg =
+        'Assalam-o-Alaikum ' + st.name + ', ' +
+        formatHumanDate(selectedSwapIso) + ' ko meri ' + reqDutyShort + ' hai. ' +
+        'Aapki us din ' + item.coverCheck.offPositionLabel + ' hai (Max 4 duty + ' + item.coverCheck.remainingOff + ' OFF safe). ' +
+        'Kya hum duty swap kar sakte hain? Main aapki duty ' + bestRepayText + ' ko repay kar doon ga.';
+
+      const dualSliderHtml = buildDualRosterSliderHtml(st, activeStaff, selectedSwapIso, item.mutualRepayOptions);
+
+      card.innerHTML =
+        '<div>' +
+          '<div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">' +
+            '<span class="sec-priority-pill ' + item.sectionBadgeClass + '">' + item.sectionBadgeText + '</span>' +
+            '<span class="role-lock-pill">👷 Same Role: ' + getNormalizedRoleKey(st) + '</span>' +
+          '</div>' +
+          '<div class="cand-top">' +
+            '<div>' +
+              '<div class="cand-name">' + st.name + '</div>' +
+              '<div class="cand-meta">ID: ' + st.empId + ' • <strong>' + st.shiftSeq + '</strong> • ' + (st.title || 'Staff') + (st.teamId ? ' (' + st.teamId + ')' : '') + ' • <strong>' + stType + '</strong></div>' +
+            '</div>' +
+            '<span class="off-pos-badge ' + (isFirst ? 'pos-first' : 'pos-last') + '">' + item.coverCheck.offPositionLabel + '</span>' +
+          '</div>' +
+          dualSliderHtml +
+          '<div class="cand-status-box" style="margin-top:8px;">' +
+            '✅ <strong>' + formatHumanDate(selectedSwapIso) + ':</strong> ' + item.coverCheck.offPositionLabel + ' • Duty Streak: <strong>' + item.coverCheck.newStreak + '/4 max</strong> • Remaining OFF: <strong>' + item.coverCheck.remainingOff + ' days</strong>' +
+          '</div>' +
+          repayHtml +
+        '</div>' +
+        '<button type="button" class="btn-copy-swap">📋 Copy WhatsApp Swap Request</button>';
+
+      const copyBtn = card.querySelector('.btn-copy-swap');
+      copyBtn.addEventListener('click', function() {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(copyMsg).then(function() {
+            copyBtn.innerText = '✅ Message Copied!';
+            setTimeout(function() { copyBtn.innerText = '📋 Copy WhatsApp Swap Request'; }, 2000);
+          });
+        } else {
+          alert(copyMsg);
+        }
+      });
+
+      listEl.appendChild(card);
+
+      const trackPartner = card.querySelector('.track-partner');
+      const trackMe = card.querySelector('.track-me');
+      let activeDriver = null;
+      let driverClearTimer = null;
+
+      function setBothScrollLeft(val) {
+        const maxScroll = Math.max(0, trackPartner.scrollWidth - trackPartner.clientWidth);
+        const clamped = Math.max(0, Math.min(maxScroll, val));
+        trackPartner.scrollLeft = clamped;
+        trackMe.scrollLeft = clamped;
+      }
+
+      function centerBothTracksOnSwapDay() {
+        const targetPill = trackPartner.querySelector('.swap-target-mark');
+        if (targetPill) {
+          const targetScrollLeft = targetPill.offsetLeft - (trackPartner.clientWidth / 2) + (targetPill.offsetWidth / 2);
+          setBothScrollLeft(targetScrollLeft);
+        }
+      }
+
+      function enableMouseDragScroll(trackEl, driverName) {
+        let isMouseDown = false;
+        let startX = 0;
+        let startScroll = 0;
+
+        trackEl.addEventListener('mousedown', function(e) {
+          if (e.button !== 0) return;
+          isMouseDown = true;
+          activeDriver = driverName;
+          trackEl.classList.add('is-dragging');
+          startX = e.pageX;
+          startScroll = trackEl.scrollLeft;
+        });
+
+        window.addEventListener('mousemove', function(e) {
+          if (!isMouseDown) return;
+          e.preventDefault();
+          const dx = e.pageX - startX;
+          setBothScrollLeft(startScroll - dx);
+        });
+
+        window.addEventListener('mouseup', function() {
+          if (!isMouseDown) return;
+          isMouseDown = false;
+          trackEl.classList.remove('is-dragging');
+          activeDriver = null;
+        });
+      }
+
+      if (trackPartner && trackMe) {
+        enableMouseDragScroll(trackPartner, 'partner');
+        enableMouseDragScroll(trackMe, 'me');
+
+        trackPartner.addEventListener('scroll', function() {
+          if (activeDriver === 'me') return;
+          activeDriver = 'partner';
+          trackMe.scrollLeft = trackPartner.scrollLeft;
+          clearTimeout(driverClearTimer);
+          driverClearTimer = setTimeout(function() { activeDriver = null; }, 80);
+        }, { passive: true });
+
+        trackMe.addEventListener('scroll', function() {
+          if (activeDriver === 'partner') return;
+          activeDriver = 'me';
+          trackPartner.scrollLeft = trackMe.scrollLeft;
+          clearTimeout(driverClearTimer);
+          driverClearTimer = setTimeout(function() { activeDriver = null; }, 80);
+        }, { passive: true });
+
+        card.querySelectorAll('.btn-slide-step').forEach(function(stepBtn) {
+          stepBtn.addEventListener('click', function() {
+            const dir = parseInt(this.getAttribute('data-dir'), 10);
+            activeDriver = null;
+            if (dir === 0) {
+              centerBothTracksOnSwapDay();
+            } else {
+              setBothScrollLeft(trackPartner.scrollLeft + (dir * 210));
+            }
+          });
+        });
+
+        setTimeout(centerBothTracksOnSwapDay, 30);
+      }
+    });
+  }
+
+  function closeSwapPanel() {
+    selectedSwapIso = null;
+    document.getElementById('swapResultsPanel').style.display = 'none';
+    if (activeStaff) renderCalendar();
+  }
+
+  document.getElementById('btnCloseSwap').addEventListener('click', closeSwapPanel);
+
+  function renderCalendar() {
+    if (!activeStaff) return;
+
+    document.getElementById('monthYearTitle').innerText = MONTH_NAMES[currentMonth] + ' ' + currentYear;
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+
+    DAY_NAMES.forEach(function(dName) {
+      const hdr = document.createElement('div');
+      hdr.className = 'cal-day-name';
+      hdr.innerText = dName;
+      grid.appendChild(hdr);
+    });
+
+    const firstDayWeekday = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    const today = new Date();
+    const todayIso = toIsoDate(today.getFullYear(), today.getMonth(), today.getDate());
+
+    let countMorning = 0;
+    let countNight = 0;
+    let countOff = 0;
+    let countRot = 0;
+    let actualDaysInView = 0;
+    let projectedDaysInView = 0;
+
+    for (let e = 0; e < firstDayWeekday; e++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'cal-cell empty';
+      grid.appendChild(emptyCell);
+    }
+
+    const staffEligible = isSwapEligibleStaff(activeStaff);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = toIsoDate(currentYear, currentMonth, day);
+      const resolved = getDutyForDate(activeStaff, iso);
+      const duty = resolved.duty;
+      const isProjected = resolved.isProjected;
+
+      if (duty) {
+        if (isProjected) projectedDaysInView++;
+        else actualDaysInView++;
+      }
+
+      const canSwap = staffEligible && isWorkingDuty(duty);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell' +
+        (iso === todayIso ? ' today-cell' : '') +
+        (isProjected ? ' projected-cell' : '') +
+        (canSwap ? ' swappable-cell' : '') +
+        (iso === selectedSwapIso ? ' swap-selected-cell' : '');
+
+      let iconHtml = '';
+      let labelText = '';
+      let timeText = '';
+      let badgeHtml = '';
+
+      if (!duty) {
+        cell.classList.add('cell-nodata');
+        labelText = 'No Data';
+      } else if (duty.category === 'EMPTY') {
+        cell.classList.add('cell-nodata');
+        labelText = '';
+        timeText = '';
+      } else if (duty.category === 'MORNING') {
+        cell.classList.add('cell-morning');
+        iconHtml = '<span class="shift-icon" title="Morning Duty">☀️</span>';
+        labelText = (!isProjected && duty.isOT) ? 'Morning ROT' : 'Morning Duty';
+        timeText = duty.time || '05:00-17:00';
+        if (!isProjected && duty.isOT) {
+          badgeHtml = '<span class="rot-pill">MORNING ROT</span>';
+          countRot++;
+        } else if (isProjected) {
+          badgeHtml = '<span class="est-tag">Auto Pattern</span>';
+        }
+        countMorning++;
+      } else if (duty.category === 'NIGHT') {
+        cell.classList.add('cell-night');
+        iconHtml = '<span class="shift-icon grey-moon" title="Night Duty">🌙</span>';
+        labelText = (!isProjected && duty.isOT) ? 'Night ROT' : 'Night Duty';
+        timeText = duty.time || '17:00-05:00';
+        if (!isProjected && duty.isOT) {
+          badgeHtml = '<span class="rot-pill">NIGHT ROT</span>';
+          countRot++;
+        } else if (isProjected) {
+          badgeHtml = '<span class="est-tag">Auto Pattern</span>';
+        }
+        countNight++;
+      } else if (duty.category === 'OFF') {
+        cell.classList.add('cell-off');
+        labelText = duty.label || 'OFF';
+        timeText = 'Rest Day';
+        if (isProjected) {
+          badgeHtml = '<span class="est-tag">Auto Pattern</span>';
+        }
+        countOff++;
+      } else {
+        cell.classList.add('cell-leave');
+        iconHtml = '<span class="shift-icon">📘</span>';
+        labelText = duty.label || 'LEAVE';
+        timeText = duty.time || '';
+      }
+
+      const swapBtnHtml = canSwap ? '<button type="button" class="cell-swap-btn" title="Long press or click to swap duty">🔄 Swap</button>' : '';
+
+      cell.innerHTML =
+        '<div class="cell-top">' +
+          '<span class="date-num">' + day + '</span>' +
+          iconHtml +
+        '</div>' +
+        '<div class="cell-body">' +
+          '<div class="shift-label">' + labelText + '</div>' +
+          (timeText ? '<div class="shift-time">' + timeText + '</div>' : '') +
+          badgeHtml +
+          swapBtnHtml +
+        '</div>';
+
+      if (canSwap) {
+        attachLongPressHandlers(cell, iso, duty);
+      }
+
+      grid.appendChild(cell);
+    }
+
+    document.getElementById('statMorning').innerText = countMorning;
+    document.getElementById('statNight').innerText = countNight;
+    document.getElementById('statOff').innerText = countOff;
+    document.getElementById('statRot').innerText = countRot;
+
+    const isPureProjected = (projectedDaysInView > 0 && actualDaysInView === 0);
+    document.getElementById('statRotPill').style.display = isPureProjected ? 'none' : 'block';
+    document.getElementById('legendRotItem').style.display = isPureProjected ? 'none' : 'inline-flex';
+
+    const banner = document.getElementById('modeBanner');
+    const patText = activeStaff.cyclePattern ? activeStaff.cyclePattern.patternText : 'Regular Shift Cycle';
+
+    if (projectedDaysInView === 0 && actualDaysInView > 0) {
+      banner.className = 'mode-banner mode-actual';
+      banner.innerHTML =
+        '<span>✅ Official Live Roster Schedule (Actual Duty + ROT included)</span>' +
+        '<span class="cycle-pill">Detected Regular Cycle: ' + patText + '</span>';
+    } else if (isPureProjected) {
+      banner.className = 'mode-banner mode-projected';
+      banner.innerHTML =
+        '<span>🔄 Auto-Repeated Regular Shift Schedule (Regular duty & OFF days only — ROT excluded)</span>' +
+        '<span class="cycle-pill">Cycle: ' + patText + '</span>';
+    } else {
+      banner.className = 'mode-banner mode-projected';
+      banner.innerHTML =
+        '<span>📅 Mixed View: Live Roster Days + Remaining Days Auto-Repeated (Regular Shift Only)</span>' +
+        '<span class="cycle-pill">Cycle: ' + patText + '</span>';
+    }
+  }
+
+  document.getElementById('btnViewRoster').addEventListener('click', function() {
+    selectStaffById(document.getElementById('staffIdInput').value, false);
+  });
+
+  document.getElementById('btnPrevMonth').addEventListener('click', function() {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    closeSwapPanel();
+  });
+
+  document.getElementById('btnNextMonth').addEventListener('click', function() {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    closeSwapPanel();
+  });
+
+  document.getElementById('btnRosterMonth').addEventListener('click', function() {
+    currentYear = baseRosterYear;
+    currentMonth = baseRosterMonth;
+    closeSwapPanel();
+  });
+
+  // =========================================================================
+  // LIVE SEARCH DROPDOWN (BY STAFF ID OR STAFF NAME ACROSS FULL ROSTER)
+  // =========================================================================
+  const staffInputEl = document.getElementById('staffIdInput');
+  const dropdownEl = document.getElementById('staffSearchDropdown');
+  const clearSearchBtn = document.getElementById('btnClearSearch');
+  let dropdownActiveIndex = -1;
+
+  function hideStaffDropdown() {
+    dropdownEl.style.display = 'none';
+    dropdownActiveIndex = -1;
+  }
+
+  function renderStaffDropdown(queryStr) {
+    const q = String(queryStr || '').trim().toLowerCase();
+    clearSearchBtn.style.display = q.length > 0 ? 'flex' : 'none';
+
+    let matches = [];
+    if (!q) {
+      matches = staffRecords.slice(0, 35);
+    } else {
+      const startsId = [];
+      const startsName = [];
+      const containsAny = [];
+
+      staffRecords.forEach(function(st) {
+        const idStr = String(st.empId || '').toLowerCase();
+        const nameStr = String(st.name || '').toLowerCase();
+        const comboStr = idStr + ' - ' + nameStr;
+        if (comboStr === q) {
+          startsId.unshift(st);
+        } else if (idStr.startsWith(q)) {
+          startsId.push(st);
+        } else if (nameStr.startsWith(q)) {
+          startsName.push(st);
+        } else if (idStr.includes(q) || nameStr.includes(q) || String(st.teamId || '').toLowerCase().includes(q)) {
+          containsAny.push(st);
+        }
+      });
+      matches = startsId.concat(startsName, containsAny).slice(0, 50);
+    }
+
+    if (matches.length === 0) {
+      dropdownEl.innerHTML = '<div class="dd-header-info">❌ No staff found matching "' + queryStr + '"</div>';
+      dropdownEl.style.display = 'block';
+      return;
+    }
+
+    let headerHtml = '<div class="dd-header-info">📋 ' + matches.length + ' Staff Found (Click to select)</div>';
+    let itemsHtml = matches.map(function(st, idx) {
+      const elig = isSwapEligibleStaff(st);
+      const rType = st.cyclePattern ? st.cyclePattern.rosterType : 'ROSTER';
+      const badgeCls = elig ? 'dd-elig' : 'dd-nonelig';
+      const badgeTxt = elig ? ('✅ ' + rType) : ('⚠️ ' + rType);
+      return (
+        '<div class="dd-item" data-empid="' + st.empId + '" data-idx="' + idx + '">' +
+          '<div class="dd-item-left">' +
+            '<div class="dd-item-name">' + st.empId + ' — ' + st.name + '</div>' +
+            '<div class="dd-item-sub">' + (st.shiftSeq || '') + (st.title ? ' • ' + st.title : '') + (st.teamId ? ' • ' + st.teamId : '') + '</div>' +
+          '</div>' +
+          '<span class="dd-item-badge ' + badgeCls + '">' + badgeTxt + '</span>' +
+        '</div>'
+      );
+    }).join('');
+
+    dropdownEl.innerHTML = headerHtml + itemsHtml;
+    dropdownEl.style.display = 'block';
+    dropdownActiveIndex = -1;
+
+    dropdownEl.querySelectorAll('.dd-item').forEach(function(itemEl) {
+      itemEl.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        const empId = this.getAttribute('data-empid');
+        selectStaffById(empId, false);
+      });
+    });
+  }
+
+  staffInputEl.addEventListener('input', function() {
+    renderStaffDropdown(this.value);
+  });
+
+  staffInputEl.addEventListener('focus', function() {
+    this.select();
+    renderStaffDropdown('');
+  });
+
+  staffInputEl.addEventListener('keydown', function(e) {
+    const items = dropdownEl.querySelectorAll('.dd-item');
+    if (e.key === 'ArrowDown' && items.length > 0) {
+      e.preventDefault();
+      dropdownActiveIndex = (dropdownActiveIndex + 1) % items.length;
+      items.forEach(function(el, i) { el.classList.toggle('dd-active', i === dropdownActiveIndex); });
+      items[dropdownActiveIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp' && items.length > 0) {
+      e.preventDefault();
+      dropdownActiveIndex = (dropdownActiveIndex - 1 + items.length) % items.length;
+      items.forEach(function(el, i) { el.classList.toggle('dd-active', i === dropdownActiveIndex); });
+      items[dropdownActiveIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (dropdownActiveIndex >= 0 && items[dropdownActiveIndex]) {
+        selectStaffById(items[dropdownActiveIndex].getAttribute('data-empid'), false);
+      } else {
+        selectStaffById(this.value, false);
+      }
+    } else if (e.key === 'Escape') {
+      hideStaffDropdown();
+    }
+  });
+
+  clearSearchBtn.addEventListener('click', function() {
+    staffInputEl.value = '';
+    clearSearchBtn.style.display = 'none';
+    staffInputEl.focus();
+    renderStaffDropdown('');
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-input-wrap')) {
+      hideStaffDropdown();
+    }
+  });
+
+  // =========================================================================
+  // ADD TO DESKTOP / APP INSTALLATION & PERSONAL SHORTCUT GENERATOR
+  // =========================================================================
+  let deferredInstallPrompt = null;
+
+  (function registerDynamicPwaManifest() {
+    try {
+      const iconSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='#0f172a'/><rect x='48' y='72' width='416' height='368' rx='48' fill='#2563eb'/><rect x='48' y='168' width='416' height='272' rx='36' fill='#ffffff'/><text x='256' y='138' font-family='Arial' font-size='56' font-weight='bold' fill='#ffffff' text-anchor='middle'>ROSTER</text><text x='256' y='335' font-family='Arial' font-size='145' font-weight='bold' fill='#0f172a' text-anchor='middle'>3x3</text></svg>";
+      const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+      const appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      appleIcon.href = iconUrl;
+      document.head.appendChild(appleIcon);
+
+      const metaCapable = document.createElement('meta');
+      metaCapable.name = 'apple-mobile-web-app-capable';
+      metaCapable.content = 'yes';
+      document.head.appendChild(metaCapable);
+
+      const metaMobileCapable = document.createElement('meta');
+      metaMobileCapable.name = 'mobile-web-app-capable';
+      metaMobileCapable.content = 'yes';
+      document.head.appendChild(metaMobileCapable);
+
+      if (window.location.protocol.startsWith('http')) {
+        const manifestObj = {
+          name: 'Staff Monthly Roster & Swap App',
+          short_name: 'My Roster',
+          start_url: window.location.href,
+          display: 'standalone',
+          background_color: '#0f172a',
+          theme_color: '#0f172a',
+          icons: [{ src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }]
+        };
+        const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = URL.createObjectURL(blob);
+        document.head.appendChild(link);
+      }
+    } catch (e) {}
+  })();
+
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const nativeBtn = document.getElementById('btnInstallNativeApp');
+    if (nativeBtn) nativeBtn.style.display = 'flex';
+  });
+
+  function bindDesktopModalEvents() {
+    const desktopModal = document.getElementById('desktopAppModal');
+    const btnAdd = document.getElementById('btnAddToDesktop');
+    if (btnAdd && desktopModal) {
+      btnAdd.addEventListener('click', function() {
+        if (activeStaff) {
+          const sumEl = document.getElementById('modalStaffSummary');
+          if (sumEl) {
+            sumEl.innerText =
+              '👤 Selected Staff: ' + activeStaff.name + ' (ID: ' + activeStaff.empId + ' • ' + (activeStaff.shiftSeq || '') + ')';
+          }
+        }
+        desktopModal.style.display = 'flex';
+      });
+    }
+
+    const btnClose = document.getElementById('btnCloseDesktopModal');
+    if (btnClose && desktopModal) {
+      btnClose.addEventListener('click', function() {
+        desktopModal.style.display = 'none';
+      });
+    }
+
+    if (desktopModal) {
+      desktopModal.addEventListener('click', function(e) {
+        if (e.target === desktopModal) {
+          desktopModal.style.display = 'none';
+        }
+      });
+    }
+
+    const btnNative = document.getElementById('btnInstallNativeApp');
+    if (btnNative) {
+      btnNative.addEventListener('click', async function() {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        this.style.display = 'none';
+      });
+    }
+
+    const btnOffline = document.getElementById('btnDownloadOfflineApp');
+    if (btnOffline) {
+      btnOffline.addEventListener('click', function() {
+        const targetId = activeStaff ? activeStaff.empId : '497038';
+        const targetName = activeStaff ? activeStaff.name.replace(/[^A-Za-z0-9]+/g, '_') : 'Staff';
+        const payload = {
+          staffRecords: staffRecords,
+          defaultStaffId: targetId,
+          baseRosterYear: baseRosterYear,
+          baseRosterMonth: baseRosterMonth
+        };
+
+        let docHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        docHtml = docHtml.replace('id="desktopAppModal" style="display: flex;"', 'id="desktopAppModal"');
+        const preloadScript = '<script>window.__PRELOADED_ROSTER_APP__ = ' + JSON.stringify(payload).replace(/<\/script/gi, '<\\/script') + ';<\/script>';
+        docHtml = docHtml.replace('</head>', preloadScript + '\n</head>');
+
+        const blob = new Blob([docHtml], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Roster_App_' + targetName + '_' + targetId + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    }
+
+    const btnCopyLink = document.getElementById('btnCopyDirectStaffLink');
+    if (btnCopyLink) {
+      btnCopyLink.addEventListener('click', function() {
+        const targetId = activeStaff ? activeStaff.empId : '497038';
+        const baseUrl = window.location.href.split('#')[0].split('?')[0];
+        const directUrl = baseUrl + '?staff=' + encodeURIComponent(targetId) + '#staff=' + encodeURIComponent(targetId);
+        const btn = this;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(directUrl).then(function() {
+            btn.querySelector('span:last-child').innerText = '✅ Copied!';
+            setTimeout(function() { btn.querySelector('span:last-child').innerText = '📋 Copy'; }, 2200);
+          });
+        } else {
+          prompt('Copy this link to save as a Desktop shortcut or Bookmark:', directUrl);
+        }
+      });
+    }
+  }
+
+  function getRequestedStaffFromUrl() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('staff')) return urlParams.get('staff').trim();
+      if (window.location.hash && window.location.hash.includes('staff=')) {
+        return decodeURIComponent(window.location.hash.split('staff=')[1].split('&')[0]).trim();
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // =========================================================================
+  // BOOT SEQUENCE: AUTO-CONNECT TO LIVE GOOGLE DRIVE ROSTER ON PAGE OPEN
+  // =========================================================================
+  let hasBootedRosterApp = false;
+  async function initRosterApp() {
+    if (hasBootedRosterApp) return;
+    hasBootedRosterApp = true;
+
+    bindDesktopModalEvents();
+    showLiveProgressBar(
+      'Live Roster Loading...',
+      'Page open hoty hi latest roster load ho raha hai...',
+      'Step 1/4: Initializing...',
+      12
+    );
+
+    await ensureXlsxReady();
+
+    // 1. Load preloaded offline snapshot first if saved as personal desktop file
+    if (window.__PRELOADED_ROSTER_APP__ && Array.isArray(window.__PRELOADED_ROSTER_APP__.staffRecords) && window.__PRELOADED_ROSTER_APP__.staffRecords.length > 0) {
+      const pre = window.__PRELOADED_ROSTER_APP__;
+      staffRecords = pre.staffRecords;
+      baseRosterYear = pre.baseRosterYear || 2026;
+      baseRosterMonth = (typeof pre.baseRosterMonth === 'number') ? pre.baseRosterMonth : 10;
+      currentYear = baseRosterYear;
+      currentMonth = baseRosterMonth;
+      renderSampleChips();
+      const startId = getRequestedStaffFromUrl() || pre.defaultStaffId || staffRecords[0].empId;
+      selectStaffById(startId, true);
+    } else {
+      // 2. Load last cached live roster from localStorage so page renders immediately on open
+      try {
+        const cachedRaw = localStorage.getItem(ROSTER_CACHE_KEY);
+        if (cachedRaw) {
+          const cachedPayload = JSON.parse(cachedRaw);
+          applyRosterPayload(cachedPayload, true);
+        }
+      } catch (e) {}
+    }
+
+    // 3. Automatically fetch latest live roster from Google Drive via Apps Script
+    const liveSuccess = await loadLiveRosterFromDrive('', false);
+
+    // 4. Fallback to sample demo data only if Live Drive, Cache, and Offline Snapshot all failed
+    if (!liveSuccess && staffRecords.length === 0) {
+      document.getElementById('rosterStatusText').innerText =
+        '⚠️ Live Google Drive roster is currently unavailable (Sample Data Loaded) — Upload Excel manually or click 🔄 Sync Live:';
+      loadSampleDemoData();
+    }
+
+    // 5. Re-sync automatically when tab/app becomes visible again
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        const liveSel = document.getElementById('liveFileSelect');
+        const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : currentLiveFileName;
+        loadLiveRosterFromDrive(chosen, true);
+      }
+    });
+
+    // 6. Background auto-check every 5 minutes for newly synced SharePoint -> Drive roster files
+    setInterval(function() {
+      const liveSel = document.getElementById('liveFileSelect');
+      const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : currentLiveFileName;
+      loadLiveRosterFromDrive(chosen, true);
+    }, 300000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRosterApp);
+  } else {
+    initRosterApp();
+  }
+  window.addEventListener('load', function() {
+    if (!hasBootedRosterApp) initRosterApp();
+  });
+</script>
+
+  <!-- Add to Desktop / App Modal -->
+  <div class="app-modal-backdrop" id="desktopAppModal">
+    <div class="app-modal-card">
+      <div class="app-modal-head">
+        <h3>📲 Add Roster to Desktop / Mobile App</h3>
+        <button type="button" class="btn-close-swap" id="btnCloseDesktopModal">✖ Close</button>
+      </div>
+      <div class="app-modal-body">
+        <div id="modalStaffSummary" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:9px 12px; border-radius:9px; font-weight:700; font-size:12.5px;">
+          Selected Staff: ADEEL ASGHAR (497038)
+        </div>
+        <p style="margin:10px 0 6px;">You can save this page to your Desktop or Mobile Home Screen so your roster opens directly like an app with one click:</p>
+        <div class="app-action-grid">
+          <button type="button" class="btn-app-primary" id="btnInstallNativeApp" style="display:none;">
+            <span>🚀 Install as Desktop / Phone App (1-Click)</span>
+            <span>➔</span>
+          </button>
+          <button type="button" class="btn-app-primary" id="btnDownloadOfflineApp">
+            <span>💾 Download Personal Roster App File (.html)</span>
+            <span>⬇ Save</span>
+          </button>
+          <button type="button" class="btn-app-secondary" id="btnCopyDirectStaffLink">
+            <span>🔗 Copy Direct Staff Roster Link (With Auto-Open ID)</span>
+            <span>📋 Copy</span>
+          </button>
+        </div>
+        <div class="install-steps-box">
+          <div style="margin-bottom:5px;"><strong>💻 Windows / Mac Desktop (Chrome / Edge):</strong><br>
+          1) Click <strong>Download Personal Roster App File</strong> above to save it to your Desktop — or click the browser top-right <strong>⋮ Menu → Save and share → Create shortcut / Install page as app</strong> (check "Open as window").</div>
+          <div><strong>📱 Mobile (Android / iPhone):</strong><br>
+          Open your browser menu (<strong>⋮</strong> or <strong>Share</strong>) and tap <strong>"Add to Home screen"</strong> — it will create an app icon on your home screen!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
