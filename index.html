@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22 Blank Cell Indicator)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.5 Fair Mutual Swap Only)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1859,11 +1859,11 @@
   <!-- Top Header -->
   <div class="top-bar">
     <div class="brand-title">
-      <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span> &amp; 3x3 / 4x4 Duty Swap</h1>
-      <span>Live SharePoint → Google Drive Auto-Sync • Same Role Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
+      <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span> &amp; 3x3 / 4x4 Mutual Duty Swap</h1>
+      <span>Live SharePoint → Google Drive Auto-Sync • Mutual Two-Way Fair Swap Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v22</div>
+      <div class="ver-pill-box">v22.5</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -1966,7 +1966,7 @@
       <div id="modeBanner" class="mode-banner mode-actual"></div>
 
       <div class="swap-hint-bar" id="swapHintBar">
-        <span>💡 <strong>Duty Swap Rule (3x3 &amp; 4x4 Only):</strong> <strong>Long Press</strong> (or click <strong>🔄 Swap</strong>) on the duty day you want OFF. 3x3 (9-to-9) and 4x2 staff cannot swap. After a swap/repay, both staff must maintain <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>!</span>
+        <span>💡 <strong>Fair Mutual Duty Swap Rule (3x3 &amp; 4x4 Only):</strong> <strong>Long Press</strong> (or click <strong>🔄 Swap</strong>) on the duty day you want OFF. Only staff who can cover your duty <strong>AND whose duty you can also repay in the same month</strong> will be shown!</span>
       </div>
 
       <div class="cal-scroll-wrap">
@@ -1978,24 +1978,23 @@
     <div class="swap-results-panel" id="swapResultsPanel">
       <div class="swap-panel-header">
         <div>
-          <h3 id="swapPanelTitle">🔄 Duty Swap Matches</h3>
+          <h3 id="swapPanelTitle">🔄 Fair Mutual Duty Swap Matches</h3>
           <div class="swap-panel-sub" id="swapPanelSub"></div>
         </div>
         <button type="button" class="btn-close-swap" id="btnCloseSwap">✖ Close Swap Panel</button>
       </div>
 
       <div class="swap-rules-strip">
-        <span>✅ <strong>Rule 1 (Strict Same Role Only):</strong> <strong>EO (Equipment Operator) can only swap with EO</strong>, <strong>Team Leader only with Team Leader</strong>, and every role can only swap with staff of the <strong>Exact Same Role</strong> (cross-role swaps are not allowed).</span>
-        <span>✅ <strong>Rule 2 (Section Priority — CMT First → PK15 Fallback):</strong> Matches from your <strong>Same Section (CMT)</strong> are prioritized at the top. If no match is found in <strong>CMT</strong>, same-role staff in the <strong>PK15</strong> area are checked next.</span>
-        <span>✅ <strong>Rule 3 (Same Month + 12h Rest Gap + Max 4 Duties &amp; Min 2 OFF):</strong> Repayment must occur within the same month. <strong>1st OFF = 🌙 Night Only</strong> and <strong>Last OFF = ☀️ Morning Only</strong> (12h rest gap), and both staff must retain <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>.</span>
+        <span>✅ <strong>Rule 1 (Mutual Two-Way Fair Swap Only):</strong> A match is valid <strong>ONLY</strong> when the partner can cover your duty on their OFF day <strong>AND you can also repay their duty on your valid OFF day within the same month</strong> (one-sided swaps without payback are excluded).</span>
+        <span>✅ <strong>Rule 2 (Strict Same Role + Section Priority):</strong> <strong>Exact Same Role Only</strong> (EO ↔ EO, TL ↔ TL). <strong>Same Section (CMT)</strong> is prioritized at Priority 1, followed by <strong>PK15</strong> at Priority 2.</span>
+        <span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties &amp; Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> and <strong>Last OFF = ☀️ Morning Only</strong>, both staff must keep <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>, and OFF blocks attached to Leave/Training are excluded.</span>
       </div>
 
       <div class="swap-filter-bar">
         <div class="swap-filter-tabs">
-          <button type="button" class="s-tab active" data-filter="ALL" onclick="setSwapFilter('ALL', this)">👷 All Same-Role Matches (<span id="cntAll">0</span>)</button>
+          <button type="button" class="s-tab active" data-filter="ALL" onclick="setSwapFilter('ALL', this)">🤝 All Fair Mutual Matches (<span id="cntAll">0</span>)</button>
           <button type="button" class="s-tab" data-filter="SAME_SECTION" onclick="setSwapFilter('SAME_SECTION', this)">🏢 Priority 1: Same Section / CMT (<span id="cntSameSection">0</span>)</button>
           <button type="button" class="s-tab" data-filter="PK15" onclick="setSwapFilter('PK15', this)">📍 Priority 2: PK15 Area (<span id="cntPk15">0</span>)</button>
-          <button type="button" class="s-tab" data-filter="MUTUAL" onclick="setSwapFilter('MUTUAL', this)">🤝 Mutual Repay Match (<span id="cntMutual">0</span>)</button>
         </div>
         <div style="font-size:11.5px; color:#475569; font-weight:700;" id="myEligibleOffSummary"></div>
       </div>
@@ -2008,7 +2007,7 @@
   <div class="context-popup" id="swapContextPopup">
     <div class="context-popup-header" id="ctxHeaderText">15 Nov 2026 • Morning Duty</div>
     <button type="button" class="context-action-btn" id="btnTriggerSwapSearch">
-      🔄 Request Duty Swap for This Day
+      🔄 Find Fair Mutual Duty Swap
     </button>
   </div>
 
@@ -2170,7 +2169,6 @@
     const textGrid = XLSX.utils.sheet_to_json(sheetObj, { header: 1, defval: '', raw: false });
     if (!textGrid || textGrid.length === 0) return sheetName || '';
 
-    // Find table header row (where Employee Number / Name / Dates appear)
     let headerRowIdx = 0;
     let bestScore = -1;
     for (let i = 0; i < Math.min(25, textGrid.length); i++) {
@@ -2203,7 +2201,6 @@
       return ignoredLabels.indexOf(u) !== -1 || u.startsWith('SHIFT SCHEDULE') || u.startsWith('PRINTED ON') || u.startsWith('FROM ') || u.startsWith('TO ') || u.startsWith('PAGE ');
     }
 
-    // 1. Scan top banner/metadata rows (rows above headerRowIdx) specifically checking "Employee Sets" -> next non-empty cell!
     let explicitSection = '';
     let bannerCandidates = [];
 
@@ -2214,7 +2211,6 @@
         if (!rawCell) continue;
         const upperClean = rawCell.toUpperCase().replace(/[:\-]/g, '').trim();
 
-        // Priority A: Cell is "Employee Sets" (or Section/Department/Unit) -> read the NEXT non-empty cell in the same row
         if (
           upperClean === 'EMPLOYEE SETS' ||
           upperClean === 'EMPLOYEE SET' ||
@@ -2230,14 +2226,12 @@
           if (explicitSection) break;
         }
 
-        // Priority B: Same cell has "Employee Sets: CARGO HANDLING EK" or "Section: CARGO HANDLING EK"
         const inlineMatch = rawCell.match(/(?:employee\s*sets?|section|dept|department|unit|cost\s*center|area|business\s*unit)\s*[:\-]\s*(.+)/i);
         if (inlineMatch && inlineMatch[1] && !isIgnoredGenericLabel(inlineMatch[1])) {
           explicitSection = inlineMatch[1].trim();
           break;
         }
 
-        // Priority C: Collect meaningful descriptive banner strings (strictly excluding "Employee Sets" and generic labels)
         if (
           rawCell.length >= 3 &&
           !/^\d+$/.test(rawCell) &&
@@ -2258,13 +2252,11 @@
     if (explicitSection) return explicitSection;
     if (bannerCandidates.length > 0) return bannerCandidates[0];
 
-    // 2. Fallback: Check if sheetName itself has "2534 - Cargo Handling EK" pattern
     const sheetDashMatch = String(sheetName || '').match(/^\d{3,6}\s*[\-–:]\s*(.+)$/);
     if (sheetDashMatch && sheetDashMatch[1] && !sheetDashMatch[1].toLowerCase().includes('shift schedule')) {
       return sheetDashMatch[1].trim();
     }
 
-    // 3. Fallback: Detect most frequent Team / Area column value in the staff rows
     const headerTxt = textGrid[headerRowIdx] || [];
     let teamCol = -1;
     for (let c = 0; c < Math.min(12, headerTxt.length); c++) {
@@ -2309,7 +2301,6 @@
 
       const opt = document.createElement('option');
       opt.value = sName;
-      // Format: "Section Name (Shift Schedule 2534)" — avoid duplicate text if secName === sName
       if (secName && secName.toLowerCase() !== sName.toLowerCase()) {
         opt.textContent = secName + ' (' + sName + ')';
       } else {
@@ -2349,7 +2340,6 @@
     currentLiveLastUpdated = payload.lastUpdated || null;
     currentLiveFileName = payload.fileName || 'Live_Roster.xlsx';
 
-    // Populate multi-month live files dropdown if available
     const liveSel = document.getElementById('liveFileSelect');
     if (liveSel && Array.isArray(payload.availableFiles) && payload.availableFiles.length > 0) {
       liveSel.innerHTML = '';
@@ -2440,7 +2430,7 @@
           (requestedFileName ? '&file=' + encodeURIComponent(requestedFileName) : '');
         const checkJson = await fetchLiveJsonWithRetry(checkUrl, 2);
         if (checkJson.status === 'success' && checkJson.lastUpdated === currentLiveLastUpdated) {
-          return false; // No new update yet
+          return false;
         }
       }
 
@@ -2477,7 +2467,6 @@
         throw new Error('Could not parse live roster workbook');
       }
 
-      // Save latest live roster to localStorage for instant startup on next visit
       try {
         localStorage.setItem(ROSTER_CACHE_KEY, JSON.stringify({
           status: 'success',
@@ -2978,8 +2967,12 @@
   }
 
   function classifyOperationalZone(staff) {
-    const teamRaw = String((staff && staff.teamId) || '').toUpperCase().replace(/\s+/g, ' ').trim();
-    const isCMT = /\bCMT\b/.test(teamRaw);
+    const teamRaw = String((staff && staff.teamId) || '')
+      .replace(/_x000D_/g, ' ')
+      .replace(/[\u00A0\s]+/g, ' ')
+      .toUpperCase()
+      .trim();
+    const isCMT = /\bCMT\b/.test(teamRaw) || teamRaw.includes('CMT');
     const isPK15 = /PK\s*15/.test(teamRaw);
     return {
       teamRaw: teamRaw,
@@ -3049,6 +3042,10 @@
     return duty && duty.category === 'OFF';
   }
 
+  function isLeaveOrUnavailableDay(duty) {
+    return duty && duty.category === 'LEAVE';
+  }
+
   function isSwapEligibleStaff(staff) {
     return Boolean(staff && staff.cyclePattern && staff.cyclePattern.swapEligible);
   }
@@ -3105,6 +3102,15 @@
     for (let i = 1; i <= 8; i++) {
       if (isOffDay(getSimDuty(addDaysIso(targetIso, i)))) offAfter++;
       else break;
+    }
+
+    const dayBeforeOffBlock = getSimDuty(addDaysIso(targetIso, -(offBefore + 1)));
+    const dayAfterOffBlock = getSimDuty(addDaysIso(targetIso, offAfter + 1));
+    if (isLeaveOrUnavailableDay(dayBeforeOffBlock) || isLeaveOrUnavailableDay(dayAfterOffBlock)) {
+      return {
+        valid: false,
+        reason: 'OFF block is attached to Leave/Training — staff on leave cannot swap or cover duty during leave'
+      };
     }
 
     const totalOffBlock = offBefore + 1 + offAfter;
@@ -3245,11 +3251,17 @@
       }
     });
 
+    // If requester has NO valid OFF slots in the same month to repay anyone, no fair mutual swap is possible
+    if (myEligibleOffDates.length === 0) {
+      return { matches: [], myEligibleOffDates: [] };
+    }
+
     const matches = [];
 
     staffRecords.forEach(function(other) {
       if (String(other.empId) === String(requesterStaff.empId)) return;
       if (!isSwapEligibleStaff(other)) return;
+      if (!areSameNormalizedRole(requesterStaff, other)) return;
 
       const coverCheck = evaluateOffSlotForSwapOrRepay(other, swapIso, reqDutyObj, null);
       if (!coverCheck.valid) return;
@@ -3317,7 +3329,16 @@
           ? otherSim[addDaysIso(swapIso, 1)]
           : getDutyForDate(other, addDaysIso(swapIso, 1)).duty;
 
+        const oDayBeforeOffBlock = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(myOff.iso, -(oOffBefore + 1)))
+          ? otherSim[addDaysIso(myOff.iso, -(oOffBefore + 1))]
+          : getDutyForDate(other, addDaysIso(myOff.iso, -(oOffBefore + 1))).duty;
+        const oDayAfterOffBlock = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(myOff.iso, oOffAfter + 1))
+          ? otherSim[addDaysIso(myOff.iso, oOffAfter + 1)]
+          : getDutyForDate(other, addDaysIso(myOff.iso, oOffAfter + 1)).duty;
+        const oOffTouchesLeave = isLeaveOrUnavailableDay(oDayBeforeOffBlock) || isLeaveOrUnavailableDay(oDayAfterOffBlock);
+
         if (
+          !oOffTouchesLeave &&
           oTotalStreak <= 4 &&
           oOffBlock >= 2 &&
           hasMinimum12HourRest(oPrevDuty, otherSim[swapIso]) &&
@@ -3335,7 +3356,8 @@
         }
       });
 
-      if (!areSameNormalizedRole(requesterStaff, other)) {
+      // STRICT FAIR SWAP RULE: Only include matches where mutual payback is possible within the same month!
+      if (mutualRepayOptions.length === 0) {
         return;
       }
 
@@ -3351,16 +3373,13 @@
         sectionBadgeClass: sectionInfo.badgeClass,
         isSameSectionOrCmt: sectionInfo.isSameSectionOrCmt,
         isPk15Fallback: sectionInfo.isPk15Fallback,
-        hasMutualRepay: mutualRepayOptions.length > 0
+        hasMutualRepay: true
       });
     });
 
     matches.sort(function(a, b) {
       if (a.sectionTier !== b.sectionTier) {
         return a.sectionTier - b.sectionTier;
-      }
-      if (a.hasMutualRepay !== b.hasMutualRepay) {
-        return (b.hasMutualRepay ? 1 : 0) - (a.hasMutualRepay ? 1 : 0);
       }
       return a.staff.name.localeCompare(b.staff.name);
     });
@@ -3454,7 +3473,6 @@
     });
   }
 
-  // Manual Excel File Upload (Offline / Backup)
   document.getElementById('rosterFileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -3570,7 +3588,7 @@
       if (!empId && !rawName) continue;
 
       const title = titleCol !== -1 ? String(row[titleCol] || '').trim() : '';
-      const teamId = teamCol !== -1 ? String(row[teamCol] || '').trim() : '';
+      const teamId = teamCol !== -1 ? String(row[teamCol] || '').replace(/_x000D_/g, ' ').replace(/\s+/g, ' ').trim() : '';
       const rawSeq = seqCol !== -1 ? String(row[seqCol] || '').trim() : '';
 
       const sched = {};
@@ -3604,7 +3622,7 @@
       const srcTag = sourceFileLabel ? (' [' + sourceFileLabel + ']') : '';
       renderSampleChips();
       document.getElementById('rosterStatusText').innerText =
-        '✅ Live Roster Loaded' + srcTag + ' (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible 3x3/4x4 Staff) — Long Press on any Duty Day to find swap matches:';
+        '✅ Live Roster Loaded' + srcTag + ' (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible 3x3/4x4 Staff) — Long Press on any Duty Day to find fair mutual swap matches:';
 
       closeSwapPanel();
       const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
@@ -3703,7 +3721,7 @@
       rBadge.innerText = pat ? pat.rosterBadgeText : '✅ SWAP ELIGIBLE ROSTER';
       forceBtn.style.display = 'none';
       hintBar.className = 'swap-hint-bar';
-      hintBar.innerHTML = '<span>💡 <strong>Duty Swap Rule (3x3 &amp; 4x4 Only):</strong> <strong>Long Press</strong> (or click <strong>🔄 Swap</strong>) on the duty day you want OFF. After a swap/repay, both staff must maintain <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>!</span>';
+      hintBar.innerHTML = '<span>💡 <strong>Fair Mutual Duty Swap Rule (3x3 &amp; 4x4 Only):</strong> <strong>Long Press</strong> (or click <strong>🔄 Swap</strong>) on the duty day you want OFF. Only staff who can cover your duty <strong>AND whose duty you can also repay in the same month</strong> will be shown!</span>';
     } else {
       rBadge.className = 'p-badge p-badge-non3x3';
       rBadge.innerText = pat ? pat.rosterBadgeText : '⚠️ SWAP NOT ALLOWED';
@@ -3897,18 +3915,16 @@
     const myRType = activeStaff.cyclePattern ? activeStaff.cyclePattern.rosterType : '3x3';
 
     document.getElementById('swapPanelTitle').innerText =
-      '🔄 Duty Swap Options for ' + formatHumanDate(swapIso) + ' — ' + shiftText;
+      '🔄 Fair Mutual Duty Swap Options for ' + formatHumanDate(swapIso) + ' — ' + shiftText;
     document.getElementById('swapPanelSub').innerText =
       'Requester: ' + activeStaff.name + ' (' + activeStaff.empId + ' • ' + activeStaff.shiftSeq + ' • ' + (activeStaff.title || 'Staff') + ' • ' + myRType + ' Roster)';
 
     const sameSectionCount = currentSwapMatches.filter(function(m) { return m.isSameSectionOrCmt; }).length;
     const pk15Count = currentSwapMatches.filter(function(m) { return m.isPk15Fallback; }).length;
-    const mutualCount = currentSwapMatches.filter(function(m) { return m.hasMutualRepay; }).length;
 
     document.getElementById('cntAll').innerText = currentSwapMatches.length;
     document.getElementById('cntSameSection').innerText = sameSectionCount;
     document.getElementById('cntPk15').innerText = pk15Count;
-    document.getElementById('cntMutual').innerText = mutualCount;
 
     const swapMonthName = MONTH_NAMES[parseInt(swapIso.split('-')[1], 10) - 1];
     const offDatesPreview = result.myEligibleOffDates.map(function(o) {
@@ -4053,14 +4069,13 @@
     const filtered = currentSwapMatches.filter(function(item) {
       if (currentSwapFilter === 'SAME_SECTION') return item.isSameSectionOrCmt;
       if (currentSwapFilter === 'PK15') return item.isPk15Fallback;
-      if (currentSwapFilter === 'MUTUAL') return item.hasMutualRepay;
       return true;
     });
 
     if (filtered.length === 0) {
       listEl.innerHTML =
         '<div style="grid-column: 1 / -1; padding: 20px; text-align:center; color:#64748b; font-weight:700;">' +
-        '⚠️ No eligible 3x3 (Non-9-to-9) or 4x4 staff found for this date (or the max 4 consecutive duties + min 2 consecutive OFF rule could not be met).' +
+        '⚠️ No fair mutual swap match found for this date (only same-role 3x3/4x4 staff whose duty you can also repay within the same month are shown).' +
         '</div>';
       return;
     }
@@ -4074,31 +4089,22 @@
       const isFirst = item.coverCheck.offPositionLabel.startsWith('1st');
 
       const card = document.createElement('div');
-      card.className = 'swap-candidate-card' + (item.hasMutualRepay ? ' mutual-match' : '');
+      card.className = 'swap-candidate-card mutual-match';
 
-      let repayHtml = '';
-      if (item.mutualRepayOptions.length > 0) {
-        const chips = item.mutualRepayOptions.slice(0, 6).map(function(rep) {
-          return '<div class="repay-chip">' +
-            rep.repayHuman + ' (' + rep.otherDutyType + ')' +
-            '<small>Your ' + rep.myOffLabel + ' • Streak: ' + rep.myNewStreak + '/4 • ' + rep.myRemainingOff + ' OFF safe</small>' +
-          '</div>';
-        }).join('');
-        repayHtml =
-          '<div class="repay-section">' +
-            '<div class="repay-title">🤝 Days You Can Repay Their Duty:</div>' +
-            '<div class="repay-chips">' + chips + '</div>' +
-          '</div>';
-      } else {
-        repayHtml =
-          '<div class="repay-section">' +
-            '<div class="no-repay-warn">⚠️ No matching duty found on your valid OFF days (1st OFF = Night / Last OFF = Morning) within this month</div>' +
-          '</div>';
-      }
+      const chips = item.mutualRepayOptions.slice(0, 6).map(function(rep) {
+        return '<div class="repay-chip">' +
+          rep.repayHuman + ' (' + rep.otherDutyType + ')' +
+          '<small>Your ' + rep.myOffLabel + ' • Streak: ' + rep.myNewStreak + '/4 • ' + rep.myRemainingOff + ' OFF safe</small>' +
+        '</div>';
+      }).join('');
 
-      const bestRepayText = item.mutualRepayOptions.length > 0
-        ? item.mutualRepayOptions[0].repayHuman + ' (' + item.mutualRepayOptions[0].otherDutyType + ')'
-        : 'Next valid OFF slot';
+      const repayHtml =
+        '<div class="repay-section">' +
+          '<div class="repay-title">🤝 Days You Can Repay Their Duty (Fair Mutual Swap):</div>' +
+          '<div class="repay-chips">' + chips + '</div>' +
+        '</div>';
+
+      const bestRepayText = item.mutualRepayOptions[0].repayHuman + ' (' + item.mutualRepayOptions[0].otherDutyType + ')';
 
       const copyMsg =
         'Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' duty on ' +
@@ -4580,7 +4586,6 @@
 
       const iconUrl = buildStaffIconDataUrl(empId || '3x3');
 
-      // Update Apple Touch Icon & Title for iPhone/iPad Safari Add to Home Screen
       let appleIcon = document.querySelector("link[rel='apple-touch-icon']");
       if (!appleIcon) {
         appleIcon = document.createElement('link');
@@ -4659,7 +4664,6 @@
       try { localStorage.setItem(LAST_SAVED_STAFF_KEY, String(activeStaff.empId)); } catch (e) {}
     }
 
-    // 1. If Chrome / Edge / Android native Add to Home Screen prompt is ready, trigger it directly!
     if (deferredInstallPrompt) {
       try {
         deferredInstallPrompt.prompt();
@@ -4673,7 +4677,6 @@
       } catch (err) {}
     }
 
-    // 2. Otherwise open the helpful Home Screen / Desktop App modal with direct link + 1-tap steps
     const desktopModal = document.getElementById('desktopAppModal');
     if (desktopModal) {
       if (activeStaff) {
@@ -4810,7 +4813,6 @@
 
     await ensureXlsxReady();
 
-    // 1. Load preloaded offline snapshot first if saved as personal desktop file
     if (window.__PRELOADED_ROSTER_APP__ && Array.isArray(window.__PRELOADED_ROSTER_APP__.staffRecords) && window.__PRELOADED_ROSTER_APP__.staffRecords.length > 0) {
       const pre = window.__PRELOADED_ROSTER_APP__;
       staffRecords = pre.staffRecords;
@@ -4822,7 +4824,6 @@
       const startId = getRequestedStaffFromUrl() || pre.defaultStaffId || staffRecords[0].empId;
       selectStaffById(startId, true);
     } else {
-      // 2. Load last cached live roster from localStorage so page renders immediately on open
       try {
         const cachedRaw = localStorage.getItem(ROSTER_CACHE_KEY);
         if (cachedRaw) {
@@ -4832,17 +4833,14 @@
       } catch (e) {}
     }
 
-    // 3. Automatically fetch latest live roster from Google Drive via Apps Script
     const liveSuccess = await loadLiveRosterFromDrive('', false);
 
-    // 4. Fallback to sample demo data only if Live Drive, Cache, and Offline Snapshot all failed
     if (!liveSuccess && staffRecords.length === 0) {
       document.getElementById('rosterStatusText').innerText =
         '⚠️ Live Google Drive roster is currently unavailable (Sample Data Loaded) — Upload Excel manually or click 🔄 Sync Live:';
       loadSampleDemoData();
     }
 
-    // 5. Re-sync automatically when tab/app becomes visible again
     document.addEventListener('visibilitychange', function() {
       if (document.visibilityState === 'visible') {
         const liveSel = document.getElementById('liveFileSelect');
@@ -4851,7 +4849,6 @@
       }
     });
 
-    // 6. Background auto-check every 5 minutes for newly synced SharePoint -> Drive roster files
     setInterval(function() {
       const liveSel = document.getElementById('liveFileSelect');
       const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : currentLiveFileName;
