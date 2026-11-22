@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.6 Fair Mutual Swap Only)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.7 Fair Mutual Swap Only)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1863,7 +1863,7 @@
       <span>Live SharePoint → Google Drive Auto-Sync (6h Cache) • Mutual Two-Way Fair Swap Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v22.6</div>
+      <div class="ver-pill-box">v22.7</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2950,15 +2950,31 @@
       }
     }
 
+    // Normalize cycle display rotation so it starts at the beginning of a work block (after OFF)
+    let displayStartIdx = 0;
+    const tLen = template.length;
+    for (let s = 0; s < tLen; s++) {
+      const currCat = template[s].category;
+      const prevCat = template[(s - 1 + tLen) % tLen].category;
+      if ((currCat === 'MORNING' || currCat === 'NIGHT') && prevCat === 'OFF') {
+        displayStartIdx = s;
+        break;
+      }
+    }
+    const rotatedTemplate = [];
+    for (let r = 0; r < tLen; r++) {
+      rotatedTemplate.push(template[(displayStartIdx + r) % tLen]);
+    }
+
     const summaryParts = [];
-    let runCat = template[0].category;
+    let runCat = rotatedTemplate[0].category;
     let runLen = 1;
-    for (let k = 1; k < template.length; k++) {
-      if (template[k].category === runCat) {
+    for (let k = 1; k < rotatedTemplate.length; k++) {
+      if (rotatedTemplate[k].category === runCat) {
         runLen++;
       } else {
         summaryParts.push(runLen + ' ' + (runCat === 'MORNING' ? 'Morning' : (runCat === 'NIGHT' ? 'Night' : 'OFF')));
-        runCat = template[k].category;
+        runCat = rotatedTemplate[k].category;
         runLen = 1;
       }
     }
