@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v20 One-Tap Home Screen App)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22 Blank Cell Indicator)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -491,6 +491,7 @@
     color: #991b1b;
   }
 
+  .show-xs { display: none; }
   /* Legend */
   .legend-bar {
     display: flex;
@@ -511,6 +512,7 @@
   .leg-off { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
   .leg-rot { background: #ffedd5; color: #9a3412; border: 1px solid #fb923c; }
   .leg-leave { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+  .leg-blank { background: #ffffff; color: #475569; border: 1.5px dashed #94a3b8; }
 
   /* Calendar Grid Wrapper */
   .cal-scroll-wrap {
@@ -1219,27 +1221,245 @@
   }
 
   @media (max-width: 720px) {
-    .cal-grid {
-      gap: 4px;
+    .top-bar {
+      padding: 10px 12px;
+      gap: 8px;
     }
-    .cal-day-name {
+    .brand-title h1 {
+      font-size: 14.5px;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    #headerSectionBadge {
+      font-size: 11.5px !important;
+      padding: 2px 7px !important;
+    }
+    .brand-title span {
       font-size: 10px;
-      padding: 5px 1px;
     }
-    .cal-cell {
-      min-height: 78px;
-      padding: 4px;
+    .creator-version-badge {
+      padding: 5px 10px 5px 6px;
+      gap: 8px;
+    }
+    .ver-pill-box {
+      font-size: 11.5px;
+      padding: 4px 8px;
+    }
+    .creator-lbl-top {
+      font-size: 8px;
+    }
+    .creator-name-gold {
+      font-size: 11px;
+    }
+    .upload-controls {
+      width: 100%;
+      gap: 6px;
+    }
+    .live-sync-pill, .btn-live-refresh, .file-label, .btn-desktop-app, .btn-print, select.sheet-select {
+      font-size: 11px;
+      padding: 6px 9px;
+    }
+
+    .container {
+      margin: 10px auto;
+      padding: 0 6px 36px;
+    }
+    .search-card {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+    }
+    .staff-input {
+      padding: 9px 34px 9px 11px;
+      font-size: 14px;
+    }
+    .btn-search {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    .profile-card {
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      gap: 10px;
+      border-radius: 12px;
+    }
+    .avatar-circle {
+      width: 42px;
+      height: 42px;
+      font-size: 15px;
+    }
+    .profile-details h2 {
+      font-size: 15.5px;
+    }
+    .p-badge {
+      font-size: 10px;
+      padding: 3px 7px;
+    }
+    .summary-pills {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .stat-pill {
+      min-width: 0;
+      padding: 5px 4px;
       border-radius: 8px;
     }
-    .date-num { font-size: 11.5px; }
-    .shift-icon { font-size: 13px; }
-    .shift-label { font-size: 9.5px; }
-    .shift-time { font-size: 8.5px; }
-    .rot-pill { font-size: 8px; padding: 1px 3px; }
-    .est-tag { font-size: 7.5px; }
+    .stat-pill .num {
+      font-size: 14.5px;
+    }
+    .stat-pill .lbl {
+      font-size: 8.5px;
+    }
+
+    .calendar-card {
+      padding: 10px 7px;
+      border-radius: 12px;
+    }
+    .cal-header {
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+    }
+    .month-nav {
+      width: 100%;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .month-nav button {
+      height: 30px;
+      min-width: 30px;
+      padding: 0 8px;
+      font-size: 12.5px;
+    }
+    .month-title {
+      font-size: 14.5px;
+      min-width: 120px;
+    }
+    .legend-bar {
+      gap: 4px;
+      font-size: 9.5px;
+    }
+    .leg-item {
+      padding: 2px 6px;
+      gap: 3px;
+    }
+    .mode-banner, .swap-hint-bar {
+      padding: 6px 9px;
+      font-size: 10.5px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+    }
+
+    .hide-xs {
+      display: none;
+    }
+    .show-xs {
+      display: inline;
+    }
+
+    /* Compact Square-ish Calendar Grid for Mobile */
+    .cal-scroll-wrap {
+      overflow-x: hidden;
+      padding-bottom: 2px;
+    }
+    .cal-grid {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 3px;
+    }
+    .cal-day-name {
+      font-size: 9.5px;
+      padding: 4px 1px;
+      border-radius: 6px;
+    }
+    .cal-cell {
+      min-height: 54px;
+      padding: 3px 2px;
+      border-radius: 7px;
+      border-width: 1px;
+      justify-content: flex-start;
+      gap: 1px;
+    }
+    .cell-top {
+      align-items: center;
+      line-height: 1;
+    }
+    .date-num {
+      font-size: 11px;
+      line-height: 1;
+    }
+    .shift-icon {
+      font-size: 11px;
+      line-height: 1;
+    }
+    .cell-body {
+      margin-top: 2px;
+      gap: 1px;
+    }
+    .shift-label {
+      font-size: 8.5px;
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .shift-time {
+      font-size: 7px;
+      line-height: 1.05;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rot-pill {
+      font-size: 6.5px;
+      padding: 1px 2px;
+      margin-top: 1px;
+      line-height: 1;
+    }
+    .est-tag {
+      display: none;
+    }
+    .cell-swap-btn {
+      margin-top: 2px;
+      padding: 1px 2px;
+      font-size: 7.5px;
+      line-height: 1.1;
+      border-radius: 4px;
+    }
+
     .swap-cards-list {
       grid-template-columns: 1fr;
-      padding: 12px;
+      padding: 10px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .cal-grid {
+      gap: 2px;
+    }
+    .cal-cell {
+      min-height: 48px;
+      padding: 2px 1.5px;
+    }
+    .date-num {
+      font-size: 10px;
+    }
+    .shift-icon {
+      font-size: 10px;
+    }
+    .shift-label {
+      font-size: 8px;
+    }
+    .shift-time {
+      font-size: 6.5px;
+    }
+    .cell-swap-btn {
+      font-size: 7px;
+      padding: 1px 1px;
     }
   }
 
@@ -1624,7 +1844,7 @@
     <div class="live-loader-card">
       <div class="loader-icon-spin">🔄</div>
       <h3 class="live-loader-title" id="liveLoaderTitle">Live Roster Syncing...</h3>
-      <div class="live-loader-sub" id="liveLoaderSub">Google Drive se latest roster fetch ho raha hai...</div>
+      <div class="live-loader-sub" id="liveLoaderSub">Fetching latest roster from Google Drive...</div>
       <div class="progress-track-outer">
         <div class="progress-fill-inner" id="liveProgressFill"></div>
       </div>
@@ -1643,7 +1863,7 @@
       <span>Live SharePoint → Google Drive Auto-Sync • Same Role Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v20</div>
+      <div class="ver-pill-box">v22</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -1739,6 +1959,7 @@
           <span class="leg-item leg-off">🔴 OFF Day</span>
           <span class="leg-item leg-rot" id="legendRotItem">🔥 Morning / Night ROT</span>
           <span class="leg-item leg-leave">📘 Leave / Trg</span>
+          <span class="leg-item leg-blank" title="Blank in Roster: Not specified (Likely Replacement / Duty Swap)">⬜ Blank (Unassigned / Likely Replacement)</span>
         </div>
       </div>
 
@@ -2202,7 +2423,7 @@
       currentProgressVal = 12;
       showLiveProgressBar(
         'Live Roster Loading...',
-        'Google Drive se latest roster fetch ho raha hai...',
+        'Fetching latest roster from Google Drive...',
         'Step 1/4: Connecting to Google Drive...',
         18
       );
@@ -2226,7 +2447,7 @@
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
           'Downloading Live Roster...',
-          'Downloading Latest Excel roster file...',
+          'Downloading latest Excel roster file...',
           'Step 2/4: Fetching Excel data...',
           45
         );
@@ -2244,7 +2465,7 @@
         const cleanName = (payload.fileName || 'Live Roster').replace(/\.xlsx$/i, '');
         showLiveProgressBar(
           'Processing Staff Schedule...',
-          cleanName + ' read ho rahi hai...',
+          cleanName + ' is being processed...',
           'Step 3/4: Parsing staff & duties...',
           78
         );
@@ -2270,7 +2491,7 @@
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
           'Live Roster Ready!',
-          'Calendar mukammal load ho gaya hai',
+          'Calendar loaded successfully',
           'Step 4/4: Complete!',
           100
         );
@@ -3738,8 +3959,8 @@
 
         if (!duty || duty.category === 'EMPTY') {
           catClass = '';
-          iconAndName = '—';
-          timeShort = 'Empty';
+          iconAndName = '⬜ Blank';
+          timeShort = 'Repl./Swap';
         } else if (duty.category === 'OFF') {
           catClass = 'm-off';
           iconAndName = '🔴 OFF';
@@ -3880,10 +4101,10 @@
         : 'Next valid OFF slot';
 
       const copyMsg =
-        'Assalam-o-Alaikum ' + st.name + ', ' +
-        formatHumanDate(selectedSwapIso) + ' ko meri ' + reqDutyShort + ' hai. ' +
-        'Aapki us din ' + item.coverCheck.offPositionLabel + ' hai (Max 4 duty + ' + item.coverCheck.remainingOff + ' OFF safe). ' +
-        'Kya hum duty swap kar sakte hain? Main aapki duty ' + bestRepayText + ' ko repay kar doon ga.';
+        'Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' duty on ' +
+        formatHumanDate(selectedSwapIso) + ', and you are on your ' + item.coverCheck.offPositionLabel +
+        ' that day (Max 4 consecutive duties + ' + item.coverCheck.remainingOff + ' OFF days safe). ' +
+        'Would you be available to swap duties? I can repay your duty on ' + bestRepayText + '.';
 
       const dualSliderHtml = buildDualRosterSliderHtml(st, activeStaff, selectedSwapIso, item.mutualRepayOptions);
 
@@ -4080,12 +4301,15 @@
         labelText = 'No Data';
       } else if (duty.category === 'EMPTY') {
         cell.classList.add('cell-nodata');
-        labelText = '';
-        timeText = '';
+        cell.style.background = '#ffffff';
+        cell.style.border = '1.5px dashed #cbd5e1';
+        iconHtml = '<span class="shift-icon" title="Blank in Roster">⬜</span>';
+        labelText = 'Blank<span class="hide-xs"> (Not Specified)</span>';
+        timeText = '<span class="hide-xs">Likely Replacement / Swap</span><span class="show-xs">Repl./Swap</span>';
       } else if (duty.category === 'MORNING') {
         cell.classList.add('cell-morning');
         iconHtml = '<span class="shift-icon" title="Morning Duty">☀️</span>';
-        labelText = (!isProjected && duty.isOT) ? 'Morning ROT' : 'Morning Duty';
+        labelText = (!isProjected && duty.isOT) ? 'Morning ROT' : 'Morning<span class="hide-xs"> Duty</span>';
         timeText = duty.time || '05:00-17:00';
         if (!isProjected && duty.isOT) {
           badgeHtml = '<span class="rot-pill">MORNING ROT</span>';
@@ -4097,7 +4321,7 @@
       } else if (duty.category === 'NIGHT') {
         cell.classList.add('cell-night');
         iconHtml = '<span class="shift-icon grey-moon" title="Night Duty">🌙</span>';
-        labelText = (!isProjected && duty.isOT) ? 'Night ROT' : 'Night Duty';
+        labelText = (!isProjected && duty.isOT) ? 'Night ROT' : 'Night<span class="hide-xs"> Duty</span>';
         timeText = duty.time || '17:00-05:00';
         if (!isProjected && duty.isOT) {
           badgeHtml = '<span class="rot-pill">NIGHT ROT</span>';
@@ -4579,7 +4803,7 @@
     bindDesktopModalEvents();
     showLiveProgressBar(
       'Live Roster Loading...',
-      'Page open hoty hi latest roster load ho raha hai...',
+      'Loading latest roster automatically...',
       'Step 1/4: Initializing...',
       12
     );
