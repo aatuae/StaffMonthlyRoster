@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.12 Same-Day Shift Swap Badge & Fair Mutual Swap)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.14 Same-Day Shift Swap Badge & Fair Mutual Swap)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1864,7 +1864,7 @@
       <span>Live SharePoint → Google Drive Auto-Sync (6h Cache) • Mutual Two-Way Fair Swap Only • Dynamic Section Priority (Cargo Handling EK: CMT → PK15 | Other Sheets: Same Area → Same Sheet)</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v22.12</div>
+      <div class="ver-pill-box">v22.14</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2017,7 +2017,9 @@
   // LIVE GOOGLE APPS SCRIPT WEB APP URL & 6-HOUR BROWSER CACHE CONFIG
   // =========================================================================
   const LIVE_ROSTER_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNFmGiBl3e8JZpLizM2ZGNO00eKNNCTBdruGXESLRml9KjMeqxsJZf8BZKlgBxtlK2Pw/exec';
-  const ROSTER_CACHE_KEY = 'cmt_live_roster_cache_v23_multimonth';
+  const ROSTER_ARCHIVE_META_KEY = 'cmt_roster_archive_meta_v23';
+  const ROSTER_IDB_NAME = 'CMT_Roster_Permanent_Archive_DB';
+  const ROSTER_IDB_STORE = 'monthly_files';
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000; // 6 Hours (21,600,000 ms)
 
   let currentLiveLastUpdated = null;
@@ -2077,31 +2079,112 @@
     return mins + 'm';
   }
 
-  function getValidCachedRoster(requestedFileName) {
+  // =========================================================================
+  // PERMANENT BROWSER ARCHIVE (INDEXEDDB) + 6-HOUR ACTIVE MONTH SYNC
+  // - 1st visit (no saved months in browser): downloads ALL available months
+  //   (e.g., November2026 + December2026 + January2027) & saves permanently!
+  // - Subsequent visits (every 6h): ONLY downloads active current month
+  //   (e.g., January2027.xlsx) & merges it with saved past months in browser!
+  // =========================================================================
+  let loadedWorkbooksList = []; // [{ fileName, lastUpdated, wb }]
+
+  function getDubaiCurrentYearMonth() {
     try {
-      const raw = localStorage.getItem(ROSTER_CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || parsed.status !== 'success' || !parsed.data) return null;
-
-      // If user explicitly picked a different month/file from dropdown, check if it matches
-      if (requestedFileName && parsed.fileName && parsed.fileName !== requestedFileName) {
-        return null;
-      }
-
-      const cachedAt = Number(parsed.cachedAt || 0);
-      const ageMs = Date.now() - cachedAt;
-      const isFresh = (cachedAt > 0) && (ageMs < SIX_HOURS_MS);
-
+      const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const parts = fmt.format(new Date()).split('-');
       return {
-        payload: parsed,
-        cachedAt: cachedAt,
-        isFresh: isFresh,
-        remainingMs: Math.max(0, SIX_HOURS_MS - ageMs)
+        year: parseInt(parts[0], 10),
+        month0: parseInt(parts[1], 10) - 1
       };
+    } catch (e) {
+      const d = new Date();
+      return { year: d.getFullYear(), month0: d.getMonth() };
+    }
+  }
+
+  function getCanonicalMonthSortKey(fileName) {
+    const m = String(fileName || '').match(/^(January|February|March|April|May|June|July|August|September|October|November|December)(\d{4})\.xlsx$/i);
+    if (!m) return 0;
+    const mIdx = MONTH_NAMES.findIndex(function(x) { return x.toLowerCase() === m[1].toLowerCase(); });
+    const yr = parseInt(m[2], 10);
+    return yr * 100 + (mIdx >= 0 ? mIdx : 0);
+  }
+
+  function openRosterArchiveDB() {
+    return new Promise(function(resolve, reject) {
+      if (typeof indexedDB === 'undefined') return reject(new Error('IndexedDB not supported'));
+      const req = indexedDB.open(ROSTER_IDB_NAME, 1);
+      req.onupgradeneeded = function(e) {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(ROSTER_IDB_STORE)) {
+          db.createObjectStore(ROSTER_IDB_STORE, { keyPath: 'fileName' });
+        }
+      };
+      req.onsuccess = function(e) { resolve(e.target.result); };
+      req.onerror = function(e) { reject(e.target.error || new Error('IDB open error')); };
+    });
+  }
+
+  async function saveFilesToPermanentArchive(filesArr) {
+    if (!Array.isArray(filesArr) || filesArr.length === 0) return;
+    try {
+      const db = await openRosterArchiveDB();
+      await new Promise(function(resolve, reject) {
+        const tx = db.transaction(ROSTER_IDB_STORE, 'readwrite');
+        const store = tx.objectStore(ROSTER_IDB_STORE);
+        filesArr.forEach(function(item) {
+          if (item && item.fileName && item.data) {
+            store.put({
+              fileName: item.fileName,
+              lastUpdated: item.lastUpdated || new Date().toISOString(),
+              data: item.data,
+              savedAt: Date.now()
+            });
+          }
+        });
+        tx.oncomplete = function() { resolve(true); };
+        tx.onerror = function() { reject(tx.error); };
+      });
+    } catch (e) {
+      console.warn('Archive save fallback:', e);
+    }
+  }
+
+  async function getAllArchivedFilesFromBrowser() {
+    try {
+      const db = await openRosterArchiveDB();
+      return await new Promise(function(resolve) {
+        const tx = db.transaction(ROSTER_IDB_STORE, 'readonly');
+        const store = tx.objectStore(ROSTER_IDB_STORE);
+        const req = store.getAll();
+        req.onsuccess = function() {
+          const list = Array.isArray(req.result) ? req.result : [];
+          list.sort(function(a, b) {
+            return getCanonicalMonthSortKey(a.fileName) - getCanonicalMonthSortKey(b.fileName);
+          });
+          resolve(list);
+        };
+        req.onerror = function() { resolve([]); };
+      });
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function getArchiveMeta() {
+    try {
+      const raw = localStorage.getItem(ROSTER_ARCHIVE_META_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
     } catch (e) {
       return null;
     }
+  }
+
+  function setArchiveMeta(metaObj) {
+    try {
+      localStorage.setItem(ROSTER_ARCHIVE_META_KEY, JSON.stringify(metaObj));
+    } catch (e) {}
   }
 
   let progressCrawlTimer = null;
@@ -2372,40 +2455,12 @@
     }
   }
 
-  let loadedWorkbooksList = []; // [{ fileName, lastUpdated, wb }]
-
-  function getDubaiCurrentYearMonth() {
-    try {
-      const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' });
-      const parts = fmt.format(new Date()).split('-');
-      return {
-        year: parseInt(parts[0], 10),
-        month0: parseInt(parts[1], 10) - 1
-      };
-    } catch (e) {
-      const d = new Date();
-      return { year: d.getFullYear(), month0: d.getMonth() };
-    }
-  }
-
-  function applyRosterPayload(payload, cacheMeta) {
-    if (!payload || payload.status !== 'success') return false;
+  function applyArchivedWorkbooksToApp(archivedFilesArr, syncedAtMs, isFresh) {
+    if (!Array.isArray(archivedFilesArr) || archivedFilesArr.length === 0) return false;
     if (typeof XLSX === 'undefined') return false;
 
-    const filesArr = (Array.isArray(payload.files) && payload.files.length > 0)
-      ? payload.files
-      : (payload.data ? [{ fileName: payload.fileName || 'Live_Roster.xlsx', lastUpdated: payload.lastUpdated || null, data: payload.data }] : []);
-
-    if (filesArr.length === 0) return false;
-
-    if (cacheMeta && cacheMeta.cachedAt) {
-      lastDownloadedTimestampMs = cacheMeta.cachedAt;
-    } else if (payload.cachedAt) {
-      lastDownloadedTimestampMs = payload.cachedAt;
-    }
-
     loadedWorkbooksList = [];
-    filesArr.forEach(function(fItem) {
+    archivedFilesArr.forEach(function(fItem) {
       if (!fItem || !fItem.data) return;
       const bytes = base64ToUint8Array(fItem.data);
       const wbObj = XLSX.read(bytes, { type: 'array', cellDates: false });
@@ -2418,11 +2473,17 @@
 
     if (loadedWorkbooksList.length === 0) return false;
 
-    // Primary workbook for sheet dropdown & section metadata
+    loadedWorkbooksList.sort(function(a, b) {
+      return getCanonicalMonthSortKey(a.fileName) - getCanonicalMonthSortKey(b.fileName);
+    });
+
     const primaryItem = loadedWorkbooksList[loadedWorkbooksList.length - 1];
     workbook = primaryItem.wb;
     currentLiveLastUpdated = primaryItem.lastUpdated;
-    currentLiveFileName = loadedWorkbooksList.map(function(x) { return x.fileName.replace(/\.xlsx$/i, ''); }).join(' + ');
+
+    const dubaiYm = getDubaiCurrentYearMonth();
+    const activeLabel = MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year;
+    currentLiveFileName = activeLabel + ' (' + loadedWorkbooksList.length + 'M Saved)';
 
     const liveSel = document.getElementById('liveFileSelect');
     if (liveSel) liveSel.style.display = 'none';
@@ -2430,17 +2491,15 @@
     const sheetSel = document.getElementById('sheetSelect');
     populateSheetDropdownWithSections(workbook);
 
+    lastDownloadedTimestampMs = syncedAtMs || Date.now();
     const remStr = formatRemainingCooldown(lastDownloadedTimestampMs);
 
-    if (cacheMeta && cacheMeta.isFresh) {
-      parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName + ' • Saved (Next sync in ' + remStr + ')');
-      setLiveSyncBadgeState('live', 'SAVED: ' + currentLiveFileName + ' • Next sync in ' + remStr);
-    } else if (cacheMeta && !cacheMeta.isFresh) {
-      parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName + ' • Refreshing...');
-      setLiveSyncBadgeState('syncing', 'Refreshing 6h Live Roster...');
+    parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName);
+
+    if (isFresh) {
+      setLiveSyncBadgeState('live', 'SAVED (' + activeLabel + ') • Next sync in ' + remStr);
     } else {
-      parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName + ' • Live (Next sync in 6h 0m)');
-      setLiveSyncBadgeState('live', 'LIVE: ' + currentLiveFileName + ' • Next sync in 6h 0m');
+      setLiveSyncBadgeState('live', 'LIVE (' + activeLabel + ') • Next sync in 6h 0m');
     }
     return true;
   }
@@ -2481,40 +2540,46 @@
   }
 
   /**
-   * Loads Live Roster with 6-Hour Browser Cache Cooldown:
-   * - Automatically detects month rollover (e.g. when Dec 1 starts, invalidates Nov-only cache so Dec loads fresh)
-   * - Otherwise uses 6-hour browser cache; after 6 hours (or Sync Live click), fetches current month (+ next month if released)
+   * Smart Permanent Archive + 6-Hour Active Sync:
+   * - If browser has NO saved archive yet (1st time user opens on phone/PC), fetches ?mode=all_available
+   *   so Nov 2026 + Dec 2026 + Jan 2027 (all existing files in Drive) are saved permanently in IndexedDB!
+   * - Once saved, every 6 hours (or when month rolls over to Jan), ONLY fetches the active month
+   *   (e.g. January2027.xlsx) and updates the archive without re-downloading old months!
    */
   async function loadLiveRosterFromDrive(requestedFileName, isSilentBackgroundCheck, forceRefresh) {
     const dubaiYm = getDubaiCurrentYearMonth();
     const expectedCurFile = MONTH_NAMES[dubaiYm.month0] + dubaiYm.year + '.xlsx';
 
-    if (!forceRefresh) {
-      const cachedState = getValidCachedRoster(requestedFileName);
-      const cachedCurTarget = cachedState && cachedState.payload ? cachedState.payload.currentMonthFile : '';
-      const isMonthRolledOver = cachedCurTarget && (cachedCurTarget.toLowerCase() !== expectedCurFile.toLowerCase());
+    const archivedFiles = await getAllArchivedFilesFromBrowser();
+    const meta = getArchiveMeta();
+    const hasArchive = archivedFiles.length > 0;
+    const isFresh = meta && meta.lastSyncedAt && ((Date.now() - meta.lastSyncedAt) < SIX_HOURS_MS);
+    const isMonthRolledOver = meta && meta.currentMonthFile && (meta.currentMonthFile.toLowerCase() !== expectedCurFile.toLowerCase());
 
-      if (cachedState && cachedState.isFresh && !isMonthRolledOver) {
-        if (staffRecords.length === 0) {
-          await ensureXlsxReady();
-          applyRosterPayload(cachedState.payload, cachedState);
-        } else {
-          const remStr = formatRemainingCooldown(cachedState.cachedAt);
-          setLiveSyncBadgeState('live', 'SAVED: ' + currentLiveFileName + ' • Next sync in ' + remStr);
-        }
-        hideLiveProgressBar();
-        return true;
+    if (!forceRefresh && hasArchive && isFresh && !isMonthRolledOver) {
+      if (staffRecords.length === 0) {
+        await ensureXlsxReady();
+        applyArchivedWorkbooksToApp(archivedFiles, meta.lastSyncedAt, true);
+      } else {
+        const remStr = formatRemainingCooldown(meta.lastSyncedAt);
+        setLiveSyncBadgeState('live', 'SAVED (' + MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year + ') • Next sync in ' + remStr);
       }
+      hideLiveProgressBar();
+      return true;
     }
 
     const refreshBtn = document.getElementById('btnRefreshLiveRoster');
+    const needFullHistoryBootstrap = (!hasArchive); // First-time load on this browser: fetch all months (Nov, Dec, Jan...)
+
     if (!isSilentBackgroundCheck) {
-      setLiveSyncBadgeState('syncing', 'Connecting Live Roster...');
+      setLiveSyncBadgeState('syncing', needFullHistoryBootstrap ? 'Downloading Full Roster Archive...' : 'Syncing Active Roster...');
       if (refreshBtn) refreshBtn.disabled = true;
       currentProgressVal = 12;
       showLiveProgressBar(
-        'Live Roster Loading...',
-        'Fetching active roster(s) from Google Drive...',
+        needFullHistoryBootstrap ? 'First-Time Roster Setup...' : 'Updating Active Roster...',
+        needFullHistoryBootstrap
+          ? 'Downloading all available months (Nov, Dec, Jan...) to save permanently in browser...'
+          : 'Fetching latest active month (' + expectedCurFile.replace('.xlsx', '') + ') from Google Drive...',
         'Step 1/4: Connecting to Google Drive...',
         18
       );
@@ -2528,60 +2593,62 @@
 
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
-          'Downloading Live Roster...',
-          'Downloading monthly Excel roster file(s)...',
+          'Downloading Roster Data...',
+          needFullHistoryBootstrap ? 'Downloading monthly history files...' : 'Downloading active roster file...',
           'Step 2/4: Fetching Excel data...',
-          45
+          48
         );
       }
 
-      const fetchUrl = LIVE_ROSTER_SCRIPT_URL +
-        (requestedFileName ? '?file=' + encodeURIComponent(requestedFileName) : '');
+      let fetchUrl = LIVE_ROSTER_SCRIPT_URL;
+      if (requestedFileName) {
+        fetchUrl += '?file=' + encodeURIComponent(requestedFileName);
+      } else if (needFullHistoryBootstrap) {
+        fetchUrl += '?mode=all_available';
+      }
 
       const payload = await fetchLiveJsonWithRetry(fetchUrl, 3);
       if (payload.status !== 'success' || (!payload.data && (!payload.files || payload.files.length === 0))) {
         throw new Error(payload.message || 'Live roster data not found');
       }
 
+      const incomingFiles = (Array.isArray(payload.files) && payload.files.length > 0)
+        ? payload.files
+        : [{ fileName: payload.fileName || expectedCurFile, lastUpdated: payload.lastUpdated, data: payload.data }];
+
       if (!isSilentBackgroundCheck) {
-        const namesLabel = Array.isArray(payload.files) && payload.files.length > 0
-          ? payload.files.map(function(x) { return x.fileName.replace(/\.xlsx$/i, ''); }).join(' & ')
-          : (payload.fileName || 'Live Roster').replace(/\.xlsx$/i, '');
+        const namesLabel = incomingFiles.map(function(x) { return x.fileName.replace(/\.xlsx$/i, ''); }).join(', ');
         showLiveProgressBar(
-          'Processing Staff Schedule...',
-          namesLabel + ' is being processed...',
-          'Step 3/4: Merging monthly schedules...',
+          'Saving & Merging Schedules...',
+          'Saving ' + namesLabel + ' to browser archive...',
+          'Step 3/4: Building multi-month calendar...',
           78
         );
         await new Promise(function(r) { setTimeout(r, 30); });
       }
 
-      const nowMs = Date.now();
-      lastDownloadedTimestampMs = nowMs;
-      payload.cachedAt = nowMs;
+      // Save/Update incoming files into permanent IndexedDB archive (keeps past months intact!)
+      await saveFilesToPermanentArchive(incomingFiles);
+      const updatedArchive = await getAllArchivedFilesFromBrowser();
+      const finalFilesToUse = updatedArchive.length > 0 ? updatedArchive : incomingFiles;
 
-      const applied = applyRosterPayload(payload, null);
+      const nowMs = Date.now();
+      setArchiveMeta({
+        lastSyncedAt: nowMs,
+        currentMonthFile: payload.currentMonthFile || expectedCurFile,
+        nextMonthFile: payload.nextMonthFile || '',
+        availableFiles: payload.availableFiles || finalFilesToUse.map(function(x) { return x.fileName; })
+      });
+
+      const applied = applyArchivedWorkbooksToApp(finalFilesToUse, nowMs, false);
       if (!applied) {
         throw new Error('Could not parse live roster workbook');
       }
 
-      try {
-        localStorage.setItem(ROSTER_CACHE_KEY, JSON.stringify({
-          status: 'success',
-          currentMonthFile: payload.currentMonthFile || expectedCurFile,
-          nextMonthFile: payload.nextMonthFile || '',
-          fileName: payload.fileName,
-          lastUpdated: payload.lastUpdated,
-          cachedAt: nowMs,
-          files: payload.files || [{ fileName: payload.fileName, lastUpdated: payload.lastUpdated, data: payload.data }],
-          data: payload.data
-        }));
-      } catch (storageErr) {}
-
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
-          'Live Roster Ready!',
-          'Saved in browser for 6 hours',
+          'Roster Archive Ready!',
+          finalFilesToUse.length + ' month(s) saved permanently • Active roster auto-syncs every 6h',
           'Step 4/4: Complete!',
           100
         );
@@ -2592,9 +2659,12 @@
     } catch (err) {
       console.warn('Live roster fetch error:', err);
       if (!isSilentBackgroundCheck) {
-        if (staffRecords.length > 0 && currentLiveFileName) {
-          const timeTag = formatSyncTimestamp(currentLiveLastUpdated);
-          setLiveSyncBadgeState('live', 'CACHED: ' + currentLiveFileName + (timeTag ? ' (' + timeTag + ')' : ''));
+        if (hasArchive && staffRecords.length === 0) {
+          await ensureXlsxReady();
+          applyArchivedWorkbooksToApp(archivedFiles, meta ? meta.lastSyncedAt : Date.now(), true);
+          setLiveSyncBadgeState('live', 'OFFLINE ARCHIVE (' + MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year + ')');
+        } else if (staffRecords.length > 0) {
+          setLiveSyncBadgeState('live', 'SAVED (' + MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year + ')');
         } else {
           setLiveSyncBadgeState('error', 'Live Offline (Click Sync Live)');
         }
@@ -4000,7 +4070,7 @@
     if (parsed.length > 0) {
       staffRecords = parsed;
 
-      // Default to Current Real Month (Dubai Time) if present in loaded months, else first available
+      // Default calendar view to Current Real Month (Dubai Time) if available, else latest loaded month
       const dubaiYm = getDubaiCurrentYearMonth();
       const curKey = dubaiYm.year + '-' + dubaiYm.month0;
       const monthKeys = Object.keys(allMonthSet);
@@ -4009,9 +4079,9 @@
         baseRosterYear = dubaiYm.year;
         baseRosterMonth = dubaiYm.month0;
       } else if (monthKeys.length > 0) {
-        const firstM = allMonthSet[monthKeys[0]];
-        baseRosterYear = firstM.year;
-        baseRosterMonth = firstM.month0;
+        const lastM = allMonthSet[monthKeys[monthKeys.length - 1]];
+        baseRosterYear = lastM.year;
+        baseRosterMonth = lastM.month0;
       }
       currentYear = baseRosterYear;
       currentMonth = baseRosterMonth;
@@ -4020,11 +4090,11 @@
       const loadedMonthsLabels = monthKeys.map(function(mk) {
         const mObj = allMonthSet[mk];
         return MONTH_SHORT[mObj.month0] + ' ' + mObj.year;
-      }).join(' + ');
+      }).join(' • ');
 
       renderSampleChips();
       document.getElementById('rosterStatusText').innerText =
-        '✅ Live Roster Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to switch months or Long Press any Duty Day to swap:';
+        '✅ Archive & Live Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to view past/next months or Long Press any Duty Day to swap:';
 
       closeSwapPanel();
       const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
@@ -5367,7 +5437,7 @@
   }
 
   // =========================================================================
-  // BOOT SEQUENCE: USE 6-HOUR BROWSER CACHE IF VALID, ELSE DOWNLOAD LIVE
+  // BOOT SEQUENCE: LOAD PERMANENT ARCHIVE + SYNC ACTIVE MONTH EVERY 6 HOURS
   // =========================================================================
   let hasBootedRosterApp = false;
   async function initRosterApp() {
@@ -5390,17 +5460,23 @@
       return;
     }
 
-    const cachedState = getValidCachedRoster('');
-    if (cachedState) {
-      applyRosterPayload(cachedState.payload, cachedState);
-      if (cachedState.isFresh) {
-        // Under 6 hours: load immediately from browser storage without downloading again
+    const dubaiYm = getDubaiCurrentYearMonth();
+    const expectedCurFile = MONTH_NAMES[dubaiYm.month0] + dubaiYm.year + '.xlsx';
+    const archivedFiles = await getAllArchivedFilesFromBrowser();
+    const meta = getArchiveMeta();
+    const hasArchive = archivedFiles.length > 0;
+    const isFresh = meta && meta.lastSyncedAt && ((Date.now() - meta.lastSyncedAt) < SIX_HOURS_MS);
+    const isMonthRolledOver = meta && meta.currentMonthFile && (meta.currentMonthFile.toLowerCase() !== expectedCurFile.toLowerCase());
+
+    if (hasArchive) {
+      applyArchivedWorkbooksToApp(archivedFiles, meta ? meta.lastSyncedAt : Date.now(), isFresh && !isMonthRolledOver);
+      if (isFresh && !isMonthRolledOver) {
         return;
       }
     }
 
-    // Either no cache exists or 6 hours have elapsed -> download fresh live roster
-    const liveSuccess = await loadLiveRosterFromDrive('', false, false);
+    // Either 1st time visit (no archive -> fetches Nov+Dec+Jan all_available) OR 6h/new-month refresh (fetches only active month)
+    const liveSuccess = await loadLiveRosterFromDrive('', hasArchive, false);
 
     if (!liveSuccess && staffRecords.length === 0) {
       document.getElementById('rosterStatusText').innerText =
@@ -5408,15 +5484,18 @@
       loadSampleDemoData();
     }
 
-    // Re-check every 15 minutes; will only download if 6 hours have passed since last download
+    // Re-check every 15 minutes; only syncs active month if 6 hours have passed
     setInterval(function() {
-      const cachedCheck = getValidCachedRoster(currentLiveFileName);
-      if (!cachedCheck || !cachedCheck.isFresh) {
-        loadLiveRosterFromDrive(currentLiveFileName, true, false);
-      } else if (currentLiveFileName) {
-        const cleanName = currentLiveFileName.replace(/\.xlsx$/i, '');
-        const remStr = formatRemainingCooldown(cachedCheck.cachedAt);
-        setLiveSyncBadgeState('live', 'SAVED: ' + cleanName + ' • Next sync in ' + remStr);
+      const mCheck = getArchiveMeta();
+      const dNow = getDubaiCurrentYearMonth();
+      const curTarget = MONTH_NAMES[dNow.month0] + dNow.year + '.xlsx';
+      const freshNow = mCheck && mCheck.lastSyncedAt && ((Date.now() - mCheck.lastSyncedAt) < SIX_HOURS_MS);
+      const rolledOver = mCheck && mCheck.currentMonthFile && (mCheck.currentMonthFile.toLowerCase() !== curTarget.toLowerCase());
+      if (!freshNow || rolledOver) {
+        loadLiveRosterFromDrive('', true, false);
+      } else if (loadedWorkbooksList.length > 0) {
+        const remStr = formatRemainingCooldown(mCheck.lastSyncedAt);
+        setLiveSyncBadgeState('live', 'SAVED (' + MONTH_SHORT[dNow.month0] + ' ' + dNow.year + ') • Next sync in ' + remStr);
       }
     }, 900000);
   }
