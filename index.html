@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v18 Section-Aware Live Roster)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v19 Section-Aware Live Roster)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1643,7 +1643,7 @@
       <span>Live SharePoint → Google Drive Auto-Sync • Same Role Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v18</div>
+      <div class="ver-pill-box">v19</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -1786,7 +1786,7 @@
   <div class="context-popup" id="swapContextPopup">
     <div class="context-popup-header" id="ctxHeaderText">15 Nov 2026 • Morning Duty</div>
     <button type="button" class="context-action-btn" id="btnTriggerSwapSearch">
-      🔄 Find Duty Swap for This Day
+      🔄 Request Duty Swap for This Day
     </button>
   </div>
 
@@ -1970,7 +1970,18 @@
       }
     }
 
-    // 1. Scan top banner/metadata rows (rows above headerRowIdx) for Section / Department / Unit / Area title
+    const ignoredLabels = [
+      'EMPLOYEE SETS', 'EMPLOYEE SET', 'SHIFT SCHEDULE', 'SECTION', 'DEPARTMENT',
+      'DEPT', 'UNIT', 'AREA', 'COST CENTER', 'DIVISION', 'ROSTER', 'SCHEDULE'
+    ];
+
+    function isIgnoredGenericLabel(str) {
+      const u = String(str || '').toUpperCase().replace(/[:\-]/g, '').trim();
+      if (!u) return true;
+      return ignoredLabels.indexOf(u) !== -1 || u.startsWith('SHIFT SCHEDULE') || u.startsWith('PRINTED ON') || u.startsWith('FROM ') || u.startsWith('TO ') || u.startsWith('PAGE ');
+    }
+
+    // 1. Scan top banner/metadata rows (rows above headerRowIdx) specifically checking "Employee Sets" -> next non-empty cell!
     let explicitSection = '';
     let bannerCandidates = [];
 
@@ -1979,38 +1990,40 @@
       for (let c = 0; c < row.length; c++) {
         const rawCell = String(row[c] || '').replace(/_x000D_/g, ' ').replace(/[\r\n]+/g, ' ').trim();
         if (!rawCell) continue;
-        const upperCell = rawCell.toUpperCase();
+        const upperClean = rawCell.toUpperCase().replace(/[:\-]/g, '').trim();
 
-        // Check if cell has explicit label like "Section: Cargo Handling EK" or "Department : ..."
-        const labelMatch = rawCell.match(/(?:section|dept|department|unit|cost\s*center|area|business\s*unit)\s*[:\-]\s*(.+)/i);
-        if (labelMatch && labelMatch[1] && labelMatch[1].trim().length >= 2) {
-          explicitSection = labelMatch[1].trim();
+        // Priority A: Cell is "Employee Sets" (or Section/Department/Unit) -> read the NEXT non-empty cell in the same row
+        if (
+          upperClean === 'EMPLOYEE SETS' ||
+          upperClean === 'EMPLOYEE SET' ||
+          ['SECTION', 'DEPARTMENT', 'DEPT', 'UNIT', 'AREA', 'COST CENTER', 'DIVISION'].indexOf(upperClean) !== -1
+        ) {
+          for (let nextC = c + 1; nextC < Math.min(row.length, c + 6); nextC++) {
+            const nextVal = String(row[nextC] || '').replace(/_x000D_/g, ' ').replace(/[\r\n]+/g, ' ').trim();
+            if (nextVal && !isIgnoredGenericLabel(nextVal) && !/^\d+$/.test(nextVal) && !parseHeaderToDateObj(null, nextVal)) {
+              explicitSection = nextVal;
+              break;
+            }
+          }
+          if (explicitSection) break;
+        }
+
+        // Priority B: Same cell has "Employee Sets: CARGO HANDLING EK" or "Section: CARGO HANDLING EK"
+        const inlineMatch = rawCell.match(/(?:employee\s*sets?|section|dept|department|unit|cost\s*center|area|business\s*unit)\s*[:\-]\s*(.+)/i);
+        if (inlineMatch && inlineMatch[1] && !isIgnoredGenericLabel(inlineMatch[1])) {
+          explicitSection = inlineMatch[1].trim();
           break;
         }
 
-        // Check if previous cell is a label like "Section" / "Department" / "Unit"
-        if (c > 0) {
-          const prevUpper = String(row[c - 1] || '').toUpperCase().replace(/[:\-]/g, '').trim();
-          if (['SECTION', 'DEPARTMENT', 'DEPT', 'UNIT', 'AREA', 'COST CENTER', 'DIVISION'].indexOf(prevUpper) !== -1) {
-            explicitSection = rawCell;
-            break;
-          }
-        }
-
-        // Collect meaningful descriptive banner strings (exclude pure dates, numbers, generic words like "Shift Schedule")
+        // Priority C: Collect meaningful descriptive banner strings (strictly excluding "Employee Sets" and generic labels)
         if (
           rawCell.length >= 3 &&
           !/^\d+$/.test(rawCell) &&
           !parseHeaderToDateObj(null, rawCell) &&
-          !upperCell.startsWith('SHIFT SCHEDULE') &&
-          !upperCell.startsWith('PRINTED ON') &&
-          !upperCell.startsWith('FROM ') &&
-          !upperCell.startsWith('TO ') &&
-          !upperCell.startsWith('PAGE ')
+          !isIgnoredGenericLabel(rawCell)
         ) {
-          // If cell contains both sheet number/code and name, e.g. "2534 - Cargo Handling EK"
           const dashSplit = rawCell.match(/^\d{3,6}\s*[\-–:]\s*(.+)$/);
-          if (dashSplit && dashSplit[1]) {
+          if (dashSplit && dashSplit[1] && !isIgnoredGenericLabel(dashSplit[1])) {
             bannerCandidates.unshift(dashSplit[1].trim());
           } else {
             bannerCandidates.push(rawCell);
@@ -2212,7 +2225,7 @@
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
           'Downloading Live Roster...',
-          'Downloading Latest Excel roster file...',
+          'Latest Excel roster file download ho rahi hai...',
           'Step 2/4: Fetching Excel data...',
           45
         );
