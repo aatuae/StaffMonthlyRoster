@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.5 Fair Mutual Swap Only)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.6 Fair Mutual Swap Only)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1840,7 +1840,7 @@
 <body>
 
   <!-- Live Roster Loading Progress Overlay -->
-  <div class="live-loader-overlay" id="liveLoaderOverlay">
+  <div class="live-loader-overlay" id="liveLoaderOverlay" style="display:none;">
     <div class="live-loader-card">
       <div class="loader-icon-spin">🔄</div>
       <h3 class="live-loader-title" id="liveLoaderTitle">Live Roster Syncing...</h3>
@@ -1860,22 +1860,22 @@
   <div class="top-bar">
     <div class="brand-title">
       <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span> &amp; 3x3 / 4x4 Mutual Duty Swap</h1>
-      <span>Live SharePoint → Google Drive Auto-Sync • Mutual Two-Way Fair Swap Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
+      <span>Live SharePoint → Google Drive Auto-Sync (6h Cache) • Mutual Two-Way Fair Swap Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v22.5</div>
+      <div class="ver-pill-box">v22.6</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
       </div>
     </div>
     <div class="upload-controls">
-      <div id="liveSyncBadge" class="live-sync-pill syncing" title="Live Roster Connection Status">
+      <div id="liveSyncBadge" class="live-sync-pill syncing" title="Live Roster Connection Status (Auto-refreshes every 6 hours)">
         <span class="live-dot"></span>
         <span id="liveSyncLabel">Connecting Live Roster...</span>
       </div>
       <select id="liveFileSelect" class="sheet-select" style="display:none;" title="Available Monthly Rosters in Google Drive"></select>
-      <button type="button" class="btn-live-refresh" id="btnRefreshLiveRoster" title="Fetch the latest roster from Google Drive">🔄 Sync Live</button>
+      <button type="button" class="btn-live-refresh" id="btnRefreshLiveRoster" title="Force download the latest roster from Google Drive now">🔄 Sync Live</button>
       <label class="file-label" title="Upload manual Excel roster file (Offline Backup)">
         📂 Upload Excel
         <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv">
@@ -2013,11 +2013,15 @@
 
 <script>
   // =========================================================================
-  // LIVE GOOGLE APPS SCRIPT WEB APP URL (GOOGLE DRIVE AUTO-SYNC)
+  // LIVE GOOGLE APPS SCRIPT WEB APP URL & 6-HOUR BROWSER CACHE CONFIG
   // =========================================================================
   const LIVE_ROSTER_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNFmGiBl3e8JZpLizM2ZGNO00eKNNCTBdruGXESLRml9KjMeqxsJZf8BZKlgBxtlK2Pw/exec';
+  const ROSTER_CACHE_KEY = 'cmt_live_roster_cache_v16';
+  const SIX_HOURS_MS = 6 * 60 * 60 * 1000; // 6 Hours (21,600,000 ms)
+
   let currentLiveLastUpdated = null;
   let currentLiveFileName = '';
+  let lastDownloadedTimestampMs = 0;
 
   const MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -2061,6 +2065,43 @@
     }
   }
 
+  function formatRemainingCooldown(cachedAtMs) {
+    if (!cachedAtMs) return '';
+    const remainingMs = (cachedAtMs + SIX_HOURS_MS) - Date.now();
+    if (remainingMs <= 0) return 'Due now';
+    const totalMins = Math.ceil(remainingMs / 60000);
+    const hrs = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    if (hrs > 0) return hrs + 'h ' + mins + 'm';
+    return mins + 'm';
+  }
+
+  function getValidCachedRoster(requestedFileName) {
+    try {
+      const raw = localStorage.getItem(ROSTER_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.status !== 'success' || !parsed.data) return null;
+
+      // If user explicitly picked a different month/file from dropdown, check if it matches
+      if (requestedFileName && parsed.fileName && parsed.fileName !== requestedFileName) {
+        return null;
+      }
+
+      const cachedAt = Number(parsed.cachedAt || 0);
+      const ageMs = Date.now() - cachedAt;
+      const isFresh = (cachedAt > 0) && (ageMs < SIX_HOURS_MS);
+
+      return {
+        payload: parsed,
+        cachedAt: cachedAt,
+        isFresh: isFresh,
+        remainingMs: Math.max(0, SIX_HOURS_MS - ageMs)
+      };
+    } catch (e) {
+      return null;
+    }
+  }
 
   let progressCrawlTimer = null;
   let currentProgressVal = 10;
@@ -2139,8 +2180,6 @@
     lbl.innerText = text;
   }
 
-  const ROSTER_CACHE_KEY = 'cmt_live_roster_cache_v16';
-
   function ensureXlsxReady() {
     if (typeof XLSX !== 'undefined') return Promise.resolve(true);
     return new Promise(function(resolve) {
@@ -2162,7 +2201,6 @@
       tryNext();
     });
   }
-
 
   function extractSectionNameFromSheet(sheetObj, sheetName) {
     if (!sheetObj) return sheetName || '';
@@ -2333,12 +2371,17 @@
     }
   }
 
-  function applyRosterPayload(payload, isFromCache) {
+  function applyRosterPayload(payload, cacheMeta) {
     if (!payload || payload.status !== 'success' || !payload.data) return false;
     if (typeof XLSX === 'undefined') return false;
 
     currentLiveLastUpdated = payload.lastUpdated || null;
     currentLiveFileName = payload.fileName || 'Live_Roster.xlsx';
+    if (cacheMeta && cacheMeta.cachedAt) {
+      lastDownloadedTimestampMs = cacheMeta.cachedAt;
+    } else if (payload.cachedAt) {
+      lastDownloadedTimestampMs = payload.cachedAt;
+    }
 
     const liveSel = document.getElementById('liveFileSelect');
     if (liveSel && Array.isArray(payload.availableFiles) && payload.availableFiles.length > 0) {
@@ -2359,13 +2402,18 @@
     const sheetSel = document.getElementById('sheetSelect');
     populateSheetDropdownWithSections(workbook);
 
-    parseExcelSheet(sheetSel.value, currentLiveFileName);
+    const cleanFileName = currentLiveFileName.replace(/\.xlsx$/i, '');
+    const remStr = formatRemainingCooldown(lastDownloadedTimestampMs);
 
-    const timeTag = formatSyncTimestamp(currentLiveLastUpdated);
-    if (isFromCache) {
-      setLiveSyncBadgeState('syncing', 'Syncing Live... (Cached: ' + currentLiveFileName.replace(/\.xlsx$/i, '') + ')');
+    if (cacheMeta && cacheMeta.isFresh) {
+      parseExcelSheet(sheetSel.value, cleanFileName + ' • Saved (Next auto-sync in ' + remStr + ')');
+      setLiveSyncBadgeState('live', 'SAVED: ' + cleanFileName + ' • Next sync in ' + remStr);
+    } else if (cacheMeta && !cacheMeta.isFresh) {
+      parseExcelSheet(sheetSel.value, cleanFileName + ' • Refreshing...');
+      setLiveSyncBadgeState('syncing', 'Refreshing 6h Live Roster...');
     } else {
-      setLiveSyncBadgeState('live', 'LIVE: ' + currentLiveFileName.replace(/\.xlsx$/i, '') + (timeTag ? ' (' + timeTag + ')' : ''));
+      parseExcelSheet(sheetSel.value, cleanFileName + ' • Live (Next auto-sync in 6h 0m)');
+      setLiveSyncBadgeState('live', 'LIVE: ' + cleanFileName + ' • Next sync in 6h 0m');
     }
     return true;
   }
@@ -2405,7 +2453,29 @@
     throw lastErr || new Error('Network request failed');
   }
 
-  async function loadLiveRosterFromDrive(requestedFileName, isSilentBackgroundCheck) {
+  /**
+   * Loads Live Roster with 6-Hour Browser Cache Cooldown:
+   * - If forceRefresh is false and browser cache is < 6 hours old, skips network download.
+   * - Once 6 hours pass (or forceRefresh is true), downloads fresh roster and resets the 6-hour timer.
+   */
+  async function loadLiveRosterFromDrive(requestedFileName, isSilentBackgroundCheck, forceRefresh) {
+    // 1. Check 6-Hour Browser Cache First (unless user clicked "Sync Live" manually)
+    if (!forceRefresh) {
+      const cachedState = getValidCachedRoster(requestedFileName);
+      if (cachedState && cachedState.isFresh) {
+        if (staffRecords.length === 0) {
+          await ensureXlsxReady();
+          applyRosterPayload(cachedState.payload, cachedState);
+        } else {
+          const cleanName = (cachedState.payload.fileName || currentLiveFileName || 'Roster').replace(/\.xlsx$/i, '');
+          const remStr = formatRemainingCooldown(cachedState.cachedAt);
+          setLiveSyncBadgeState('live', 'SAVED: ' + cleanName + ' • Next sync in ' + remStr);
+        }
+        hideLiveProgressBar();
+        return true;
+      }
+    }
+
     const refreshBtn = document.getElementById('btnRefreshLiveRoster');
     if (!isSilentBackgroundCheck) {
       setLiveSyncBadgeState('syncing', 'Connecting Live Roster...');
@@ -2423,15 +2493,6 @@
       const xlsxOk = await ensureXlsxReady();
       if (!xlsxOk) {
         throw new Error('Failed to load SheetJS (XLSX) library.');
-      }
-
-      if (isSilentBackgroundCheck && currentLiveLastUpdated) {
-        const checkUrl = LIVE_ROSTER_SCRIPT_URL + '?checkOnly=true' +
-          (requestedFileName ? '&file=' + encodeURIComponent(requestedFileName) : '');
-        const checkJson = await fetchLiveJsonWithRetry(checkUrl, 2);
-        if (checkJson.status === 'success' && checkJson.lastUpdated === currentLiveLastUpdated) {
-          return false;
-        }
       }
 
       if (!isSilentBackgroundCheck) {
@@ -2462,7 +2523,11 @@
         await new Promise(function(r) { setTimeout(r, 30); });
       }
 
-      const applied = applyRosterPayload(payload, false);
+      const nowMs = Date.now();
+      lastDownloadedTimestampMs = nowMs;
+      payload.cachedAt = nowMs;
+
+      const applied = applyRosterPayload(payload, null);
       if (!applied) {
         throw new Error('Could not parse live roster workbook');
       }
@@ -2472,6 +2537,7 @@
           status: 'success',
           fileName: payload.fileName,
           lastUpdated: payload.lastUpdated,
+          cachedAt: nowMs,
           availableFiles: payload.availableFiles || [],
           data: payload.data
         }));
@@ -2480,7 +2546,7 @@
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
           'Live Roster Ready!',
-          'Calendar loaded successfully',
+          'Saved in browser for 6 hours',
           'Step 4/4: Complete!',
           100
         );
@@ -2508,11 +2574,12 @@
   document.getElementById('btnRefreshLiveRoster').addEventListener('click', function() {
     const liveSel = document.getElementById('liveFileSelect');
     const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : '';
-    loadLiveRosterFromDrive(chosen, false);
+    // Manual click forces immediate live download and resets the 6-hour timer
+    loadLiveRosterFromDrive(chosen, false, true);
   });
 
   document.getElementById('liveFileSelect').addEventListener('change', function() {
-    loadLiveRosterFromDrive(this.value, false);
+    loadLiveRosterFromDrive(this.value, false, true);
   });
 
   function formatDisplayName(rawName) {
@@ -3251,7 +3318,6 @@
       }
     });
 
-    // If requester has NO valid OFF slots in the same month to repay anyone, no fair mutual swap is possible
     if (myEligibleOffDates.length === 0) {
       return { matches: [], myEligibleOffDates: [] };
     }
@@ -3356,7 +3422,6 @@
         }
       });
 
-      // STRICT FAIR SWAP RULE: Only include matches where mutual payback is possible within the same month!
       if (mutualRepayOptions.length === 0) {
         return;
       }
@@ -3622,7 +3687,7 @@
       const srcTag = sourceFileLabel ? (' [' + sourceFileLabel + ']') : '';
       renderSampleChips();
       document.getElementById('rosterStatusText').innerText =
-        '✅ Live Roster Loaded' + srcTag + ' (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible 3x3/4x4 Staff) — Long Press on any Duty Day to find fair mutual swap matches:';
+        '✅ Roster Ready' + srcTag + ' (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible 3x3/4x4 Staff) — Long Press on any Duty Day to find fair mutual swap matches:';
 
       closeSwapPanel();
       const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
@@ -4796,7 +4861,7 @@
   }
 
   // =========================================================================
-  // BOOT SEQUENCE: AUTO-CONNECT TO LIVE GOOGLE DRIVE ROSTER ON PAGE OPEN
+  // BOOT SEQUENCE: USE 6-HOUR BROWSER CACHE IF VALID, ELSE DOWNLOAD LIVE
   // =========================================================================
   let hasBootedRosterApp = false;
   async function initRosterApp() {
@@ -4804,13 +4869,6 @@
     hasBootedRosterApp = true;
 
     bindDesktopModalEvents();
-    showLiveProgressBar(
-      'Live Roster Loading...',
-      'Loading latest roster automatically...',
-      'Step 1/4: Initializing...',
-      12
-    );
-
     await ensureXlsxReady();
 
     if (window.__PRELOADED_ROSTER_APP__ && Array.isArray(window.__PRELOADED_ROSTER_APP__.staffRecords) && window.__PRELOADED_ROSTER_APP__.staffRecords.length > 0) {
@@ -4823,17 +4881,20 @@
       renderSampleChips();
       const startId = getRequestedStaffFromUrl() || pre.defaultStaffId || staffRecords[0].empId;
       selectStaffById(startId, true);
-    } else {
-      try {
-        const cachedRaw = localStorage.getItem(ROSTER_CACHE_KEY);
-        if (cachedRaw) {
-          const cachedPayload = JSON.parse(cachedRaw);
-          applyRosterPayload(cachedPayload, true);
-        }
-      } catch (e) {}
+      return;
     }
 
-    const liveSuccess = await loadLiveRosterFromDrive('', false);
+    const cachedState = getValidCachedRoster('');
+    if (cachedState) {
+      applyRosterPayload(cachedState.payload, cachedState);
+      if (cachedState.isFresh) {
+        // Under 6 hours: load immediately from browser storage without downloading again
+        return;
+      }
+    }
+
+    // Either no cache exists or 6 hours have elapsed -> download fresh live roster
+    const liveSuccess = await loadLiveRosterFromDrive('', false, false);
 
     if (!liveSuccess && staffRecords.length === 0) {
       document.getElementById('rosterStatusText').innerText =
@@ -4841,19 +4902,17 @@
       loadSampleDemoData();
     }
 
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') {
-        const liveSel = document.getElementById('liveFileSelect');
-        const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : currentLiveFileName;
-        loadLiveRosterFromDrive(chosen, true);
-      }
-    });
-
+    // Re-check every 15 minutes; will only download if 6 hours have passed since last download
     setInterval(function() {
-      const liveSel = document.getElementById('liveFileSelect');
-      const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : currentLiveFileName;
-      loadLiveRosterFromDrive(chosen, true);
-    }, 300000);
+      const cachedCheck = getValidCachedRoster(currentLiveFileName);
+      if (!cachedCheck || !cachedCheck.isFresh) {
+        loadLiveRosterFromDrive(currentLiveFileName, true, false);
+      } else if (currentLiveFileName) {
+        const cleanName = currentLiveFileName.replace(/\.xlsx$/i, '');
+        const remStr = formatRemainingCooldown(cachedCheck.cachedAt);
+        setLiveSyncBadgeState('live', 'SAVED: ' + cleanName + ' • Next sync in ' + remStr);
+      }
+    }, 900000);
   }
 
   if (document.readyState === 'loading') {
