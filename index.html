@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.8 Fair Mutual Swap Only)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.12 Same-Day Shift Swap Badge & Fair Mutual Swap)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1861,10 +1861,10 @@
   <div class="top-bar">
     <div class="brand-title">
       <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span> &amp; 3x3 / 4x4 Mutual Duty Swap</h1>
-      <span>Live SharePoint → Google Drive Auto-Sync (6h Cache) • Mutual Two-Way Fair Swap Only • Priority 1: Same Section (CMT) → Priority 2: PK15</span>
+      <span>Live SharePoint → Google Drive Auto-Sync (6h Cache) • Mutual Two-Way Fair Swap Only • Dynamic Section Priority (Cargo Handling EK: CMT → PK15 | Other Sheets: Same Area → Same Sheet)</span>
     </div>
     <div class="creator-version-badge" title="Application Version & Creator">
-      <div class="ver-pill-box">v22.8</div>
+      <div class="ver-pill-box">v22.12</div>
       <div class="creator-text-box">
         <span class="creator-lbl-top">CREATED BY</span>
         <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -1987,15 +1987,15 @@
 
       <div class="swap-rules-strip">
         <span>✅ <strong>Rule 1 (Mutual Two-Way Fair Swap Only):</strong> A match is valid <strong>ONLY</strong> when the partner can cover your duty on their OFF day <strong>AND you can also repay their duty on your valid OFF day within the same month</strong> (one-sided swaps without payback are excluded).</span>
-        <span>✅ <strong>Rule 2 (Strict Same Role + Section Priority):</strong> <strong>Exact Same Role Only</strong> (EO ↔ EO, TL ↔ TL). <strong>Same Section (CMT)</strong> is prioritized at Priority 1, followed by <strong>PK15</strong> at Priority 2.</span>
-        <span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties &amp; Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> and <strong>Last OFF = ☀️ Morning Only</strong>, both staff must keep <strong>at least 2 consecutive OFF days after a maximum of 4 consecutive duties</strong>, and OFF blocks attached to Leave/Training are excluded.</span>
+        <span>✅ <strong>Rule 2 (Strict Same Role + Dynamic Section Priority):</strong> <strong>Exact Same Role Only</strong> (EO ↔ EO, TL ↔ TL). For <strong>Cargo Handling EK</strong>, <strong>CMT</strong> is Priority 1 and <strong>PK15</strong> is Priority 2; for all other sheets/areas, <strong>Same Section/Area</strong> is prioritized first within the same sheet.</span>
+        <span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties [Max 3 Nights / No 4th Night] + Same-Day Shift Exchange + Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> (max 3 consecutive Nights; 4th Night strictly blocked), <strong>Last OFF = ☀️ Morning Only</strong> (up to 4 Mornings allowed), plus <strong>Same-Day Morning ↔ 2nd Night Swap</strong> when 12h rest &amp; min 2 OFF days remain safe.</span>
       </div>
 
       <div class="swap-filter-bar">
         <div class="swap-filter-tabs">
           <button type="button" class="s-tab active" data-filter="ALL" onclick="setSwapFilter('ALL', this)">🤝 All Fair Mutual Matches (<span id="cntAll">0</span>)</button>
-          <button type="button" class="s-tab" data-filter="SAME_SECTION" onclick="setSwapFilter('SAME_SECTION', this)">🏢 Priority 1: Same Section / CMT (<span id="cntSameSection">0</span>)</button>
-          <button type="button" class="s-tab" data-filter="PK15" onclick="setSwapFilter('PK15', this)">📍 Priority 2: PK15 Area (<span id="cntPk15">0</span>)</button>
+          <button type="button" class="s-tab" data-filter="SAME_SECTION" onclick="setSwapFilter('SAME_SECTION', this)"><span id="tabSameSectionLabel">🏢 Priority 1: Same Section</span> (<span id="cntSameSection">0</span>)</button>
+          <button type="button" class="s-tab" data-filter="SECOND_PRIORITY" onclick="setSwapFilter('SECOND_PRIORITY', this)"><span id="tabSecondPriorityLabel">📍 Priority 2: Other Area</span> (<span id="cntSecondPriority">0</span>)</button>
         </div>
         <div style="font-size:11.5px; color:#475569; font-weight:700;" id="myEligibleOffSummary"></div>
       </div>
@@ -2017,7 +2017,7 @@
   // LIVE GOOGLE APPS SCRIPT WEB APP URL & 6-HOUR BROWSER CACHE CONFIG
   // =========================================================================
   const LIVE_ROSTER_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNFmGiBl3e8JZpLizM2ZGNO00eKNNCTBdruGXESLRml9KjMeqxsJZf8BZKlgBxtlK2Pw/exec';
-  const ROSTER_CACHE_KEY = 'cmt_live_roster_cache_v16';
+  const ROSTER_CACHE_KEY = 'cmt_live_roster_cache_v23_multimonth';
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000; // 6 Hours (21,600,000 ms)
 
   let currentLiveLastUpdated = null;
@@ -2372,49 +2372,75 @@
     }
   }
 
+  let loadedWorkbooksList = []; // [{ fileName, lastUpdated, wb }]
+
+  function getDubaiCurrentYearMonth() {
+    try {
+      const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const parts = fmt.format(new Date()).split('-');
+      return {
+        year: parseInt(parts[0], 10),
+        month0: parseInt(parts[1], 10) - 1
+      };
+    } catch (e) {
+      const d = new Date();
+      return { year: d.getFullYear(), month0: d.getMonth() };
+    }
+  }
+
   function applyRosterPayload(payload, cacheMeta) {
-    if (!payload || payload.status !== 'success' || !payload.data) return false;
+    if (!payload || payload.status !== 'success') return false;
     if (typeof XLSX === 'undefined') return false;
 
-    currentLiveLastUpdated = payload.lastUpdated || null;
-    currentLiveFileName = payload.fileName || 'Live_Roster.xlsx';
+    const filesArr = (Array.isArray(payload.files) && payload.files.length > 0)
+      ? payload.files
+      : (payload.data ? [{ fileName: payload.fileName || 'Live_Roster.xlsx', lastUpdated: payload.lastUpdated || null, data: payload.data }] : []);
+
+    if (filesArr.length === 0) return false;
+
     if (cacheMeta && cacheMeta.cachedAt) {
       lastDownloadedTimestampMs = cacheMeta.cachedAt;
     } else if (payload.cachedAt) {
       lastDownloadedTimestampMs = payload.cachedAt;
     }
 
-    const liveSel = document.getElementById('liveFileSelect');
-    if (liveSel && Array.isArray(payload.availableFiles) && payload.availableFiles.length > 0) {
-      liveSel.innerHTML = '';
-      payload.availableFiles.forEach(function(fItem) {
-        const opt = document.createElement('option');
-        opt.value = fItem.name;
-        opt.textContent = '📅 ' + fItem.name.replace(/\.xlsx$/i, '');
-        if (fItem.name === currentLiveFileName) opt.selected = true;
-        liveSel.appendChild(opt);
+    loadedWorkbooksList = [];
+    filesArr.forEach(function(fItem) {
+      if (!fItem || !fItem.data) return;
+      const bytes = base64ToUint8Array(fItem.data);
+      const wbObj = XLSX.read(bytes, { type: 'array', cellDates: false });
+      loadedWorkbooksList.push({
+        fileName: fItem.fileName || 'Live_Roster.xlsx',
+        lastUpdated: fItem.lastUpdated || null,
+        wb: wbObj
       });
-      liveSel.style.display = payload.availableFiles.length > 1 ? 'inline-block' : 'none';
-    }
+    });
 
-    const bytes = base64ToUint8Array(payload.data);
-    workbook = XLSX.read(bytes, { type: 'array', cellDates: false });
+    if (loadedWorkbooksList.length === 0) return false;
+
+    // Primary workbook for sheet dropdown & section metadata
+    const primaryItem = loadedWorkbooksList[loadedWorkbooksList.length - 1];
+    workbook = primaryItem.wb;
+    currentLiveLastUpdated = primaryItem.lastUpdated;
+    currentLiveFileName = loadedWorkbooksList.map(function(x) { return x.fileName.replace(/\.xlsx$/i, ''); }).join(' + ');
+
+    const liveSel = document.getElementById('liveFileSelect');
+    if (liveSel) liveSel.style.display = 'none';
 
     const sheetSel = document.getElementById('sheetSelect');
     populateSheetDropdownWithSections(workbook);
 
-    const cleanFileName = currentLiveFileName.replace(/\.xlsx$/i, '');
     const remStr = formatRemainingCooldown(lastDownloadedTimestampMs);
 
     if (cacheMeta && cacheMeta.isFresh) {
-      parseExcelSheet(sheetSel.value, cleanFileName + ' • Saved (Next auto-sync in ' + remStr + ')');
-      setLiveSyncBadgeState('live', 'SAVED: ' + cleanFileName + ' • Next sync in ' + remStr);
+      parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName + ' • Saved (Next sync in ' + remStr + ')');
+      setLiveSyncBadgeState('live', 'SAVED: ' + currentLiveFileName + ' • Next sync in ' + remStr);
     } else if (cacheMeta && !cacheMeta.isFresh) {
-      parseExcelSheet(sheetSel.value, cleanFileName + ' • Refreshing...');
+      parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName + ' • Refreshing...');
       setLiveSyncBadgeState('syncing', 'Refreshing 6h Live Roster...');
     } else {
-      parseExcelSheet(sheetSel.value, cleanFileName + ' • Live (Next auto-sync in 6h 0m)');
-      setLiveSyncBadgeState('live', 'LIVE: ' + cleanFileName + ' • Next sync in 6h 0m');
+      parseMultiMonthWorkbooks(sheetSel.value, currentLiveFileName + ' • Live (Next sync in 6h 0m)');
+      setLiveSyncBadgeState('live', 'LIVE: ' + currentLiveFileName + ' • Next sync in 6h 0m');
     }
     return true;
   }
@@ -2424,7 +2450,7 @@
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const timerId = controller ? setTimeout(function() { controller.abort(); }, 20000) : null;
+        const timerId = controller ? setTimeout(function() { controller.abort(); }, 25000) : null;
         const fetchOpts = {
           method: 'GET',
           mode: 'cors',
@@ -2456,21 +2482,25 @@
 
   /**
    * Loads Live Roster with 6-Hour Browser Cache Cooldown:
-   * - If forceRefresh is false and browser cache is < 6 hours old, skips network download.
-   * - Once 6 hours pass (or forceRefresh is true), downloads fresh roster and resets the 6-hour timer.
+   * - Automatically detects month rollover (e.g. when Dec 1 starts, invalidates Nov-only cache so Dec loads fresh)
+   * - Otherwise uses 6-hour browser cache; after 6 hours (or Sync Live click), fetches current month (+ next month if released)
    */
   async function loadLiveRosterFromDrive(requestedFileName, isSilentBackgroundCheck, forceRefresh) {
-    // 1. Check 6-Hour Browser Cache First (unless user clicked "Sync Live" manually)
+    const dubaiYm = getDubaiCurrentYearMonth();
+    const expectedCurFile = MONTH_NAMES[dubaiYm.month0] + dubaiYm.year + '.xlsx';
+
     if (!forceRefresh) {
       const cachedState = getValidCachedRoster(requestedFileName);
-      if (cachedState && cachedState.isFresh) {
+      const cachedCurTarget = cachedState && cachedState.payload ? cachedState.payload.currentMonthFile : '';
+      const isMonthRolledOver = cachedCurTarget && (cachedCurTarget.toLowerCase() !== expectedCurFile.toLowerCase());
+
+      if (cachedState && cachedState.isFresh && !isMonthRolledOver) {
         if (staffRecords.length === 0) {
           await ensureXlsxReady();
           applyRosterPayload(cachedState.payload, cachedState);
         } else {
-          const cleanName = (cachedState.payload.fileName || currentLiveFileName || 'Roster').replace(/\.xlsx$/i, '');
           const remStr = formatRemainingCooldown(cachedState.cachedAt);
-          setLiveSyncBadgeState('live', 'SAVED: ' + cleanName + ' • Next sync in ' + remStr);
+          setLiveSyncBadgeState('live', 'SAVED: ' + currentLiveFileName + ' • Next sync in ' + remStr);
         }
         hideLiveProgressBar();
         return true;
@@ -2484,7 +2514,7 @@
       currentProgressVal = 12;
       showLiveProgressBar(
         'Live Roster Loading...',
-        'Fetching latest roster from Google Drive...',
+        'Fetching active roster(s) from Google Drive...',
         'Step 1/4: Connecting to Google Drive...',
         18
       );
@@ -2499,7 +2529,7 @@
       if (!isSilentBackgroundCheck) {
         showLiveProgressBar(
           'Downloading Live Roster...',
-          'Downloading latest Excel roster file...',
+          'Downloading monthly Excel roster file(s)...',
           'Step 2/4: Fetching Excel data...',
           45
         );
@@ -2509,16 +2539,18 @@
         (requestedFileName ? '?file=' + encodeURIComponent(requestedFileName) : '');
 
       const payload = await fetchLiveJsonWithRetry(fetchUrl, 3);
-      if (payload.status !== 'success' || !payload.data) {
+      if (payload.status !== 'success' || (!payload.data && (!payload.files || payload.files.length === 0))) {
         throw new Error(payload.message || 'Live roster data not found');
       }
 
       if (!isSilentBackgroundCheck) {
-        const cleanName = (payload.fileName || 'Live Roster').replace(/\.xlsx$/i, '');
+        const namesLabel = Array.isArray(payload.files) && payload.files.length > 0
+          ? payload.files.map(function(x) { return x.fileName.replace(/\.xlsx$/i, ''); }).join(' & ')
+          : (payload.fileName || 'Live Roster').replace(/\.xlsx$/i, '');
         showLiveProgressBar(
           'Processing Staff Schedule...',
-          cleanName + ' is being processed...',
-          'Step 3/4: Parsing staff & duties...',
+          namesLabel + ' is being processed...',
+          'Step 3/4: Merging monthly schedules...',
           78
         );
         await new Promise(function(r) { setTimeout(r, 30); });
@@ -2536,10 +2568,12 @@
       try {
         localStorage.setItem(ROSTER_CACHE_KEY, JSON.stringify({
           status: 'success',
+          currentMonthFile: payload.currentMonthFile || expectedCurFile,
+          nextMonthFile: payload.nextMonthFile || '',
           fileName: payload.fileName,
           lastUpdated: payload.lastUpdated,
           cachedAt: nowMs,
-          availableFiles: payload.availableFiles || [],
+          files: payload.files || [{ fileName: payload.fileName, lastUpdated: payload.lastUpdated, data: payload.data }],
           data: payload.data
         }));
       } catch (storageErr) {}
@@ -2560,7 +2594,7 @@
       if (!isSilentBackgroundCheck) {
         if (staffRecords.length > 0 && currentLiveFileName) {
           const timeTag = formatSyncTimestamp(currentLiveLastUpdated);
-          setLiveSyncBadgeState('live', 'CACHED: ' + currentLiveFileName.replace(/\.xlsx$/i, '') + (timeTag ? ' (' + timeTag + ')' : ''));
+          setLiveSyncBadgeState('live', 'CACHED: ' + currentLiveFileName + (timeTag ? ' (' + timeTag + ')' : ''));
         } else {
           setLiveSyncBadgeState('error', 'Live Offline (Click Sync Live)');
         }
@@ -2573,14 +2607,7 @@
   }
 
   document.getElementById('btnRefreshLiveRoster').addEventListener('click', function() {
-    const liveSel = document.getElementById('liveFileSelect');
-    const chosen = (liveSel && liveSel.style.display !== 'none') ? liveSel.value : '';
-    // Manual click forces immediate live download and resets the 6-hour timer
-    loadLiveRosterFromDrive(chosen, false, true);
-  });
-
-  document.getElementById('liveFileSelect').addEventListener('change', function() {
-    loadLiveRosterFromDrive(this.value, false, true);
+    loadLiveRosterFromDrive('', false, true);
   });
 
   function formatDisplayName(rawName) {
@@ -2907,8 +2934,8 @@
     if (bestLen === 6 && workCount === 3 && offCount === 3 && doubledWO.indexOf('WWWOOO') !== -1) {
       if (is9to9Shift) {
         rosterType = '3x3_9TO9';
-        swapEligible = false;
-        rosterBadgeText = '🚫 3x3 (9 TO 9) — SWAP NOT ALLOWED';
+        swapEligible = true;
+        rosterBadgeText = '✅ 3x3 (1M + 2x 21:00-09:00) — SWAP ELIGIBLE (NO 4TH NIGHT)';
       } else {
         rosterType = '3x3';
         swapEligible = true;
@@ -2937,8 +2964,8 @@
       rosterBadgeText = '✅ 3x3 ROSTER (SWAP ELIGIBLE)';
     } else if (is9to9Shift && (countW3 >= 1 || countO3 >= 1)) {
       rosterType = '3x3_9TO9';
-      swapEligible = false;
-      rosterBadgeText = '🚫 3x3 (9 TO 9) — SWAP NOT ALLOWED';
+      swapEligible = true;
+      rosterBadgeText = '✅ 3x3 (1M + 2x 21:00-09:00) — SWAP ELIGIBLE (NO 4TH NIGHT)';
     } else if (!is9to9Shift && totalRegularDuties > 0 && bestScore >= 0.45) {
       if (bestLen === 8 && workCount >= 3 && offCount >= 3) {
         rosterType = '4x4';
@@ -3050,6 +3077,17 @@
     return rA === rB;
   }
 
+  function isCargoHandlingEkContext(staff) {
+    const sName = String((staff && staff.sheetName) || '').toUpperCase();
+    const secTitle = String((staff && staff.sectionTitle) || '').toUpperCase();
+    const teamRaw = String((staff && staff.teamId) || '').toUpperCase();
+    const combined = sName + ' ' + secTitle + ' ' + teamRaw;
+    return combined.includes('CARGO HANDLING EK') ||
+           combined.includes('CARGO HANDING EK') ||
+           /\bCMT\b/.test(combined) ||
+           /PK\s*15/.test(combined);
+  }
+
   function classifyOperationalZone(staff) {
     const teamRaw = String((staff && staff.teamId) || '')
       .replace(/_x000D_/g, ' ')
@@ -3058,63 +3096,121 @@
       .trim();
     const isCMT = /\bCMT\b/.test(teamRaw) || teamRaw.includes('CMT');
     const isPK15 = /PK\s*15/.test(teamRaw);
+    const isCargoEk = isCargoHandlingEkContext(staff);
     return {
       teamRaw: teamRaw,
       isCMT: isCMT,
-      isPK15: isPK15
+      isPK15: isPK15,
+      isCargoEk: isCargoEk,
+      sheetName: String((staff && staff.sheetName) || '').trim(),
+      sectionTitle: String((staff && staff.sectionTitle) || '').trim()
     };
   }
 
   function evaluateSectionPriority(requesterStaff, partnerStaff) {
     const reqZ = classifyOperationalZone(requesterStaff);
     const parZ = classifyOperationalZone(partnerStaff);
+    const sameSheet = (!reqZ.sheetName || !parZ.sheetName || reqZ.sheetName === parZ.sheetName);
 
-    if (reqZ.teamRaw && parZ.teamRaw && reqZ.teamRaw === parZ.teamRaw) {
+    // Case A: Cargo Handling EK (CMT <-> PK15 specific operational hierarchy)
+    if (reqZ.isCargoEk) {
+      if (reqZ.teamRaw && parZ.teamRaw && reqZ.teamRaw === parZ.teamRaw) {
+        return {
+          tier: 1,
+          badgeText: '⭐ Priority 1: Exact Same Section (' + parZ.teamRaw + ')',
+          badgeClass: 'sec-tier-1',
+          isPriority1: true,
+          isPriority2: false
+        };
+      }
+
+      if (reqZ.isCMT && parZ.isCMT) {
+        return {
+          tier: 2,
+          badgeText: '🏢 Priority 1: Same CMT Section (' + (parZ.teamRaw || 'CMT') + ')',
+          badgeClass: 'sec-tier-2',
+          isPriority1: true,
+          isPriority2: false
+        };
+      }
+
+      if (reqZ.isCMT && parZ.isPK15) {
+        return {
+          tier: 3,
+          badgeText: '📍 Priority 2: PK15 Area (' + (parZ.teamRaw || 'PK 15') + ')',
+          badgeClass: 'sec-tier-3',
+          isPriority1: false,
+          isPriority2: true
+        };
+      }
+
+      if (reqZ.isPK15 && parZ.isCMT) {
+        return {
+          tier: 3,
+          badgeText: '📍 Priority 2: CMT Area (' + (parZ.teamRaw || 'CMT') + ')',
+          badgeClass: 'sec-tier-3',
+          isPriority1: false,
+          isPriority2: true
+        };
+      }
+
+      if (parZ.isPK15) {
+        return {
+          tier: 3,
+          badgeText: '📍 Priority 2: PK15 Area (' + (parZ.teamRaw || 'PK 15') + ')',
+          badgeClass: 'sec-tier-3',
+          isPriority1: false,
+          isPriority2: true
+        };
+      }
+
+      return {
+        tier: 4,
+        badgeText: '🌐 Other Area (' + (parZ.teamRaw || parZ.sectionTitle || 'General') + ')',
+        badgeClass: 'sec-tier-4',
+        isPriority1: false,
+        isPriority2: true
+      };
+    }
+
+    // Case B: All Other Sheets / Areas (CTO, Loaders, ULD, etc. — No CMT/PK15 rule applied)
+    const displayArea = parZ.teamRaw || parZ.sectionTitle || parZ.sheetName || 'Same Sheet';
+    if (sameSheet && reqZ.teamRaw && parZ.teamRaw && reqZ.teamRaw === parZ.teamRaw) {
       return {
         tier: 1,
-        badgeText: '⭐ Priority 1: Exact Same Section (' + parZ.teamRaw + ')',
+        badgeText: '⭐ Priority 1: Same Section (' + parZ.teamRaw + ')',
         badgeClass: 'sec-tier-1',
-        isSameSectionOrCmt: true,
-        isPk15Fallback: parZ.isPK15
+        isPriority1: true,
+        isPriority2: false
       };
     }
 
-    if (reqZ.isCMT && parZ.isCMT) {
+    if (sameSheet && !reqZ.teamRaw && !parZ.teamRaw) {
+      return {
+        tier: 1,
+        badgeText: '⭐ Priority 1: Same Sheet (' + displayArea + ')',
+        badgeClass: 'sec-tier-1',
+        isPriority1: true,
+        isPriority2: false
+      };
+    }
+
+    if (sameSheet) {
       return {
         tier: 2,
-        badgeText: '🏢 Priority 1: Same CMT Section (' + (parZ.teamRaw || 'CMT') + ')',
+        badgeText: '📍 Priority 2: Same Sheet / Other Area (' + displayArea + ')',
         badgeClass: 'sec-tier-2',
-        isSameSectionOrCmt: true,
-        isPk15Fallback: false
-      };
-    }
-
-    if (reqZ.isCMT && parZ.isPK15) {
-      return {
-        tier: 3,
-        badgeText: '📍 Priority 2: PK15 Area (' + (parZ.teamRaw || 'PK 15') + ')',
-        badgeClass: 'sec-tier-3',
-        isSameSectionOrCmt: false,
-        isPk15Fallback: true
-      };
-    }
-
-    if (parZ.isPK15) {
-      return {
-        tier: 3,
-        badgeText: '📍 PK15 Area (' + (parZ.teamRaw || 'PK 15') + ')',
-        badgeClass: 'sec-tier-3',
-        isSameSectionOrCmt: false,
-        isPk15Fallback: true
+        isPriority1: false,
+        isPriority2: true
       };
     }
 
     return {
       tier: 4,
-      badgeText: '🌐 Other Area (' + (parZ.teamRaw || 'General') + ')',
+      badgeText: '🌐 Other Sheet (' + displayArea + ')',
       badgeClass: 'sec-tier-4',
-      isSameSectionOrCmt: false,
-      isPk15Fallback: false
+      isPriority1: false,
+      isPriority2: true
     };
   }
 
@@ -3260,6 +3356,29 @@
       };
     }
 
+    // Strict Rule: 4th Night duty is NEVER allowed (whether 17:00-05:00 or 21:00-09:00), max 3 consecutive Nights allowed
+    if (incomingDutyObj && incomingDutyObj.category === 'NIGHT') {
+      let nightBefore = 0;
+      for (let i = 1; i <= 8; i++) {
+        const dPrev = getSimDuty(addDaysIso(targetIso, -i));
+        if (dPrev && dPrev.category === 'NIGHT') nightBefore++;
+        else break;
+      }
+      let nightAfter = 0;
+      for (let i = 1; i <= 8; i++) {
+        const dNext = getSimDuty(addDaysIso(targetIso, i));
+        if (dNext && dNext.category === 'NIGHT') nightAfter++;
+        else break;
+      }
+      const newConsecutiveNights = nightBefore + 1 + nightAfter;
+      if (newConsecutiveNights >= 4) {
+        return {
+          valid: false,
+          reason: 'Results in ' + newConsecutiveNights + ' consecutive Night duties (4th Night is strictly not allowed; max 3 Nights or 4 Mornings allowed)'
+        };
+      }
+    }
+
     const remainingConsecutiveOff = isFirstOff ? offAfter : offBefore;
     if (remainingConsecutiveOff < 2) {
       return {
@@ -3335,8 +3454,40 @@
       }
     });
 
-    if (myEligibleOffDates.length === 0) {
-      return { matches: [], myEligibleOffDates: [] };
+    function validateSimulatedWindow(staffObj, simMap, focusIsos) {
+      function simDuty(iso) {
+        if (Object.prototype.hasOwnProperty.call(simMap, iso)) return simMap[iso];
+        return getDutyForDate(staffObj, iso).duty;
+      }
+      for (let f = 0; f < focusIsos.length; f++) {
+        const cIso = focusIsos[f];
+        const cur = simDuty(cIso);
+        const prev = simDuty(addDaysIso(cIso, -1));
+        const next = simDuty(addDaysIso(cIso, 1));
+        if (isWorkingDuty(cur)) {
+          if (!hasMinimum12HourRest(prev, cur) || !hasMinimum12HourRest(cur, next)) return false;
+          let wBefore = 0, wAfter = 0;
+          for (let i = 1; i <= 8; i++) { if (isWorkingDuty(simDuty(addDaysIso(cIso, -i)))) wBefore++; else break; }
+          for (let i = 1; i <= 8; i++) { if (isWorkingDuty(simDuty(addDaysIso(cIso, i)))) wAfter++; else break; }
+          if (wBefore + 1 + wAfter > 4) return false;
+
+          if (cur.category === 'NIGHT') {
+            let nBefore = 0, nAfter = 0;
+            for (let i = 1; i <= 8; i++) { const d = simDuty(addDaysIso(cIso, -i)); if (d && d.category === 'NIGHT') nBefore++; else break; }
+            for (let i = 1; i <= 8; i++) { const d = simDuty(addDaysIso(cIso, i)); if (d && d.category === 'NIGHT') nAfter++; else break; }
+            if (nBefore + 1 + nAfter >= 4) return false;
+          }
+        } else if (isOffDay(cur)) {
+          let oBefore = 0, oAfter = 0;
+          for (let i = 1; i <= 8; i++) { if (isOffDay(simDuty(addDaysIso(cIso, -i)))) oBefore++; else break; }
+          for (let i = 1; i <= 8; i++) { if (isOffDay(simDuty(addDaysIso(cIso, i)))) oAfter++; else break; }
+          if (oBefore + 1 + oAfter < 2) return false;
+          const bLeave = simDuty(addDaysIso(cIso, -(oBefore + 1)));
+          const aLeave = simDuty(addDaysIso(cIso, oAfter + 1));
+          if (isLeaveOrUnavailableDay(bLeave) || isLeaveOrUnavailableDay(aLeave)) return false;
+        }
+      }
+      return true;
     }
 
     const matches = [];
@@ -3345,6 +3496,79 @@
       if (String(other.empId) === String(requesterStaff.empId)) return;
       if (!isSwapEligibleStaff(other)) return;
       if (!areSameNormalizedRole(requesterStaff, other)) return;
+
+      const otherDutyOnSwapIso = getDutyForDate(other, swapIso).duty;
+
+      // Case A: Direct Same-Day Shift Exchange (e.g., 2nd Night <-> Morning on the SAME date)
+      if (
+        isWorkingDuty(otherDutyOnSwapIso) &&
+        !otherDutyOnSwapIso.isOT &&
+        !reqDutyObj.isOT &&
+        otherDutyOnSwapIso.category !== reqDutyObj.category
+      ) {
+        const reqSimSameDay = {};
+        reqSimSameDay[swapIso] = {
+          category: otherDutyOnSwapIso.category,
+          label: otherDutyOnSwapIso.label,
+          time: otherDutyOnSwapIso.time,
+          isOT: false
+        };
+        const otherSimSameDay = {};
+        otherSimSameDay[swapIso] = {
+          category: reqDutyObj.category,
+          label: reqDutyObj.label,
+          time: reqDutyObj.time,
+          isOT: false
+        };
+
+        if (
+          validateSimulatedWindow(requesterStaff, reqSimSameDay, [swapIso]) &&
+          validateSimulatedWindow(other, otherSimSameDay, [swapIso])
+        ) {
+          let rWorkBefore = 0, rWorkAfter = 0;
+          for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(requesterStaff, addDaysIso(swapIso, -i)).duty)) rWorkBefore++; else break; }
+          for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(requesterStaff, addDaysIso(swapIso, i)).duty)) rWorkAfter++; else break; }
+
+          let oWorkBefore = 0, oWorkAfter = 0;
+          for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(other, addDaysIso(swapIso, -i)).duty)) oWorkBefore++; else break; }
+          for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(other, addDaysIso(swapIso, i)).duty)) oWorkAfter++; else break; }
+
+          const sectionInfo = evaluateSectionPriority(requesterStaff, other);
+          const otherShiftTxt = otherDutyOnSwapIso.category === 'MORNING' ? '☀️ Morning' : '🌙 Night';
+          const otherTimeTxt = otherDutyOnSwapIso.time || (otherDutyOnSwapIso.category === 'MORNING' ? '05:00-17:00' : '17:00-05:00');
+
+          matches.push({
+            staff: other,
+            isSameDaySwap: true,
+            coverCheck: {
+              valid: true,
+              offPositionLabel: 'Same-Day Shift Swap (' + otherShiftTxt + ')',
+              newStreak: oWorkBefore + 1 + oWorkAfter,
+              remainingOff: 3
+            },
+            mutualRepayOptions: [{
+              repayIso: swapIso,
+              repayHuman: formatHumanDate(swapIso) + ' (Same Day)',
+              myOffLabel: 'Direct Shift Exchange (' + otherTimeTxt + ')',
+              myNewStreak: rWorkBefore + 1 + rWorkAfter,
+              myRemainingOff: 3,
+              otherDutyType: otherShiftTxt,
+              otherDutyTime: otherTimeTxt
+            }],
+            sameRole: true,
+            sectionTier: sectionInfo.tier,
+            sectionBadgeText: sectionInfo.badgeText,
+            sectionBadgeClass: sectionInfo.badgeClass,
+            isPriority1: sectionInfo.isPriority1,
+            isPriority2: sectionInfo.isPriority2,
+            hasMutualRepay: true
+          });
+          return;
+        }
+      }
+
+      // Case B: Standard OFF-Day Cover + Same-Month Repay
+      if (myEligibleOffDates.length === 0) return;
 
       const coverCheck = evaluateOffSlotForSwapOrRepay(other, swapIso, reqDutyObj, null);
       if (!coverCheck.valid) return;
@@ -3420,9 +3644,28 @@
           : getDutyForDate(other, addDaysIso(myOff.iso, oOffAfter + 1)).duty;
         const oOffTouchesLeave = isLeaveOrUnavailableDay(oDayBeforeOffBlock) || isLeaveOrUnavailableDay(oDayAfterOffBlock);
 
+        let oNightBefore = 0;
+        for (let i = 1; i <= 8; i++) {
+          const dObj = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(swapIso, -i))
+            ? otherSim[addDaysIso(swapIso, -i)]
+            : getDutyForDate(other, addDaysIso(swapIso, -i)).duty;
+          if (dObj && dObj.category === 'NIGHT') oNightBefore++;
+          else break;
+        }
+        let oNightAfter = 0;
+        for (let i = 1; i <= 8; i++) {
+          const dObj = Object.prototype.hasOwnProperty.call(otherSim, addDaysIso(swapIso, i))
+            ? otherSim[addDaysIso(swapIso, i)]
+            : getDutyForDate(other, addDaysIso(swapIso, i)).duty;
+          if (dObj && dObj.category === 'NIGHT') oNightAfter++;
+          else break;
+        }
+        const oNightStreak = (otherSim[swapIso].category === 'NIGHT') ? (oNightBefore + 1 + oNightAfter) : 0;
+
         if (
           !oOffTouchesLeave &&
           oTotalStreak <= 4 &&
+          oNightStreak < 4 &&
           oOffBlock >= 2 &&
           hasMinimum12HourRest(oPrevDuty, otherSim[swapIso]) &&
           hasMinimum12HourRest(otherSim[swapIso], oNextDuty)
@@ -3453,8 +3696,8 @@
         sectionTier: sectionInfo.tier,
         sectionBadgeText: sectionInfo.badgeText,
         sectionBadgeClass: sectionInfo.badgeClass,
-        isSameSectionOrCmt: sectionInfo.isSameSectionOrCmt,
-        isPk15Fallback: sectionInfo.isPk15Fallback,
+        isPriority1: sectionInfo.isPriority1,
+        isPriority2: sectionInfo.isPriority2,
         hasMutualRepay: true
       });
     });
@@ -3524,6 +3767,8 @@
         name: st.name,
         title: st.title,
         teamId: st.teamId,
+        sheetName: 'Sample',
+        sectionTitle: 'Cargo Handling EK',
         shiftSeq: st.shiftSeq,
         scheduleByIsoDate: sched,
         cyclePattern: detectRegularCyclePattern(sched)
@@ -3568,6 +3813,7 @@
     reader.onload = function(evt) {
       try {
         const data = new Uint8Array(evt.target.result);
+        loadedWorkbooksList = [];
         workbook = XLSX.read(data, { type: 'array', cellDates: false });
 
         const sheetSel = document.getElementById('sheetSelect');
@@ -3583,8 +3829,213 @@
   });
 
   document.getElementById('sheetSelect').addEventListener('change', function() {
-    parseExcelSheet(this.value, currentLiveFileName || 'Uploaded Roster');
+    if (loadedWorkbooksList && loadedWorkbooksList.length > 0) {
+      parseMultiMonthWorkbooks(this.value, currentLiveFileName || 'Live Roster');
+    } else {
+      parseExcelSheet(this.value, currentLiveFileName || 'Uploaded Roster');
+    }
   });
+
+  function extractStaffFromWorkbookSheet(wbObj, targetSheetName) {
+    if (!wbObj) return { staffList: [], dateCols: [] };
+    let chosenSheet = targetSheetName;
+    if (!wbObj.Sheets[chosenSheet]) {
+      chosenSheet = wbObj.SheetNames.find(function(s) {
+        return s.toLowerCase() === String(targetSheetName || '').toLowerCase() ||
+               s.toLowerCase().includes('schedule') || s.includes('2534');
+      }) || wbObj.SheetNames[0];
+    }
+    const sheet = wbObj.Sheets[chosenSheet];
+    if (!sheet) return { staffList: [], dateCols: [] };
+
+    const rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+    const textGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+    if (!rawGrid || rawGrid.length === 0) return { staffList: [], dateCols: [] };
+
+    let headerRowIdx = 0;
+    let bestScore = -1;
+    for (let i = 0; i < Math.min(25, rawGrid.length); i++) {
+      let score = 0;
+      let dateHits = 0;
+      for (let c = 0; c < rawGrid[i].length; c++) {
+        const txt = String(textGrid[i][c] || '').toUpperCase();
+        if (txt.includes('EMPLOYEE') || txt.includes('STAFF') || txt === 'ID') score += 3;
+        if (txt.includes('NAME')) score += 3;
+        if (parseHeaderToDateObj(rawGrid[i][c], textGrid[i][c])) {
+          dateHits++;
+          score += 2;
+        }
+      }
+      if (dateHits >= 3) score += 10;
+      if (score > bestScore) {
+        bestScore = score;
+        headerRowIdx = i;
+      }
+    }
+
+    const headerRaw = rawGrid[headerRowIdx] || [];
+    const headerTxt = textGrid[headerRowIdx] || [];
+
+    const dateCols = [];
+    let firstDateCol = 999;
+    for (let c = 0; c < Math.max(headerRaw.length, headerTxt.length); c++) {
+      const dObj = parseHeaderToDateObj(headerRaw[c], headerTxt[c]);
+      if (dObj) {
+        if (c < firstDateCol) firstDateCol = c;
+        dateCols.push({ colIdx: c, dateObj: dObj });
+      }
+    }
+
+    const metaLimit = firstDateCol < 999 ? firstDateCol : Math.min(10, headerTxt.length);
+    let idCol = -1, nameCol = -1, titleCol = -1, seqCol = -1, teamCol = -1;
+
+    for (let c = 0; c < metaLimit; c++) {
+      const u = String(headerTxt[c] || '').toUpperCase().trim();
+      if (!u) continue;
+      if (idCol === -1 && (u.includes('EMPLOYEE NUMBER') || u.includes('EMP NO') || u.includes('EMP ID') || u.includes('STAFF') || u === 'ID')) idCol = c;
+      else if (nameCol === -1 && (u.includes('NAME') || u === 'EMPLOYEE')) nameCol = c;
+      else if (titleCol === -1 && (u.includes('TITLE') || u.includes('JOB') || u.includes('ROLE'))) titleCol = c;
+      else if (teamCol === -1 && (u.includes('TEAM') || u.includes('AREA') || u.includes('SECTION'))) teamCol = c;
+      else if (seqCol === -1 && (u.includes('SEQ') || u.includes('PATTERN') || u.includes('SHIFT') || u.includes('GROUP') || u.includes('LINE'))) seqCol = c;
+    }
+
+    const sampleRows = textGrid.slice(headerRowIdx + 1, headerRowIdx + 20);
+    let bestIdCol = -1, bestIdHits = 0, bestNameCol = -1, bestNameHits = 0;
+    for (let c = 0; c < metaLimit; c++) {
+      let idHits = 0, nameHits = 0;
+      for (let r = 0; r < sampleRows.length; r++) {
+        const val = String((sampleRows[r] || [])[c] || '').trim();
+        if (/^\d{5,8}$/.test(val)) idHits++;
+        if (val.length >= 6 && /[A-Za-z]{3,}/.test(val) && (val.includes(' ') || val.includes(',')) && !/^CU\d+/i.test(val)) nameHits++;
+      }
+      if (idHits > bestIdHits) { bestIdHits = idHits; bestIdCol = c; }
+      if (nameHits > bestNameHits) { bestNameHits = nameHits; bestNameCol = c; }
+    }
+    if (bestIdCol !== -1 && bestIdHits >= 2) idCol = bestIdCol;
+    if (bestNameCol !== -1 && bestNameHits >= 2) nameCol = bestNameCol;
+    if (idCol === -1) idCol = 2;
+    if (nameCol === -1) nameCol = 3;
+    if (titleCol === -1) titleCol = 4;
+    if (seqCol === -1 && metaLimit > 5) seqCol = 5;
+    if (teamCol === -1 && metaLimit > 6) teamCol = 6;
+
+    const secTitle = extractSectionNameFromSheet(sheet, chosenSheet);
+    const list = [];
+
+    for (let r = headerRowIdx + 1; r < textGrid.length; r++) {
+      const row = textGrid[r] || [];
+      const empId = String(row[idCol] || '').trim();
+      const rawName = String(row[nameCol] || '').trim();
+      if (!empId && !rawName) continue;
+
+      const title = titleCol !== -1 ? String(row[titleCol] || '').trim() : '';
+      const teamId = teamCol !== -1 ? String(row[teamCol] || '').replace(/_x000D_/g, ' ').replace(/\s+/g, ' ').trim() : '';
+      const rawSeq = seqCol !== -1 ? String(row[seqCol] || '').trim() : '';
+
+      const sched = {};
+      dateCols.forEach(function(dc) {
+        sched[dc.dateObj.iso] = parseRosterDutyCell(row[dc.colIdx]);
+      });
+
+      const shiftLabel = rawSeq ? (rawSeq.toUpperCase().startsWith('SHIFT') ? rawSeq.toUpperCase() : 'SHIFT-' + rawSeq.toUpperCase()) : 'ROSTER STAFF';
+
+      list.push({
+        empId: empId,
+        name: formatDisplayName(rawName),
+        title: title,
+        teamId: teamId,
+        sheetName: chosenSheet,
+        sectionTitle: secTitle || chosenSheet,
+        shiftSeq: shiftLabel,
+        scheduleByIsoDate: sched
+      });
+    }
+
+    return { staffList: list, dateCols: dateCols };
+  }
+
+  function parseMultiMonthWorkbooks(sheetName, sourceFileLabel) {
+    if (!loadedWorkbooksList || loadedWorkbooksList.length === 0) return;
+    updateHeaderSectionDisplay(sheetName);
+
+    const mergedByKey = {};
+    const orderedKeys = [];
+    const allMonthSet = {};
+
+    loadedWorkbooksList.forEach(function(wbEntry) {
+      const res = extractStaffFromWorkbookSheet(wbEntry.wb, sheetName);
+      res.dateCols.forEach(function(dc) {
+        allMonthSet[dc.dateObj.year + '-' + dc.dateObj.month0] = { year: dc.dateObj.year, month0: dc.dateObj.month0 };
+      });
+
+      res.staffList.forEach(function(st) {
+        const key = st.empId ? ('ID_' + st.empId) : ('NM_' + st.name);
+        if (!mergedByKey[key]) {
+          mergedByKey[key] = {
+            empId: st.empId,
+            name: st.name,
+            title: st.title,
+            teamId: st.teamId,
+            sheetName: st.sheetName,
+            sectionTitle: st.sectionTitle,
+            shiftSeq: st.shiftSeq,
+            scheduleByIsoDate: Object.assign({}, st.scheduleByIsoDate)
+          };
+          orderedKeys.push(key);
+        } else {
+          Object.assign(mergedByKey[key].scheduleByIsoDate, st.scheduleByIsoDate);
+          if (st.title) mergedByKey[key].title = st.title;
+          if (st.teamId) mergedByKey[key].teamId = st.teamId;
+          if (st.shiftSeq && st.shiftSeq !== 'ROSTER STAFF') mergedByKey[key].shiftSeq = st.shiftSeq;
+        }
+      });
+    });
+
+    const parsed = orderedKeys.map(function(k) {
+      const item = mergedByKey[k];
+      item.cyclePattern = detectRegularCyclePattern(item.scheduleByIsoDate, item.shiftSeq, item.teamId);
+      return item;
+    });
+
+    if (parsed.length > 0) {
+      staffRecords = parsed;
+
+      // Default to Current Real Month (Dubai Time) if present in loaded months, else first available
+      const dubaiYm = getDubaiCurrentYearMonth();
+      const curKey = dubaiYm.year + '-' + dubaiYm.month0;
+      const monthKeys = Object.keys(allMonthSet);
+
+      if (allMonthSet[curKey]) {
+        baseRosterYear = dubaiYm.year;
+        baseRosterMonth = dubaiYm.month0;
+      } else if (monthKeys.length > 0) {
+        const firstM = allMonthSet[monthKeys[0]];
+        baseRosterYear = firstM.year;
+        baseRosterMonth = firstM.month0;
+      }
+      currentYear = baseRosterYear;
+      currentMonth = baseRosterMonth;
+
+      const countEligible = staffRecords.filter(isSwapEligibleStaff).length;
+      const loadedMonthsLabels = monthKeys.map(function(mk) {
+        const mObj = allMonthSet[mk];
+        return MONTH_SHORT[mObj.month0] + ' ' + mObj.year;
+      }).join(' + ');
+
+      renderSampleChips();
+      document.getElementById('rosterStatusText').innerText =
+        '✅ Live Roster Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to switch months or Long Press any Duty Day to swap:';
+
+      closeSwapPanel();
+      const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
+      if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
+        selectStaffById(preferredId, true);
+      } else {
+        const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
+        selectStaffById(firstEligible.empId, true);
+      }
+    }
+  }
 
   function parseExcelSheet(sheetName, sourceFileLabel) {
     if (!workbook || !sheetName) return;
@@ -3685,6 +4136,8 @@
         name: formatDisplayName(rawName),
         title: title,
         teamId: teamId,
+        sheetName: sheetName,
+        sectionTitle: sheetSectionMap[sheetName] || sheetName,
         shiftSeq: shiftLabel,
         scheduleByIsoDate: sched,
         cyclePattern: detectRegularCyclePattern(sched, shiftLabel, teamId)
@@ -3819,7 +4272,7 @@
       } else if (pat && pat.rosterType === '4x2') {
         reasonMsg = 'Duty swap is not allowed for 4x2 roster (4 Duty / 2 OFF) staff.';
       }
-      hintBar.innerHTML = '<span>⚠️ <strong>Swap Not Available:</strong> ' + reasonMsg + ' Only 3x3 (Non-9-to-9) and 4x4 roster staff can swap/repay duties.</span>';
+      hintBar.innerHTML = '<span>⚠️ <strong>Swap Not Available:</strong> ' + reasonMsg + ' Only 3x3 (including 1 Morning + 2x 21:00-09:00) and 4x4 roster staff can swap/repay duties (Max 3 consecutive Nights; 4th Night never allowed).</span>';
     }
 
     renderCalendar();
@@ -4001,12 +4454,24 @@
     document.getElementById('swapPanelSub').innerText =
       'Requester: ' + activeStaff.name + ' (' + activeStaff.empId + ' • ' + activeStaff.shiftSeq + ' • ' + (activeStaff.title || 'Staff') + ' • ' + myRType + ' Roster)';
 
-    const sameSectionCount = currentSwapMatches.filter(function(m) { return m.isSameSectionOrCmt; }).length;
-    const pk15Count = currentSwapMatches.filter(function(m) { return m.isPk15Fallback; }).length;
+    const reqZoneInfo = classifyOperationalZone(activeStaff);
+    const tab1LabelEl = document.getElementById('tabSameSectionLabel');
+    const tab2LabelEl = document.getElementById('tabSecondPriorityLabel');
+    if (reqZoneInfo.isCargoEk) {
+      if (tab1LabelEl) tab1LabelEl.innerText = reqZoneInfo.isPK15 ? '🏢 Priority 1: Same Section (PK15)' : '🏢 Priority 1: Same Section (CMT)';
+      if (tab2LabelEl) tab2LabelEl.innerText = reqZoneInfo.isPK15 ? '📍 Priority 2: CMT Area' : '📍 Priority 2: PK15 Area';
+    } else {
+      const secLbl = reqZoneInfo.teamRaw || reqZoneInfo.sectionTitle || 'Same Section';
+      if (tab1LabelEl) tab1LabelEl.innerText = '🏢 Priority 1: Same Section (' + secLbl + ')';
+      if (tab2LabelEl) tab2LabelEl.innerText = '📍 Priority 2: Other Area (' + (reqZoneInfo.sectionTitle || 'Same Sheet') + ')';
+    }
+
+    const p1Count = currentSwapMatches.filter(function(m) { return m.isPriority1; }).length;
+    const p2Count = currentSwapMatches.filter(function(m) { return m.isPriority2; }).length;
 
     document.getElementById('cntAll').innerText = currentSwapMatches.length;
-    document.getElementById('cntSameSection').innerText = sameSectionCount;
-    document.getElementById('cntPk15').innerText = pk15Count;
+    document.getElementById('cntSameSection').innerText = p1Count;
+    document.getElementById('cntSecondPriority').innerText = p2Count;
 
     const swapMonthName = MONTH_NAMES[parseInt(swapIso.split('-')[1], 10) - 1];
     const offDatesPreview = result.myEligibleOffDates.map(function(o) {
@@ -4030,11 +4495,13 @@
     renderSwapCards();
   }
 
-  function buildDualRosterSliderHtml(partnerStaff, requesterStaff, swapIso, repayOptions) {
+  function buildDualRosterSliderHtml(partnerStaff, requesterStaff, swapIso, repayOptions, isSameDaySwap) {
     const repayIsoSet = {};
-    (repayOptions || []).forEach(function(r) {
-      repayIsoSet[r.repayIso] = true;
-    });
+    if (!isSameDaySwap) {
+      (repayOptions || []).forEach(function(r) {
+        repayIsoSet[r.repayIso] = true;
+      });
+    }
 
     const windowIsos = [];
     for (let offset = -10; offset <= 10; offset++) {
@@ -4084,9 +4551,19 @@
         let markerHtml = '';
         if (isSwapTarget) {
           extraCls = ' swap-target-mark';
-          markerHtml = isRequesterTrack
-            ? '<span class="mini-mark-badge badge-swap-day">SWAP OFF</span>'
-            : '<span class="mini-mark-badge badge-swap-day">COVER DAY</span>';
+          if (isSameDaySwap) {
+            const partnerD = getDutyForDate(partnerStaff, swapIso).duty;
+            const myD = getDutyForDate(requesterStaff, swapIso).duty;
+            const pTargetLabel = (myD && myD.category === 'MORNING') ? 'DO MORNING' : 'DO NIGHT';
+            const myTargetLabel = (partnerD && partnerD.category === 'MORNING') ? 'DO MORNING' : 'DO NIGHT';
+            markerHtml = isRequesterTrack
+              ? '<span class="mini-mark-badge badge-swap-day">SHIFT SWAP → ' + myTargetLabel + '</span>'
+              : '<span class="mini-mark-badge badge-swap-day">SHIFT SWAP → ' + pTargetLabel + '</span>';
+          } else {
+            markerHtml = isRequesterTrack
+              ? '<span class="mini-mark-badge badge-swap-day">SWAP OFF</span>'
+              : '<span class="mini-mark-badge badge-swap-day">COVER DAY</span>';
+          }
         } else if (isRepayTarget) {
           extraCls = ' repay-target-mark';
           markerHtml = isRequesterTrack
@@ -4134,7 +4611,7 @@
         '<div class="slider-row-block">' +
           '<div class="slider-row-label lbl-me">' +
             '<span>🙋 My Roster — ' + myShortName + ' (' + requesterStaff.shiftSeq + ')</span>' +
-            '<span>🟢 Repay Days Marked</span>' +
+            '<span>' + (isSameDaySwap ? '🔄 Same-Day Shift Swap' : '🟢 Repay Days Marked') + '</span>' +
           '</div>' +
           '<div class="roster-h-track track-me">' +
             renderTrackPills(requesterStaff, true) +
@@ -4149,8 +4626,8 @@
     listEl.innerHTML = '';
 
     const filtered = currentSwapMatches.filter(function(item) {
-      if (currentSwapFilter === 'SAME_SECTION') return item.isSameSectionOrCmt;
-      if (currentSwapFilter === 'PK15') return item.isPk15Fallback;
+      if (currentSwapFilter === 'SAME_SECTION') return item.isPriority1;
+      if (currentSwapFilter === 'SECOND_PRIORITY') return item.isPriority2;
       return true;
     });
 
@@ -4180,21 +4657,33 @@
         '</div>';
       }).join('');
 
-      const repayHtml =
-        '<div class="repay-section">' +
-          '<div class="repay-title">🤝 Days You Can Repay Their Duty (Fair Mutual Swap):</div>' +
-          '<div class="repay-chips">' + chips + '</div>' +
-        '</div>';
+      const repayHtml = item.isSameDaySwap
+        ? '<div class="repay-section">' +
+            '<div class="repay-title">🔄 Same-Day Shift Exchange (No Extra Repay Day Needed):</div>' +
+            '<div class="repay-chips"><div class="repay-chip">' +
+              formatHumanDate(selectedSwapIso) + ' • You do ' + item.mutualRepayOptions[0].otherDutyType + ' (' + item.mutualRepayOptions[0].otherDutyTime + ')' +
+              '<small>' + st.name + ' does your ' + (reqDuty.category === 'MORNING' ? '☀️ Morning' : '🌙 Night') + ' on the same day</small>' +
+            '</div></div>' +
+          '</div>'
+        : '<div class="repay-section">' +
+            '<div class="repay-title">🤝 Days You Can Repay Their Duty (Fair Mutual Swap):</div>' +
+            '<div class="repay-chips">' + chips + '</div>' +
+          '</div>';
 
       const bestRepayText = item.mutualRepayOptions[0].repayHuman + ' (' + item.mutualRepayOptions[0].otherDutyType + ')';
 
-      const copyMsg =
-        'Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' duty on ' +
-        formatHumanDate(selectedSwapIso) + ', and you are on your ' + item.coverCheck.offPositionLabel +
-        ' that day (Max 4 consecutive duties + ' + item.coverCheck.remainingOff + ' OFF days safe). ' +
-        'Would you be available to swap duties? I can repay your duty on ' + bestRepayText + '.';
+      const copyMsg = item.isSameDaySwap
+        ? 'Assalam-o-Alaikum ' + st.name + ', on ' + formatHumanDate(selectedSwapIso) +
+          ' I have ' + reqDutyShort + ' and you have ' + item.mutualRepayOptions[0].otherDutyType +
+          ' (' + item.mutualRepayOptions[0].otherDutyTime + '). Can we do a same-day shift swap (I take your ' +
+          item.mutualRepayOptions[0].otherDutyType + ' and you take my ' +
+          (reqDuty.category === 'MORNING' ? 'Morning' : 'Night') + ')?'
+        : 'Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' duty on ' +
+          formatHumanDate(selectedSwapIso) + ', and you are on your ' + item.coverCheck.offPositionLabel +
+          ' that day (Max 4 consecutive duties + ' + item.coverCheck.remainingOff + ' OFF days safe). ' +
+          'Would you be available to swap duties? I can repay your duty on ' + bestRepayText + '.';
 
-      const dualSliderHtml = buildDualRosterSliderHtml(st, activeStaff, selectedSwapIso, item.mutualRepayOptions);
+      const dualSliderHtml = buildDualRosterSliderHtml(st, activeStaff, selectedSwapIso, item.mutualRepayOptions, Boolean(item.isSameDaySwap));
 
       card.innerHTML =
         '<div>' +
