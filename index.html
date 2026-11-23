@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.16 Same-Day Shift Swap Badge & Fair Mutual Swap)</title>
+<title>Staff Monthly Roster Calendar &amp; Side-by-Side Swap Slider (v22.15 Same-Day Shift Swap Badge & Fair Mutual Swap)</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1893,7 +1893,7 @@
         <span>Live SharePoint → Google Drive Auto-Sync (6h Cache) • Mutual Two-Way Fair Swap Only • Dynamic Section Priority (Cargo Handling EK: CMT → PK15 | Other Sheets: Same Area → Same Sheet)</span>
       </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.16</div>
+        <div class="ver-pill-box">v22.15</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2018,7 +2018,7 @@
       <div class="swap-rules-strip">
         <span>✅ <strong>Rule 1 (Mutual Two-Way Fair Swap Only):</strong> A match is valid <strong>ONLY</strong> when the partner can cover your duty on their OFF day <strong>AND you can also repay their duty on your valid OFF day within the same month</strong> (one-sided swaps without payback are excluded).</span>
         <span>✅ <strong>Rule 2 (Strict Same Role + Dynamic Section Priority):</strong> <strong>Exact Same Role Only</strong> (EO ↔ EO, TL ↔ TL). For <strong>Cargo Handling EK</strong>, <strong>CMT</strong> is Priority 1 and <strong>PK15</strong> is Priority 2; for all other sheets/areas, <strong>Same Section/Area</strong> is prioritized first within the same sheet.</span>
-        <span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties [Max 3 Nights / No 4th Night] + 4x4 Extended Rules + Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> (max 3 consecutive Nights; 4th Night strictly blocked), <strong>Last OFF (or 3rd/4th OFF in 4x4) = ☀️ Morning Only</strong> (up to 4 Mornings allowed; 3M+2N blocked), plus <strong>Same-Day Morning ↔ Night Swap</strong> (including 4x4 2M+2N ↔ 3M+1N / 1M+3N) when 12h rest &amp; min 2 OFF days remain safe.</span>
+        <span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties [Max 3 Nights / No 4th Night] + Same-Day Shift Exchange + Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> (max 3 consecutive Nights; 4th Night strictly blocked), <strong>Last OFF = ☀️ Morning Only</strong> (up to 4 Mornings allowed), plus <strong>Same-Day Morning ↔ 2nd Night Swap</strong> when 12h rest &amp; min 2 OFF days remain safe.</span>
       </div>
 
       <div class="swap-filter-bar">
@@ -3394,8 +3394,6 @@
     }
 
     const totalOffBlock = offBefore + 1 + offAfter;
-    const staffRosterType = (staff && staff.cyclePattern) ? staff.cyclePattern.rosterType : '';
-    const is4x4Staff = (staffRosterType === '4x4');
 
     if (totalOffBlock < 3) {
       return {
@@ -3404,19 +3402,15 @@
       };
     }
 
-    const isFirstOff = (offBefore === 0);
-    const isLastOff = (offAfter === 0);
-    // 4x4 Special Rule: 4x4 staff can also take a Morning duty on their 3rd OFF (offBefore === 2, offAfter === 1 in 4-OFF block)
-    // or on their 4th OFF (2nd-last OFF, e.g., offBefore >= 2 && offAfter === 1 when 2nd Night was OFF/swapped giving 5 OFF days),
-    // because at least 2 consecutive OFF days still remain intact before this slot!
-    const is4x4LateMorningOff = is4x4Staff && !isFirstOff && !isLastOff && (offBefore >= 2) && (offAfter === 1);
-
-    if (offBefore > 0 && offAfter > 0 && !is4x4LateMorningOff) {
+    if (offBefore > 0 && offAfter > 0) {
       return {
         valid: false,
         reason: 'Working on the middle OFF day would break the 2 consecutive OFF days requirement'
       };
     }
+
+    const isFirstOff = (offBefore === 0);
+    const isLastOff = (offAfter === 0);
 
     if (incomingDutyObj && isWorkingDuty(incomingDutyObj)) {
       if (isFirstOff && incomingDutyObj.category !== 'NIGHT') {
@@ -3425,10 +3419,10 @@
           reason: 'Only a Night duty can be covered/repaid on the 1st OFF day (Morning duty violates the 12h rest gap)'
         };
       }
-      if ((isLastOff || is4x4LateMorningOff) && incomingDutyObj.category !== 'MORNING') {
+      if (isLastOff && incomingDutyObj.category !== 'MORNING') {
         return {
           valid: false,
-          reason: 'Only a Morning duty can be covered/repaid on the 3rd/Last OFF day (Night duty violates the 12h rest gap before next day Morning)'
+          reason: 'Only a Morning duty can be covered/repaid on the Last OFF day (Night duty violates the 12h rest gap before next day Morning)'
         };
       }
 
@@ -3493,17 +3487,14 @@
       };
     }
 
-    const offSlotNumber = offBefore + 1;
     const offPositionLabel = isFirstOff
       ? '1st OFF (of ' + totalOffBlock + ')'
-      : (is4x4LateMorningOff
-          ? (offSlotNumber === 3 ? '3rd OFF' : offSlotNumber + 'th OFF') + ' (4x4 Morning Slot, ' + remainingConsecutiveOff + ' OFF safe)'
-          : 'Last OFF (' + totalOffBlock + 'th of ' + totalOffBlock + ')');
+      : 'Last OFF (' + totalOffBlock + 'th of ' + totalOffBlock + ')';
 
     return {
       valid: true,
       isFirstOff: isFirstOff,
-      isLastOff: isLastOff || is4x4LateMorningOff,
+      isLastOff: isLastOff,
       requiredDutyCategory: isFirstOff ? 'NIGHT' : 'MORNING',
       offPositionLabel: offPositionLabel,
       totalOffBlock: totalOffBlock,
@@ -3590,9 +3581,7 @@
           let oBefore = 0, oAfter = 0;
           for (let i = 1; i <= 8; i++) { if (isOffDay(simDuty(addDaysIso(cIso, -i)))) oBefore++; else break; }
           for (let i = 1; i <= 8; i++) { if (isOffDay(simDuty(addDaysIso(cIso, i)))) oAfter++; else break; }
-          const stTypeSim = (staffObj && staffObj.cyclePattern) ? staffObj.cyclePattern.rosterType : '';
-          const isSingleTrailing4x4Off = (stTypeSim === '4x4' && oBefore === 0 && oAfter === 0 && isWorkingDuty(simDuty(addDaysIso(cIso, -1))));
-          if (oBefore + 1 + oAfter < 2 && !isSingleTrailing4x4Off) return false;
+          if (oBefore + 1 + oAfter < 2) return false;
           const bLeave = simDuty(addDaysIso(cIso, -(oBefore + 1)));
           const aLeave = simDuty(addDaysIso(cIso, oAfter + 1));
           if (isLeaveOrUnavailableDay(bLeave) || isLeaveOrUnavailableDay(aLeave)) return false;
@@ -3777,7 +3766,7 @@
           !oOffTouchesLeave &&
           oTotalStreak <= 4 &&
           oNightStreak < 4 &&
-          (oOffBlock >= 2 || (other.cyclePattern && other.cyclePattern.rosterType === '4x4' && oOffBlock >= 1)) &&
+          oOffBlock >= 2 &&
           hasMinimum12HourRest(oPrevDuty, otherSim[swapIso]) &&
           hasMinimum12HourRest(otherSim[swapIso], oNextDuty)
         ) {
@@ -4138,13 +4127,6 @@
         '✅ Archive & Live Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to view past/next months or Long Press any Duty Day to swap:';
 
       closeSwapPanel();
-      const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
-      if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
-        selectStaffById(preferredId, true);
-      } else {
-        const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
-        selectStaffById(firstEligible.empId, true);
-      }
     }
   }
 
