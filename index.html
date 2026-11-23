@@ -1924,7 +1924,7 @@
         <div class="input-group">
           <label for="staffIdInput">Search Staff by ID Number OR Name (Full Roster Search)</label>
           <div class="search-input-wrap">
-            <input type="text" id="staffIdInput" class="staff-input" placeholder="Enter Staff ID (e.g. 497038) or Staff Name (e.g. ADEEL)..." autocomplete="off">
+            <input type="text" id="staffIdInput" class="staff-input" placeholder="Enter Staff ID (e.g. 123456) or Staff Name (e.g. JOHN)..." autocomplete="off">
             <button type="button" class="btn-clear-search" id="btnClearSearch" title="Clear Search">✕</button>
             <div class="search-dropdown-list" id="staffSearchDropdown"></div>
           </div>
@@ -1933,7 +1933,7 @@
       </div>
       <div class="status-msg">
         <div id="rosterStatusText">🔄 Loading Live Google Drive Roster...</div>
-        <div class="sample-chips" id="sampleChipsBox"></div>
+        
       </div>
     </div>
 
@@ -3899,16 +3899,7 @@
 
   function renderSampleChips() {
     const chipsBox = document.getElementById('sampleChipsBox');
-    chipsBox.innerHTML = '';
-    staffRecords.slice(0, 6).forEach(function(st) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip-btn';
-      const tag = st.cyclePattern ? st.cyclePattern.rosterType : '';
-      b.textContent = st.empId + ' (' + st.name.split(' ')[0] + (tag ? ' • ' + tag : '') + ')';
-      b.onclick = function() { quickLookup(st.empId); };
-      chipsBox.appendChild(b);
-    });
+    if (chipsBox) chipsBox.innerHTML = '';
   }
 
   document.getElementById('rosterFileInput').addEventListener('change', function(e) {
@@ -4138,7 +4129,13 @@
         '✅ Archive & Live Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to view past/next months or Long Press any Duty Day to swap:';
 
       closeSwapPanel();
-      
+      const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
+      if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
+        selectStaffById(preferredId, true);
+      } else {
+        const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
+        selectStaffById(firstEligible.empId, true);
+      }
     }
   }
 
