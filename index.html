@@ -5574,6 +5574,78 @@
       </div>
     </div>
   </div>
+<script>
+  // Service Worker Register Karein
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  let deferredPrompt;
+  const nativeInstallBtn = document.getElementById('btnInstallNativeApp');
+
+  // Android / Chrome par Auto Popup + Existing Button Show Karein
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // 1. Aapka existing modal wala button show kar dein (jo pehle display:none tha)
+    if (nativeInstallBtn) {
+      nativeInstallBtn.style.display = 'inline-block';
+    }
+
+    // 2. Agar mobile screen size hai to automatic neeche popup bhi dikhayein
+    if (window.innerWidth <= 768) {
+      showMobileInstallPopup();
+    }
+  });
+
+  // Aapke existing button par click lagayein
+  if (nativeInstallBtn) {
+    nativeInstallBtn.addEventListener('click', triggerInstallPrompt);
+  }
+
+  function triggerInstallPrompt() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        if (nativeInstallBtn) nativeInstallBtn.style.display = 'none';
+        const popup = document.getElementById('mobile-auto-popup');
+        if (popup) popup.remove();
+      });
+    } else {
+      alert('Browser menu (⋮ ya Share) open karein aur "Add to Home Screen" select karein.');
+    }
+  }
+
+  function showMobileInstallPopup() {
+    if (document.getElementById('mobile-auto-popup')) return;
+
+    const popup = document.createElement('div');
+    popup.id = 'mobile-auto-popup';
+    popup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:15px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.4); z-index:99999; width:90%; max-width:360px; text-align:center; font-family:sans-serif;';
+    popup.innerHTML = `
+      <p style="margin:0 0 10px 0; font-size:14px;">📲 <b>My Roster</b> ko mobile home screen par save karein!</p>
+      <button onclick="triggerInstallPrompt()" style="background:#22c55e; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">Add to Home Screen</button>
+      <button onclick="this.parentElement.remove()" style="background:transparent; color:#94a3b8; border:none; margin-left:10px; cursor:pointer;">Close</button>
+    `;
+    document.body.appendChild(popup);
+  }
+
+  // iPhone (Safari) Users ke liye Auto Popup
+  const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+  const isStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+  if (isIos() && !isStandalone() && window.innerWidth <= 768) {
+    const iosPopup = document.createElement('div');
+    iosPopup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:15px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.4); z-index:99999; width:90%; max-width:360px; text-align:center; font-family:sans-serif;';
+    iosPopup.innerHTML = `
+      <p style="margin:0 0 8px 0; font-size:13px;">📲 Home screen par add karne ke liye neeche <b>Share (⍐)</b> dabayein aur <b>"Add to Home Screen"</b> select karein.</p>
+      <button onclick="this.parentElement.remove()" style="background:#334155; color:#fff; border:none; padding:5px 12px; border-radius:5px; cursor:pointer; font-size:12px;">Theek hai</button>
+    `;
+    document.body.appendChild(iosPopup);
+  }
+</script>
 
 </body>
 </html>
