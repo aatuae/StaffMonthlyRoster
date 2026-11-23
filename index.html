@@ -5325,13 +5325,6 @@
 
   updateDynamicPwaManifestForStaff(null);
 
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    const nativeBtn = document.getElementById('btnInstallNativeApp');
-    if (nativeBtn) nativeBtn.style.display = 'flex';
-  });
-
   async function triggerOneTapHomeScreenInstall() {
     if (activeStaff) {
       updateDynamicPwaManifestForStaff(activeStaff);
