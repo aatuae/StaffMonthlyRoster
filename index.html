@@ -1921,6 +1921,102 @@
   }
 
 
+
+  /* Dedicated Work Area / Card Jump Search Bar inside Full Sheet Directory */
+  .dir-area-jump-box {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1 1 280px;
+    max-width: 440px;
+    position: relative;
+  }
+  .dir-area-jump-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1e3a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dir-area-jump-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .dir-area-jump-input {
+    width: 100%;
+    padding: 9px 34px 9px 12px;
+    border-radius: 10px;
+    border: 2px solid #2563eb;
+    background: #eff6ff;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 800;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+  .dir-area-jump-input:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+  }
+  .dir-area-jump-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #cbd5e1;
+    border: none;
+    color: #0f172a;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .dir-area-jump-clear:hover {
+    background: #94a3b8;
+    color: #ffffff;
+  }
+  .dir-area-jump-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 2px solid #1d4ed8;
+    border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.24);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+  }
+  .dir-jump-target-highlight {
+    animation: dirJumpPulse 2.4s ease-out;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45), 0 10px 25px rgba(245, 158, 11, 0.28) !important;
+  }
+  @keyframes dirJumpPulse {
+    0% { transform: scale(1.015); background-color: #fef08a; }
+    40% { transform: scale(1.005); background-color: #fef9c3; }
+    100% { transform: scale(1); }
+  }
+  .dir-subsec-card-highlight {
+    animation: dirCardFlash 2.4s ease-out;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35), 0 12px 28px rgba(37, 99, 235, 0.2) !important;
+  }
+  @keyframes dirCardFlash {
+    0% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.65); }
+    100% { box-shadow: 0 5px 15px rgba(37, 99, 235, 0.12); }
+  }
+
   /* Full Sheet Member Roster Directory (By Role & Sub-Section) */
   .full-directory-card {
     background: #ffffff;
@@ -1929,6 +2025,69 @@
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
     border: 1px solid #e2e8f0;
     margin-top: 18px;
+  }
+  .dir-month-switcher-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    padding: 5px 9px;
+    border-radius: 10px;
+    flex-wrap: wrap;
+  }
+  .dir-month-switcher-bar button {
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #0f172a;
+    height: 32px;
+    min-width: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.14s ease;
+  }
+  .dir-month-switcher-bar button:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+  }
+  .dir-month-switcher-bar button:disabled,
+  .dir-month-switcher-bar button.btn-month-locked {
+    background: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
+    opacity: 0.72;
+    box-shadow: none !important;
+  }
+  .dir-month-title-pill {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    min-width: 135px;
+    text-align: center;
+  }
+  .dir-month-status-tag {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .dir-month-status-tag.loaded {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+  }
+  .dir-month-status-tag.locked {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
   }
   .dir-header-bar {
     display: flex;
@@ -2197,20 +2356,21 @@
     color: #1e3a8a;
   }
   .dir-staff-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
-    gap: 10px;
-    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 10px 14px;
   }
   .dir-member-card {
     border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 10px 12px;
+    border-radius: 9px;
+    padding: 9px 12px;
     background: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 7px;
+    gap: 5px;
+    width: 100%;
     cursor: pointer;
     transition: transform 0.12s ease, border-color 0.14s ease, box-shadow 0.14s ease;
   }
@@ -2574,6 +2734,78 @@
     box-shadow: inset 0 0 0 2px #7c3aed;
   }
 
+
+  /* Exact Excel Shift Colors (Shift 001 / SHIFT-1 to Shift 004 / SHIFT-4) */
+  .shift-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    border: 1.5px solid rgba(15, 23, 42, 0.28);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    line-height: 1.25;
+  }
+  .shift-color-1 {
+    background-color: #FFC000 !important;
+    color: #1e293b !important;
+    border-color: #b45309 !important;
+  }
+  .shift-color-2 {
+    background-color: #FFFF00 !important;
+    color: #0f172a !important;
+    border-color: #a16207 !important;
+  }
+  .shift-color-3 {
+    background-color: #92D050 !important;
+    color: #0f172a !important;
+    border-color: #3f6212 !important;
+  }
+  .shift-color-4 {
+    background-color: #00B0F0 !important;
+    color: #0f172a !important;
+    border-color: #0369a1 !important;
+  }
+  .shift-color-5 {
+    background-color: #C4B5FD !important;
+    color: #1e1b4b !important;
+    border-color: #5b21b6 !important;
+  }
+  .shift-color-6 {
+    background-color: #FDBA74 !important;
+    color: #431407 !important;
+    border-color: #9a3412 !important;
+  }
+  .shift-color-default {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #64748b !important;
+  }
+  .dir-shift-tab.shift-color-1,
+  .dir-shift-tab.shift-color-2,
+  .dir-shift-tab.shift-color-3,
+  .dir-shift-tab.shift-color-4,
+  .dir-shift-tab.shift-color-5,
+  .dir-shift-tab.shift-color-6 {
+    opacity: 0.92;
+  }
+  .dir-shift-tab.active.shift-color-1,
+  .dir-shift-tab.active.shift-color-2,
+  .dir-shift-tab.active.shift-color-3,
+  .dir-shift-tab.active.shift-color-4,
+  .dir-shift-tab.active.shift-color-5,
+  .dir-shift-tab.active.shift-color-6 {
+    opacity: 1;
+    box-shadow: 0 0 0 2.5px #0f172a, 0 3px 8px rgba(15, 23, 42, 0.25) !important;
+    transform: translateY(-1px);
+  }
+  .dir-shift-tab .dir-role-count {
+    background: rgba(15, 23, 42, 0.14) !important;
+    color: #0f172a !important;
+  }
+
 </style>
 </head>
 <body>
@@ -2602,7 +2834,7 @@
         <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span></h1>
   </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.25</div>
+        <div class="ver-pill-box">v22.30</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2641,7 +2873,7 @@
         <button type="button" class="btn-search" id="btnViewRoster">🔍 View My Roster</button>
         <div class="main-view-tabs" role="tablist" aria-label="Roster View Switcher">
           <button type="button" class="btn-main-tab active" id="tabBtnMyCalendar" onclick="switchMainViewTab('CALENDAR')">📅 My Calendar &amp; Swap</button>
-          <button type="button" class="btn-main-tab" id="tabBtnFullDirectory" onclick="switchMainViewTab('DIRECTORY')">👥 Full Sheet Member Roster <span class="tab-count-pill" id="tabDirTotalCount">0</span></button>
+          <button type="button" class="btn-main-tab" id="tabBtnFullDirectory" onclick="switchMainViewTab('DIRECTORY')">👥 Full staff list <span class="tab-count-pill" id="tabDirTotalCount">0</span></button>
         </div>
       </div>
       <div class="status-msg">
@@ -2754,10 +2986,29 @@
     <div class="full-directory-card" id="fullSheetDirectoryCard" style="display:none; margin-top:0;">
       <div class="dir-header-bar">
         <div class="dir-title-group">
-          <h3>👥 Full Sheet Member Roster List <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
+          <h3>👥 Full staff list <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
           <p id="dirSummarySub">Tap a card to view Calendar, or <strong>Long Press</strong> (or tap <strong>☑️ Compare</strong>) on same-role staff (AA↔AA, TL↔TL, EO↔EO) to compare full-month rosters side-by-side!</p>
         </div>
-        <button type="button" class="btn-live-refresh" id="btnToggleDirectoryBody" style="background:#334155;">🔽 Hide List</button>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; width:100%;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+            <button type="button" class="btn-live-refresh" id="btnToggleDirectoryBody" style="background:#334155;">🔽 Hide List</button>
+            <div class="dir-month-switcher-bar" id="dirMonthSwitcherBar" title="Switch Month for Full staff list (Next Month button stays grey until that month's roster is released & loaded)">
+              <button type="button" id="btnDirPrevMonth" title="Previous Month">◀</button>
+              <div class="dir-month-title-pill" id="dirMonthYearTitle">November 2026</div>
+              <button type="button" id="btnDirNextMonth" title="Next Month (Active only when next month's roster is loaded)">Next Month ▶</button>
+              <button type="button" id="btnDirCurrentMonth" style="font-size:11.5px;" title="Return to Current Roster Month">📌 Current</button>
+              <span class="dir-month-status-tag loaded" id="dirMonthAvailabilityTag">✅ Roster Loaded</span>
+            </div>
+          </div>
+          <div class="dir-area-jump-box">
+            <label for="dirWorkAreaJumpInput" class="dir-area-jump-label">🔍 Find Staff Work Area &amp; Jump to Card (All Shifts)</label>
+            <div class="dir-area-jump-wrap">
+              <input type="text" id="dirWorkAreaJumpInput" class="dir-area-jump-input" placeholder="Search Staff ID or Name to jump to Work Area Card..." autocomplete="off">
+              <button type="button" class="dir-area-jump-clear" id="btnClearWorkAreaJump" title="Clear Work Area Search">✕</button>
+              <div class="dir-area-jump-dropdown" id="dirWorkAreaJumpDropdown"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="fullDirectoryBody">
@@ -2787,9 +3038,14 @@
   <!-- Long-Press Context Menu -->
   <div class="context-popup" id="swapContextPopup">
     <div class="context-popup-header" id="ctxHeaderText">15 Nov 2026 • Morning Duty</div>
-    <button type="button" class="context-action-btn" id="btnTriggerSwapSearch">
-      🔄 Find Fair Mutual Duty Swap
-    </button>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <button type="button" class="context-action-btn" id="btnTriggerSwapSearch">
+        🔄 Find Fair Mutual Duty Swap
+      </button>
+      <button type="button" class="context-action-btn" id="btnTriggerRotGiveawaySearch" style="background:linear-gradient(135deg,#ea580c 0%,#c2410c 100%); border:1px solid rgba(254,215,170,0.4);">
+        🔥 Find ROT Giveaway Staff (No Payback)
+      </button>
+    </div>
   </div>
 
 <script>
@@ -2823,6 +3079,7 @@
 
   let pendingSwapIso = null;
   let selectedSwapIso = null;
+  let currentSwapMode = 'MUTUAL'; // 'MUTUAL' | 'ROT_GIVEAWAY'
   let currentSwapMatches = [];
   let currentSwapFilter = 'ALL';
 
@@ -2924,6 +3181,7 @@
           });
         }
         return {
+          r: typeof st.rowOrder === 'number' ? st.rowOrder : 999999,
           i: st.empId,
           n: st.name,
           t: st.title,
@@ -2982,6 +3240,7 @@
           });
         }
         return {
+          rowOrder: typeof item.r === 'number' ? item.r : 999999,
           empId: item.i || '',
           name: item.n || '',
           title: item.t || '',
@@ -3013,11 +3272,26 @@
       updateHeaderSectionDisplay(compactObj.sheetName);
     }
 
+    loadedRosterMonthsMap = {};
+    staffRecords.forEach(function(st) {
+      if (!st.scheduleByIsoDate) return;
+      Object.keys(st.scheduleByIsoDate).forEach(function(iso) {
+        const d = st.scheduleByIsoDate[iso];
+        if (!d || d.category === 'EMPTY') return;
+        const p = iso.split('-');
+        if (p.length >= 2) {
+          loadedRosterMonthsMap[parseInt(p[0], 10) + '-' + (parseInt(p[1], 10) - 1)] = true;
+        }
+      });
+    });
+
     const dubaiYm = getDubaiCurrentYearMonth();
     baseRosterYear = dubaiYm.year;
     baseRosterMonth = dubaiYm.month0;
     currentYear = baseRosterYear;
     currentMonth = baseRosterMonth;
+    dirCurrentYear = baseRosterYear;
+    dirCurrentMonth = baseRosterMonth;
 
     const countEligible = staffRecords.filter(isSwapEligibleStaff).length;
     const activeLabel = MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year;
@@ -4723,6 +4997,217 @@
     };
   }
 
+
+  // =========================================================================
+  // ROT GIVEAWAY STAFF FINDER (NO PAYBACK NEEDED)
+  // Rules:
+  // 1. Exact Same Normalized Role (EO <-> EO, TL <-> TL, AA <-> AA, etc.)
+  // 2. Partner must be OFF on that date (or already working Same Shift -> Same-Shift ROT Exchange/Cover)
+  // 3. Partner must NOT already have a ROT on that date
+  // 4. Partner consecutive working duties (including any existing ROTs!) must NOT exceed 4 (max 4 duties together)
+  // 5. Max 3 consecutive Night duties (4th Night strictly blocked)
+  // 6. Minimum 12h rest gap before and after + at least 2 consecutive OFF days safe (not attached to Leave)
+  // 7. No payback needed (pure giveaway)
+  // =========================================================================
+  function evaluatePartnerForRotGiveaway(partnerStaff, rotIso, reqDutyObj) {
+    if (!partnerStaff) return { valid: false, reason: 'Invalid staff' };
+    if (!areSameNormalizedRole(activeStaff, partnerStaff)) {
+      return { valid: false, reason: 'Different role' };
+    }
+
+    const partnerDutyOnDate = getDutyForDate(partnerStaff, rotIso).duty;
+    if (!partnerDutyOnDate || isLeaveOrUnavailableDay(partnerDutyOnDate)) {
+      return { valid: false, reason: 'Partner on Leave/Unavailable' };
+    }
+
+    // If partner is ALREADY working on that date:
+    // User note: "wo tu same shift main b ho jata hai ya us staff say us staff ki off honi chaiey"
+    // Note: If partner is working the SAME shift (e.g. Morning when ROT is Morning), they are already on duty that shift (same-shift ROT takeover/coverage if needed), OR if partner is OFF, they take the ROT!
+    if (isWorkingDuty(partnerDutyOnDate)) {
+      if (partnerDutyOnDate.isOT) {
+        return { valid: false, reason: 'Partner already has ROT on this date' };
+      }
+      if (partnerDutyOnDate.category === reqDutyObj.category) {
+        let wBefore = 0, wAfter = 0;
+        for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(partnerStaff, addDaysIso(rotIso, -i)).duty)) wBefore++; else break; }
+        for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(partnerStaff, addDaysIso(rotIso, i)).duty)) wAfter++; else break; }
+        const curStreak = wBefore + 1 + wAfter;
+        const shiftName = partnerDutyOnDate.category === 'MORNING' ? '☀️ Morning' : '🌙 Night';
+        return {
+          valid: true,
+          matchType: 'SAME_SHIFT',
+          badgeLabel: '🟡 Same Shift (' + shiftName + ')',
+          isSameShift: true,
+          newStreak: curStreak,
+          remainingOff: 2,
+          detailText: 'Already scheduled on ' + shiftName + ' (' + (partnerDutyOnDate.time || '') + ') — Same-shift ROT handover possible'
+        };
+      }
+      return { valid: false, reason: 'Partner working opposite shift on this date' };
+    }
+
+    if (!isOffDay(partnerDutyOnDate)) {
+      return { valid: false, reason: 'Partner not OFF on this date' };
+    }
+
+    // Partner is OFF on rotIso: verify consecutive duties (including any existing ROTs!), 12h rest, max 3 Nights, min 2 OFF days, and not touching Leave
+    let offBefore = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isOffDay(getDutyForDate(partnerStaff, addDaysIso(rotIso, -i)).duty)) offBefore++;
+      else break;
+    }
+    let offAfter = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isOffDay(getDutyForDate(partnerStaff, addDaysIso(rotIso, i)).duty)) offAfter++;
+      else break;
+    }
+
+    const dayBeforeOffBlock = getDutyForDate(partnerStaff, addDaysIso(rotIso, -(offBefore + 1))).duty;
+    const dayAfterOffBlock = getDutyForDate(partnerStaff, addDaysIso(rotIso, offAfter + 1)).duty;
+    if (isLeaveOrUnavailableDay(dayBeforeOffBlock) || isLeaveOrUnavailableDay(dayAfterOffBlock)) {
+      return { valid: false, reason: 'OFF block attached to Leave/Training' };
+    }
+
+    const totalOffBlock = offBefore + 1 + offAfter;
+    if (totalOffBlock < 3) {
+      return { valid: false, reason: 'Only ' + totalOffBlock + ' OFF days — taking ROT would leave fewer than 2 consecutive OFF days' };
+    }
+
+    const partnerRType = (partnerStaff.cyclePattern) ? partnerStaff.cyclePattern.rosterType : '';
+    const is4x4Partner = (partnerRType === '4x4');
+    const isFirstOff = (offBefore === 0);
+    const isLastOff = (offAfter === 0);
+    const is4x4LateMorningOff = is4x4Partner && !isFirstOff && !isLastOff && (offBefore >= 2) && (offAfter === 1);
+
+    if (offBefore > 0 && offAfter > 0 && !is4x4LateMorningOff) {
+      return { valid: false, reason: 'Middle OFF day would split 2 consecutive OFF days' };
+    }
+
+    if (isFirstOff && reqDutyObj.category !== 'NIGHT') {
+      return { valid: false, reason: '1st OFF only allows Night ROT (Morning ROT breaks 12h rest gap)' };
+    }
+    if ((isLastOff || is4x4LateMorningOff) && reqDutyObj.category !== 'MORNING') {
+      return { valid: false, reason: 'Last/3rd OFF only allows Morning ROT (Night ROT breaks 12h rest gap)' };
+    }
+
+    const prevDayDuty = getDutyForDate(partnerStaff, addDaysIso(rotIso, -1)).duty;
+    const nextDayDuty = getDutyForDate(partnerStaff, addDaysIso(rotIso, 1)).duty;
+    if (!hasMinimum12HourRest(prevDayDuty, reqDutyObj) || !hasMinimum12HourRest(reqDutyObj, nextDayDuty)) {
+      return { valid: false, reason: 'Violates 12-hour minimum rest gap' };
+    }
+
+    // Count ALL consecutive working duties (regular + existing ROTs!) before and after rotIso
+    let workBefore = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isWorkingDuty(getDutyForDate(partnerStaff, addDaysIso(rotIso, -i)).duty)) workBefore++;
+      else break;
+    }
+    let workAfter = 0;
+    for (let i = 1; i <= 8; i++) {
+      if (isWorkingDuty(getDutyForDate(partnerStaff, addDaysIso(rotIso, i)).duty)) workAfter++;
+      else break;
+    }
+
+    const newConsecutiveDuties = workBefore + 1 + workAfter;
+    if (newConsecutiveDuties > 4) {
+      return { valid: false, reason: 'Would cause ' + newConsecutiveDuties + ' consecutive duties (including existing ROT — Max 4 allowed)' };
+    }
+
+    if (reqDutyObj.category === 'NIGHT') {
+      let nightBefore = 0;
+      for (let i = 1; i <= 8; i++) {
+        const dPrev = getDutyForDate(partnerStaff, addDaysIso(rotIso, -i)).duty;
+        if (dPrev && dPrev.category === 'NIGHT') nightBefore++;
+        else break;
+      }
+      let nightAfter = 0;
+      for (let i = 1; i <= 8; i++) {
+        const dNext = getDutyForDate(partnerStaff, addDaysIso(rotIso, i)).duty;
+        if (dNext && dNext.category === 'NIGHT') nightAfter++;
+        else break;
+      }
+      if (nightBefore + 1 + nightAfter >= 4) {
+        return { valid: false, reason: '4th consecutive Night duty is strictly not allowed' };
+      }
+    }
+
+    const remainingConsecutiveOff = isFirstOff ? offAfter : offBefore;
+    if (remainingConsecutiveOff < 2) {
+      return { valid: false, reason: 'Less than 2 consecutive OFF days remaining' };
+    }
+
+    const offSlotNumber = offBefore + 1;
+    const offPosLabel = isFirstOff
+      ? '1st OFF (of ' + totalOffBlock + ')'
+      : (is4x4LateMorningOff
+          ? (offSlotNumber === 3 ? '3rd OFF' : offSlotNumber + 'th OFF') + ' (4x4 Morning Slot, ' + remainingConsecutiveOff + ' OFF safe)'
+          : 'Last OFF (' + totalOffBlock + 'th of ' + totalOffBlock + ')');
+
+    return {
+      valid: true,
+      matchType: 'OFF_DAY',
+      badgeLabel: offPosLabel,
+      isSameShift: false,
+      newStreak: newConsecutiveDuties,
+      remainingOff: remainingConsecutiveOff,
+      detailText: 'Available on ' + offPosLabel + ' • Total Duty Streak (with ROT): ' + newConsecutiveDuties + '/4 • ' + remainingConsecutiveOff + ' OFF days safe'
+    };
+  }
+
+  function findRotGiveawayMatchesForDate(requesterStaff, rotIso) {
+    const reqDutyObj = getDutyForDate(requesterStaff, rotIso).duty;
+    if (!isWorkingDuty(reqDutyObj) || !reqDutyObj.isOT) {
+      return { matches: [], myEligibleOffDates: [] };
+    }
+
+    const matches = [];
+    staffRecords.forEach(function(other) {
+      if (String(other.empId) === String(requesterStaff.empId)) return;
+      if (!areSameNormalizedRole(requesterStaff, other)) return;
+
+      const check = evaluatePartnerForRotGiveaway(other, rotIso, reqDutyObj);
+      if (!check.valid) return;
+
+      const sectionInfo = evaluateSectionPriority(requesterStaff, other);
+      matches.push({
+        staff: other,
+        isRotGiveaway: true,
+        isSameShiftRot: Boolean(check.isSameShift),
+        coverCheck: {
+          valid: true,
+          offPositionLabel: check.badgeLabel,
+          newStreak: check.newStreak,
+          remainingOff: check.remainingOff,
+          detailText: check.detailText
+        },
+        mutualRepayOptions: [],
+        sameRole: true,
+        sectionTier: sectionInfo.tier,
+        sectionBadgeText: sectionInfo.badgeText,
+        sectionBadgeClass: sectionInfo.badgeClass,
+        isPriority1: sectionInfo.isPriority1,
+        isPriority2: sectionInfo.isPriority2,
+        hasMutualRepay: false
+      });
+    });
+
+    matches.sort(function(a, b) {
+      // Prioritize OFF-day takers before Same-Shift staff, then Section Tier, then Name
+      if (a.isSameShiftRot !== b.isSameShiftRot) {
+        return a.isSameShiftRot ? 1 : -1;
+      }
+      if (a.sectionTier !== b.sectionTier) {
+        return a.sectionTier - b.sectionTier;
+      }
+      return a.staff.name.localeCompare(b.staff.name);
+    });
+
+    return {
+      matches: matches,
+      myEligibleOffDates: []
+    };
+  }
+
   // =========================================================================
   // DEMO SAMPLE DATA (FALLBACK IF LIVE DRIVE & OFFLINE CACHE UNAVAILABLE)
   // =========================================================================
@@ -4783,13 +5268,16 @@
       };
     });
 
+    loadedRosterMonthsMap = { '2026-10': true };
     sheetSectionMap['Sample'] = 'Cargo Handling EK';
     updateHeaderSectionDisplay('Sample');
-    renderSampleChips();
     baseRosterYear = 2026;
     baseRosterMonth = 10;
     currentYear = 2026;
     currentMonth = 10;
+    dirCurrentYear = 2026;
+    dirCurrentMonth = 10;
+    renderSampleChips();
     const startId = getRequestedStaffFromUrl() || '497038';
     selectStaffById(startId, true);
   }
@@ -4808,6 +5296,116 @@
   let dirSelectedPattern = 'ALL';
   let dirQuickQuery = '';
   let dirIsCollapsed = false;
+  let dirCurrentYear = 2026;
+  let dirCurrentMonth = 10;
+  let loadedRosterMonthsMap = {}; // { 'YYYY-M0': true } -> tracks months whose actual Excel roster is loaded
+
+  function getMonthKeyYM(y, m0) {
+    return y + '-' + m0;
+  }
+
+  function hasLoadedRosterForMonth(y, m0) {
+    const key = getMonthKeyYM(y, m0);
+    if (loadedRosterMonthsMap && loadedRosterMonthsMap[key]) return true;
+    const prefix = y + '-' + String(m0 + 1).padStart(2, '0') + '-';
+    return staffRecords.some(function(st) {
+      if (!st.scheduleByIsoDate) return false;
+      return Object.keys(st.scheduleByIsoDate).some(function(iso) {
+        if (!iso.startsWith(prefix)) return false;
+        const d = st.scheduleByIsoDate[iso];
+        return d && d.category && d.category !== 'EMPTY';
+      });
+    });
+  }
+
+  function getStaffMetadataForMonth(staffObj, y, m0) {
+    const key = getMonthKeyYM(y, m0);
+    if (staffObj && staffObj.monthlyMeta && staffObj.monthlyMeta[key]) {
+      return staffObj.monthlyMeta[key];
+    }
+    return {
+      title: (staffObj && staffObj.title) || '',
+      teamId: (staffObj && staffObj.teamId) || '',
+      shiftSeq: (staffObj && staffObj.shiftSeq) || 'ROSTER STAFF',
+      sheetName: (staffObj && staffObj.sheetName) || '',
+      sectionTitle: (staffObj && staffObj.sectionTitle) || '',
+      rowOrder: (staffObj && typeof staffObj.rowOrder === 'number') ? staffObj.rowOrder : 999999,
+      cyclePattern: (staffObj && staffObj.cyclePattern) || null
+    };
+  }
+
+  function getStaffMonthScopedView(staffObj, y, m0) {
+    const meta = getStaffMetadataForMonth(staffObj, y, m0);
+    return Object.assign({}, staffObj, {
+      title: meta.title || staffObj.title,
+      teamId: meta.teamId || staffObj.teamId,
+      shiftSeq: meta.shiftSeq || staffObj.shiftSeq,
+      sheetName: meta.sheetName || staffObj.sheetName,
+      sectionTitle: meta.sectionTitle || staffObj.sectionTitle,
+      rowOrder: typeof meta.rowOrder === 'number' ? meta.rowOrder : staffObj.rowOrder,
+      cyclePattern: meta.cyclePattern || staffObj.cyclePattern
+    });
+  }
+
+  function updateDirectoryMonthControls() {
+    const titleEl = document.getElementById('dirMonthYearTitle');
+    const prevBtn = document.getElementById('btnDirPrevMonth');
+    const nextBtn = document.getElementById('btnDirNextMonth');
+    const curBtn = document.getElementById('btnDirCurrentMonth');
+    const tagEl = document.getElementById('dirMonthAvailabilityTag');
+
+    if (titleEl) {
+      titleEl.innerText = MONTH_NAMES[dirCurrentMonth] + ' ' + dirCurrentYear;
+    }
+
+    let prevM = dirCurrentMonth - 1;
+    let prevY = dirCurrentYear;
+    if (prevM < 0) { prevM = 11; prevY--; }
+
+    let nextM = dirCurrentMonth + 1;
+    let nextY = dirCurrentYear;
+    if (nextM > 11) { nextM = 0; nextY++; }
+
+    const curLoaded = hasLoadedRosterForMonth(dirCurrentYear, dirCurrentMonth);
+    const prevLoaded = hasLoadedRosterForMonth(prevY, prevM);
+    const nextLoaded = hasLoadedRosterForMonth(nextY, nextM);
+
+    if (prevBtn) {
+      prevBtn.disabled = !prevLoaded;
+      prevBtn.classList.toggle('btn-month-locked', !prevLoaded);
+      prevBtn.title = prevLoaded
+        ? ('View ' + MONTH_NAMES[prevM] + ' ' + prevY + ' Full staff list')
+        : (MONTH_NAMES[prevM] + ' ' + prevY + ' roster is not loaded');
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = !nextLoaded;
+      nextBtn.classList.toggle('btn-month-locked', !nextLoaded);
+      nextBtn.innerText = nextLoaded
+        ? (MONTH_SHORT[nextM] + ' ' + nextY + ' ▶')
+        : (MONTH_SHORT[nextM] + ' Not Loaded ▶');
+      nextBtn.title = nextLoaded
+        ? ('Switch Full staff list to ' + MONTH_NAMES[nextM] + ' ' + nextY)
+        : (MONTH_NAMES[nextM] + ' ' + nextY + ' roster not released/loaded yet');
+    }
+
+    if (curBtn) {
+      const isBase = (dirCurrentYear === baseRosterYear && dirCurrentMonth === baseRosterMonth);
+      curBtn.style.background = isBase ? '#eff6ff' : '#ffffff';
+      curBtn.style.borderColor = isBase ? '#93c5fd' : '#cbd5e1';
+      curBtn.style.color = isBase ? '#1d4ed8' : '#0f172a';
+    }
+
+    if (tagEl) {
+      if (curLoaded) {
+        tagEl.className = 'dir-month-status-tag loaded';
+        tagEl.innerText = '✅ ' + MONTH_SHORT[dirCurrentMonth] + ' ' + dirCurrentYear + ' Roster Loaded';
+      } else {
+        tagEl.className = 'dir-month-status-tag locked';
+        tagEl.innerText = '⏳ ' + MONTH_SHORT[dirCurrentMonth] + ' ' + dirCurrentYear + ' Not Loaded';
+      }
+    }
+  }
 
   const DIR_ROLE_ORDER = [
     { key: 'SUPERVISOR',         label: '🧭 COP / Supervisor',          shortLabel: 'COP / Supervisor' },
@@ -4840,6 +5438,31 @@
       label: '👷 ' + cleanTitle,
       shortLabel: cleanTitle
     };
+  }
+
+  
+  function getShiftColorClass(shiftStr) {
+    const s = String(shiftStr || '').toUpperCase().trim();
+    if (!s || s === 'ALL' || s === 'ROSTER STAFF' || s === 'OTHER SHIFT') return 'shift-color-default';
+    const slashMatch = s.match(/\/\s*(\d+)\s*$/);
+    const numMatch = slashMatch || s.match(/(?:SHIFT[\s\-]*0*|S)([1-9]\d*)\b/) || s.match(/(\d+)\s*$/);
+    if (numMatch) {
+      const n = parseInt(numMatch[1], 10);
+      if (n === 1) return 'shift-color-1';
+      if (n === 2) return 'shift-color-2';
+      if (n === 3) return 'shift-color-3';
+      if (n === 4) return 'shift-color-4';
+      if (n === 5) return 'shift-color-5';
+      if (n === 6) return 'shift-color-6';
+    }
+    return 'shift-color-default';
+  }
+
+  function renderShiftBadgeHtml(shiftStr, extraStyle) {
+    const label = String(shiftStr || 'SHIFT').trim();
+    const cls = getShiftColorClass(label);
+    const st = extraStyle ? ' style="' + extraStyle + '"' : '';
+    return '<span class="shift-pill-badge ' + cls + '"' + st + '>' + label + '</span>';
   }
 
   function getNormalizedShiftKey(staff) {
@@ -4919,14 +5542,26 @@
     const shiftTabsEl = document.getElementById('dirShiftTabs');
     if (!container || !tabsEl) return;
 
+    updateDirectoryMonthControls();
     renderDirectorySheetTabs();
 
-    // Strictly isolate to the currently selected sheet's staff only
+    // Strictly isolate to the currently selected sheet's staff + selected directory month's Work Area/Shift/Role
     const topSheetSel = document.getElementById('sheetSelect');
     const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
-    const currentSheetStaff = staffRecords.filter(function(st) {
-      return !activeSheetName || !st.sheetName || st.sheetName === activeSheetName;
-    });
+    const dirMonthKey = getMonthKeyYM(dirCurrentYear, dirCurrentMonth);
+    const hasMonthSpecificRoster = Boolean(loadedRosterMonthsMap && loadedRosterMonthsMap[dirMonthKey]);
+
+    const currentSheetStaff = staffRecords
+      .filter(function(st) {
+        if (hasMonthSpecificRoster && st.monthlyMeta && !st.monthlyMeta[dirMonthKey]) {
+          return false;
+        }
+        const scopedSheet = (st.monthlyMeta && st.monthlyMeta[dirMonthKey] && st.monthlyMeta[dirMonthKey].sheetName) || st.sheetName;
+        return !activeSheetName || !scopedSheet || scopedSheet === activeSheetName;
+      })
+      .map(function(st) {
+        return getStaffMonthScopedView(st, dirCurrentYear, dirCurrentMonth);
+      });
 
     const sheetBadge = document.getElementById('dirSheetBadge');
     const summarySub = document.getElementById('dirSummarySub');
@@ -4934,7 +5569,7 @@
       ? sheetSectionMap[activeSheetName]
       : ((currentSheetStaff[0] && (currentSheetStaff[0].sectionTitle || currentSheetStaff[0].sheetName)) || 'Selected Sheet');
     if (sheetBadge) {
-      sheetBadge.innerText = secName + (activeSheetName && activeSheetName !== secName ? ' (' + activeSheetName + ')' : '') + ' • ' + currentSheetStaff.length + ' Staff';
+      sheetBadge.innerText = MONTH_SHORT[dirCurrentMonth] + ' ' + dirCurrentYear + ' • ' + secName + (activeSheetName && activeSheetName !== secName ? ' (' + activeSheetName + ')' : '') + ' • ' + currentSheetStaff.length + ' Staff';
     }
     const tabCountPill = document.getElementById('tabDirTotalCount');
     if (tabCountPill) {
@@ -4959,7 +5594,8 @@
       let shHtml = '<span class="dir-shift-label">🕒 Shift Filter (' + secName + '):</span>' +
         '<button type="button" class="dir-shift-tab ' + (dirSelectedShift === 'ALL' ? 'active' : '') + '" data-shift="ALL">📋 All Shifts <span class="dir-role-count">' + currentSheetStaff.length + '</span></button>';
       sortedShiftKeys.forEach(function(shKey) {
-        shHtml += '<button type="button" class="dir-shift-tab ' + (dirSelectedShift === shKey ? 'active' : '') + '" data-shift="' + shKey.replace(/"/g, '&quot;') + '">' + shKey + ' <span class="dir-role-count">' + shiftCounts[shKey] + '</span></button>';
+        const shColorCls = getShiftColorClass(shKey);
+        shHtml += '<button type="button" class="dir-shift-tab ' + shColorCls + ' ' + (dirSelectedShift === shKey ? 'active' : '') + '" data-shift="' + shKey.replace(/"/g, '&quot;') + '">' + shKey + ' <span class="dir-role-count">' + shiftCounts[shKey] + '</span></button>';
       });
       shiftTabsEl.innerHTML = shHtml;
 
@@ -5043,8 +5679,8 @@
     if (summarySub) {
       const count4x4 = shiftScopedStaff.filter(function(s) { return getDirectoryRosterBadge(s).code === '4x4'; }).length;
       const count3x3 = shiftScopedStaff.filter(function(s) { return getDirectoryRosterBadge(s).code === '3x3' || getDirectoryRosterBadge(s).code === '3x3_9TO9'; }).length;
-      const shiftScopeLabel = dirSelectedShift === 'ALL' ? ('Sheet: ' + secName) : ('Sheet: ' + secName + ' • ' + dirSelectedShift);
-      summarySub.innerText = shiftScopeLabel + ' — Showing ' + filteredStaff.length + ' of ' + shiftScopedStaff.length + ' Staff (🟣 ' + count4x4 + ' on 4x4 • 🟢 ' + count3x3 + ' on 3x3) — Click any member card to view their Monthly Calendar';
+      const shiftScopeLabel = MONTH_NAMES[dirCurrentMonth] + ' ' + dirCurrentYear + ' • ' + (dirSelectedShift === 'ALL' ? ('Sheet: ' + secName) : ('Sheet: ' + secName + ' • ' + dirSelectedShift));
+      summarySub.innerText = shiftScopeLabel + ' — Showing ' + filteredStaff.length + ' of ' + shiftScopedStaff.length + ' Staff (🟣 ' + count4x4 + ' on 4x4 • 🟢 ' + count3x3 + ' on 3x3) — Click any member card to view their ' + MONTH_SHORT[dirCurrentMonth] + ' Calendar';
     }
 
     if (filteredStaff.length === 0) {
@@ -5094,10 +5730,12 @@
         let shiftsHtml = '';
         shiftKeysInSub.forEach(function(shKey) {
           const members = subObj.shifts[shKey].slice().sort(function(a, b) {
-            return String(a.name || '').localeCompare(String(b.name || ''));
+            const ra = typeof a.rowOrder === 'number' ? a.rowOrder : 999999;
+            const rb = typeof b.rowOrder === 'number' ? b.rowOrder : 999999;
+            return ra - rb;
           });
 
-          const cardsHtml = members.map(function(st) {
+          const cardsHtml = members.map(function(st, memberIdx) {
             const rBadge = getDirectoryRosterBadge(st);
             const patLine = (st.cyclePattern && st.cyclePattern.patternText) ? st.cyclePattern.patternText : 'Regular Roster Schedule';
             const isCurrent = activeEmpId && String(st.empId) === activeEmpId;
@@ -5111,11 +5749,11 @@
                   : '<button type="button" class="dir-compare-check-pill" data-cmp-empid="' + st.empId + '" style="background:#fef2f2; color:#991b1b; border-color:#fca5a5;" title="Only same role selection compare allow">🚫 Diff Role</button>');
 
             return (
-              '<div class="dir-member-card ' + (isCurrent ? 'dir-active-staff' : '') + (isCompareSel ? ' dir-compare-selected' : '') + '" data-empid="' + st.empId + '">' +
+              '<div class="dir-member-card ' + (isCurrent ? 'dir-active-staff' : '') + (isCompareSel ? ' dir-compare-selected' : '') + (dirHighlightedEmpId && String(st.empId) === dirHighlightedEmpId ? ' dir-jump-target-highlight' : '') + '" data-empid="' + st.empId + '">' +
                 '<div class="dir-m-top">' +
                   '<div>' +
-                    '<div class="dir-m-name">' + (isCurrent ? '✅ ' : (isCompareSel ? '🟣 ' : '')) + st.name + '</div>' +
-                    '<div class="dir-m-id">ID: <strong>' + st.empId + '</strong> • <strong>' + shKey + '</strong> • ' + subName + '</div>' +
+                    '<div class="dir-m-name"><span style="color:#64748b; font-size:12px; margin-right:5px;">#' + (memberIdx + 1) + '</span>' + (isCurrent ? '✅ ' : (isCompareSel ? '🟣 ' : '')) + st.name + '</div>' +
+                    '<div class="dir-m-id">ID: <strong>' + st.empId + '</strong> • ' + renderShiftBadgeHtml(shKey, 'padding:1px 6px; font-size:10px;') + ' • ' + subName + '</div>' +
                   '</div>' +
                   '<span class="dir-roster-pill ' + rBadge.cls + '">' + rBadge.text + '</span>' +
                 '</div>' +
@@ -5131,11 +5769,12 @@
             );
           }).join('');
 
+          const subbarShiftCls = getShiftColorClass(shKey);
           shiftsHtml +=
-            '<div style="border-top:1.5px solid #dbeafe; background:#ffffff;">' +
-              '<div class="dir-shift-subbar">' +
+            '<div style="border-top:1.5px solid #cbd5e1; background:#ffffff;">' +
+              '<div class="dir-shift-subbar ' + subbarShiftCls + '" style="border-bottom:1.5px solid rgba(15,23,42,0.2);">' +
                 '<span>🕒 <strong>' + shKey + '</strong> • ' + subName + '</span>' +
-                '<span style="background:#1d4ed8; color:#ffffff; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:800;">' + members.length + ' Staff</span>' +
+                '<span style="background:rgba(15,23,42,0.85); color:#ffffff; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:800;">' + members.length + ' Staff</span>' +
               '</div>' +
               '<div class="dir-staff-grid">' + cardsHtml + '</div>' +
             '</div>';
@@ -5345,6 +5984,8 @@
         didLongPress = false;
         return;
       }
+      currentYear = dirCurrentYear;
+      currentMonth = dirCurrentMonth;
       selectStaffById(empId, false);
       switchMainViewTab('CALENDAR');
       const profCard = document.getElementById('profileCard');
@@ -5449,7 +6090,7 @@
           '<div class="mcp-row-head">' +
             '<div>' +
               '<div class="mcp-staff-title">' + (entry.isMe ? '🙋 MY ROSTER: ' : '👤 ') + st.name + ' <span style="color:#2563eb;">(' + st.empId + ')</span></div>' +
-              '<div class="mcp-staff-meta">' + (st.shiftSeq || '') + ' • ' + (st.teamId || st.sectionTitle || '') + ' • <strong>' + rBadge.text + '</strong></div>' +
+              '<div class="mcp-staff-meta">' + renderShiftBadgeHtml(st.shiftSeq || 'SHIFT', 'padding:1px 6px; font-size:10px;') + ' • ' + (st.teamId || st.sectionTitle || '') + ' • <strong>' + rBadge.text + '</strong></div>' +
             '</div>' +
             (entry.isMe
               ? '<span style="background:#16a34a; color:#fff; padding:2px 8px; border-radius:6px; font-size:10.5px; font-weight:800;">ACTIVE</span>'
@@ -5622,6 +6263,230 @@
     }
   }
 
+
+  // =========================================================================
+  // DEDICATED WORK AREA / FULL SHIFT CARD JUMP SEARCH (IN DIRECTORY HEADER)
+  // =========================================================================
+  let dirHighlightedEmpId = '';
+
+  function jumpToStaffWorkAreaCard(empId) {
+    const cleanId = String(empId || '').trim();
+    if (!cleanId) return;
+
+    const topSheetSel = document.getElementById('sheetSelect');
+    const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
+    const jumpMonthKey = getMonthKeyYM(dirCurrentYear, dirCurrentMonth);
+    const hasJumpMonthRoster = Boolean(loadedRosterMonthsMap && loadedRosterMonthsMap[jumpMonthKey]);
+    const currentSheetStaff = staffRecords
+      .filter(function(st) {
+        if (hasJumpMonthRoster && st.monthlyMeta && !st.monthlyMeta[jumpMonthKey]) return false;
+        const scopedSheet = (st.monthlyMeta && st.monthlyMeta[jumpMonthKey] && st.monthlyMeta[jumpMonthKey].sheetName) || st.sheetName;
+        return !activeSheetName || !scopedSheet || scopedSheet === activeSheetName;
+      })
+      .map(function(st) {
+        return getStaffMonthScopedView(st, dirCurrentYear, dirCurrentMonth);
+      });
+
+    const targetStaff = currentSheetStaff.find(function(s) {
+      return String(s.empId).trim() === cleanId;
+    }) || staffRecords.find(function(s) {
+      return String(s.empId).trim() === cleanId;
+    });
+
+    if (!targetStaff) return;
+
+    // Ensure directory body is expanded if collapsed
+    if (dirIsCollapsed) {
+      dirIsCollapsed = false;
+      const bodyEl = document.getElementById('fullDirectoryBody');
+      const toggleBtn = document.getElementById('btnToggleDirectoryBody');
+      if (bodyEl) bodyEl.style.display = 'block';
+      if (toggleBtn) toggleBtn.innerText = '🔽 Hide List';
+    }
+
+    // Reset Shift to ALL so the entire Work Area card with ALL shifts (SHIFT-1, SHIFT-2, etc.) is visible
+    dirSelectedShift = 'ALL';
+    dirSelectedRole = getDirectoryRoleMeta(targetStaff).key;
+    dirSelectedSubSection = String(targetStaff.teamId || targetStaff.sectionTitle || 'GENERAL AREA').trim();
+    dirSelectedPattern = 'ALL';
+    dirQuickQuery = '';
+    const qInp = document.getElementById('dirQuickFilterInput');
+    if (qInp) qInp.value = '';
+
+    const patSel = document.getElementById('dirPatternSelect');
+    if (patSel) patSel.value = 'ALL';
+
+    dirHighlightedEmpId = cleanId;
+    renderFullSheetMemberDirectory();
+
+    const jumpInput = document.getElementById('dirWorkAreaJumpInput');
+    const jumpDd = document.getElementById('dirWorkAreaJumpDropdown');
+    const jumpClr = document.getElementById('btnClearWorkAreaJump');
+    if (jumpInput) {
+      jumpInput.value = targetStaff.empId + ' - ' + targetStaff.name + ' (' + dirSelectedSubSection + ')';
+    }
+    if (jumpClr) jumpClr.style.display = 'flex';
+    if (jumpDd) jumpDd.style.display = 'none';
+
+    setTimeout(function() {
+      const targetCard = document.querySelector('#dirGroupsContainer .dir-member-card[data-empid="' + cleanId + '"]');
+      if (targetCard) {
+        const parentSubsecBlock = targetCard.closest('.dir-subsec-block');
+        if (parentSubsecBlock) {
+          parentSubsecBlock.classList.remove('dir-subsec-card-highlight');
+          void parentSubsecBlock.offsetWidth;
+          parentSubsecBlock.classList.add('dir-subsec-card-highlight');
+          parentSubsecBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        setTimeout(function() {
+          targetCard.classList.remove('dir-jump-target-highlight');
+          void targetCard.offsetWidth;
+          targetCard.classList.add('dir-jump-target-highlight');
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 280);
+      }
+    }, 60);
+  }
+
+  function bindWorkAreaJumpSearchEvents() {
+    const jumpInput = document.getElementById('dirWorkAreaJumpInput');
+    const jumpDd = document.getElementById('dirWorkAreaJumpDropdown');
+    const jumpClr = document.getElementById('btnClearWorkAreaJump');
+    if (!jumpInput || !jumpDd) return;
+
+    let ddIdx = -1;
+
+    function renderJumpDropdown(rawQ) {
+      const q = String(rawQ || '').trim().toLowerCase();
+      if (jumpClr) jumpClr.style.display = q.length > 0 ? 'flex' : 'none';
+
+      const topSheetSel = document.getElementById('sheetSelect');
+      const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
+      const ddMonthKey = getMonthKeyYM(dirCurrentYear, dirCurrentMonth);
+      const hasDdMonthRoster = Boolean(loadedRosterMonthsMap && loadedRosterMonthsMap[ddMonthKey]);
+      const sheetList = staffRecords
+        .filter(function(st) {
+          if (hasDdMonthRoster && st.monthlyMeta && !st.monthlyMeta[ddMonthKey]) return false;
+          const scopedSheet = (st.monthlyMeta && st.monthlyMeta[ddMonthKey] && st.monthlyMeta[ddMonthKey].sheetName) || st.sheetName;
+          return !activeSheetName || !scopedSheet || scopedSheet === activeSheetName;
+        })
+        .map(function(st) {
+          return getStaffMonthScopedView(st, dirCurrentYear, dirCurrentMonth);
+        });
+
+      let matches = [];
+      if (!q) {
+        matches = sheetList.slice(0, 35);
+      } else {
+        const exactOrStart = [];
+        const partial = [];
+        sheetList.forEach(function(st) {
+          const idStr = String(st.empId || '').toLowerCase();
+          const nmStr = String(st.name || '').toLowerCase();
+          const areaStr = String(st.teamId || st.sectionTitle || '').toLowerCase();
+          const shStr = String(st.shiftSeq || '').toLowerCase();
+          if (idStr.startsWith(q) || nmStr.startsWith(q)) {
+            exactOrStart.push(st);
+          } else if (idStr.includes(q) || nmStr.includes(q) || areaStr.includes(q) || shStr.includes(q)) {
+            partial.push(st);
+          }
+        });
+        matches = exactOrStart.concat(partial).slice(0, 50);
+      }
+
+      if (matches.length === 0) {
+        jumpDd.innerHTML = '<div class="dd-header-info">❌ No staff found in this sheet matching "' + rawQ + '"</div>';
+        jumpDd.style.display = 'block';
+        return;
+      }
+
+      const hdr = '<div class="dd-header-info">📍 Select Staff to Open Full Work Area &amp; All-Shifts Card (' + matches.length + ' found)</div>';
+      const rows = matches.map(function(st, i) {
+        const areaName = String(st.teamId || st.sectionTitle || 'GENERAL AREA').trim();
+        const roleMeta = getDirectoryRoleMeta(st);
+        const areaCount = sheetList.filter(function(x) {
+          return getDirectoryRoleMeta(x).key === roleMeta.key &&
+                 String(x.teamId || x.sectionTitle || 'GENERAL AREA').trim() === areaName;
+        }).length;
+
+        return (
+          '<div class="dd-item" data-jump-empid="' + st.empId + '" data-idx="' + i + '">' +
+            '<div class="dd-item-left">' +
+              '<div class="dd-item-name">' + st.empId + ' — ' + st.name + '</div>' +
+              '<div class="dd-item-sub">📍 <strong>' + areaName + '</strong> • ' + renderShiftBadgeHtml(st.shiftSeq || 'SHIFT', 'padding:1px 5px; font-size:9.5px;') + ' • ' + roleMeta.shortLabel + '</div>' +
+            '</div>' +
+            '<span class="dd-item-badge dd-elig">👥 ' + areaCount + ' Staff Card</span>' +
+          '</div>'
+        );
+      }).join('');
+
+      jumpDd.innerHTML = hdr + rows;
+      jumpDd.style.display = 'block';
+      ddIdx = -1;
+
+      jumpDd.querySelectorAll('.dd-item').forEach(function(el) {
+        el.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          const eid = this.getAttribute('data-jump-empid');
+          jumpToStaffWorkAreaCard(eid);
+        });
+      });
+    }
+
+    jumpInput.addEventListener('input', function() {
+      renderJumpDropdown(this.value);
+    });
+
+    jumpInput.addEventListener('focus', function() {
+      this.select();
+      renderJumpDropdown('');
+    });
+
+    jumpInput.addEventListener('keydown', function(e) {
+      const items = jumpDd.querySelectorAll('.dd-item');
+      if (e.key === 'ArrowDown' && items.length > 0) {
+        e.preventDefault();
+        ddIdx = (ddIdx + 1) % items.length;
+        items.forEach(function(el, i) { el.classList.toggle('dd-active', i === ddIdx); });
+        items[ddIdx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp' && items.length > 0) {
+        e.preventDefault();
+        ddIdx = (ddIdx - 1 + items.length) % items.length;
+        items.forEach(function(el, i) { el.classList.toggle('dd-active', i === ddIdx); });
+        items[ddIdx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (ddIdx >= 0 && items[ddIdx]) {
+          jumpToStaffWorkAreaCard(items[ddIdx].getAttribute('data-jump-empid'));
+        } else if (items.length > 0) {
+          jumpToStaffWorkAreaCard(items[0].getAttribute('data-jump-empid'));
+        }
+      } else if (e.key === 'Escape') {
+        jumpDd.style.display = 'none';
+      }
+    });
+
+    if (jumpClr) {
+      jumpClr.addEventListener('click', function() {
+        jumpInput.value = '';
+        jumpClr.style.display = 'none';
+        dirHighlightedEmpId = '';
+        dirSelectedSubSection = 'ALL';
+        const subSel = document.getElementById('dirSubSectionSelect');
+        if (subSel) subSel.value = 'ALL';
+        renderFullSheetMemberDirectory();
+        jumpInput.focus();
+        renderJumpDropdown('');
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.dir-area-jump-wrap')) {
+        jumpDd.style.display = 'none';
+      }
+    });
+  }
+
   function bindFullDirectoryEvents() {
     const subSel = document.getElementById('dirSubSectionSelect');
     if (subSel) {
@@ -5651,6 +6516,41 @@
         dirIsCollapsed = !dirIsCollapsed;
         bodyEl.style.display = dirIsCollapsed ? 'none' : 'block';
         toggleBtn.innerText = dirIsCollapsed ? '🔼 Show List' : '🔽 Hide List';
+      });
+    }
+
+    const dirPrevBtn = document.getElementById('btnDirPrevMonth');
+    if (dirPrevBtn) {
+      dirPrevBtn.addEventListener('click', function() {
+        if (this.disabled) return;
+        dirCurrentMonth--;
+        if (dirCurrentMonth < 0) {
+          dirCurrentMonth = 11;
+          dirCurrentYear--;
+        }
+        renderFullSheetMemberDirectory();
+      });
+    }
+
+    const dirNextBtn = document.getElementById('btnDirNextMonth');
+    if (dirNextBtn) {
+      dirNextBtn.addEventListener('click', function() {
+        if (this.disabled) return;
+        dirCurrentMonth++;
+        if (dirCurrentMonth > 11) {
+          dirCurrentMonth = 0;
+          dirCurrentYear++;
+        }
+        renderFullSheetMemberDirectory();
+      });
+    }
+
+    const dirCurBtn = document.getElementById('btnDirCurrentMonth');
+    if (dirCurBtn) {
+      dirCurBtn.addEventListener('click', function() {
+        dirCurrentYear = baseRosterYear;
+        dirCurrentMonth = baseRosterMonth;
+        renderFullSheetMemberDirectory();
       });
     }
   }
@@ -5803,6 +6703,7 @@
       const shiftLabel = rawSeq ? (rawSeq.toUpperCase().startsWith('SHIFT') ? rawSeq.toUpperCase() : 'SHIFT-' + rawSeq.toUpperCase()) : 'ROSTER STAFF';
 
       list.push({
+        rowOrder: r,
         empId: empId,
         name: formatDisplayName(rawName),
         title: title,
@@ -5825,16 +6726,34 @@
     const orderedKeys = [];
     const allMonthSet = {};
 
+    loadedRosterMonthsMap = {};
     loadedWorkbooksList.forEach(function(wbEntry) {
       const res = extractStaffFromWorkbookSheet(wbEntry.wb, sheetName);
+      const wbMonthKeys = {};
       res.dateCols.forEach(function(dc) {
-        allMonthSet[dc.dateObj.year + '-' + dc.dateObj.month0] = { year: dc.dateObj.year, month0: dc.dateObj.month0 };
+        const mKey = dc.dateObj.year + '-' + dc.dateObj.month0;
+        allMonthSet[mKey] = { year: dc.dateObj.year, month0: dc.dateObj.month0 };
+        wbMonthKeys[mKey] = true;
+        loadedRosterMonthsMap[mKey] = true;
       });
+      const wbMonthKeyList = Object.keys(wbMonthKeys);
 
       res.staffList.forEach(function(st) {
         const key = st.empId ? ('ID_' + st.empId) : ('NM_' + st.name);
+        const monthPat = detectRegularCyclePattern(st.scheduleByIsoDate, st.shiftSeq, st.teamId);
+        const monthMetaObj = {
+          title: st.title,
+          teamId: st.teamId,
+          shiftSeq: st.shiftSeq,
+          sheetName: st.sheetName,
+          sectionTitle: st.sectionTitle,
+          rowOrder: typeof st.rowOrder === 'number' ? st.rowOrder : orderedKeys.length,
+          cyclePattern: monthPat
+        };
+
         if (!mergedByKey[key]) {
           mergedByKey[key] = {
+            rowOrder: typeof st.rowOrder === 'number' ? st.rowOrder : orderedKeys.length,
             empId: st.empId,
             name: st.name,
             title: st.title,
@@ -5842,6 +6761,7 @@
             sheetName: st.sheetName,
             sectionTitle: st.sectionTitle,
             shiftSeq: st.shiftSeq,
+            monthlyMeta: {},
             scheduleByIsoDate: Object.assign({}, st.scheduleByIsoDate)
           };
           orderedKeys.push(key);
@@ -5851,6 +6771,10 @@
           if (st.teamId) mergedByKey[key].teamId = st.teamId;
           if (st.shiftSeq && st.shiftSeq !== 'ROSTER STAFF') mergedByKey[key].shiftSeq = st.shiftSeq;
         }
+
+        wbMonthKeyList.forEach(function(mk) {
+          mergedByKey[key].monthlyMeta[mk] = monthMetaObj;
+        });
       });
     });
 
@@ -5878,6 +6802,8 @@
       }
       currentYear = baseRosterYear;
       currentMonth = baseRosterMonth;
+      dirCurrentYear = baseRosterYear;
+      dirCurrentMonth = baseRosterMonth;
 
       const countEligible = staffRecords.filter(isSwapEligibleStaff).length;
       const loadedMonthsLabels = monthKeys.map(function(mk) {
@@ -5977,6 +6903,15 @@
     if (seqCol === -1 && metaLimit > 5) seqCol = 5;
     if (teamCol === -1 && metaLimit > 6) teamCol = 6;
 
+    loadedRosterMonthsMap = {};
+    const singleMonthKeys = {};
+    dateCols.forEach(function(dc) {
+      const mk = dc.dateObj.year + '-' + dc.dateObj.month0;
+      singleMonthKeys[mk] = true;
+      loadedRosterMonthsMap[mk] = true;
+    });
+    const singleMonthKeyList = Object.keys(singleMonthKeys);
+
     const parsed = [];
     for (let r = headerRowIdx + 1; r < textGrid.length; r++) {
       const row = textGrid[r] || [];
@@ -5994,8 +6929,22 @@
       });
 
       const shiftLabel = rawSeq ? (rawSeq.toUpperCase().startsWith('SHIFT') ? rawSeq.toUpperCase() : 'SHIFT-' + rawSeq.toUpperCase()) : 'ROSTER STAFF';
+      const patObj = detectRegularCyclePattern(sched, shiftLabel, teamId);
+      const mMeta = {};
+      singleMonthKeyList.forEach(function(mk) {
+        mMeta[mk] = {
+          title: title,
+          teamId: teamId,
+          shiftSeq: shiftLabel,
+          sheetName: sheetName,
+          sectionTitle: sheetSectionMap[sheetName] || sheetName,
+          rowOrder: r,
+          cyclePattern: patObj
+        };
+      });
 
       parsed.push({
+        rowOrder: r,
         empId: empId,
         name: formatDisplayName(rawName),
         title: title,
@@ -6003,8 +6952,9 @@
         sheetName: sheetName,
         sectionTitle: sheetSectionMap[sheetName] || sheetName,
         shiftSeq: shiftLabel,
+        monthlyMeta: mMeta,
         scheduleByIsoDate: sched,
-        cyclePattern: detectRegularCyclePattern(sched, shiftLabel, teamId)
+        cyclePattern: patObj
       });
     }
 
@@ -6015,6 +6965,8 @@
         baseRosterMonth = dateCols[0].dateObj.month0;
         currentYear = baseRosterYear;
         currentMonth = baseRosterMonth;
+        dirCurrentYear = baseRosterYear;
+        dirCurrentMonth = baseRosterMonth;
       }
 
       const countEligible = staffRecords.filter(isSwapEligibleStaff).length;
@@ -6108,9 +7060,18 @@
     document.getElementById('avatarInitials').innerText = getInitials(found.name);
     document.getElementById('profName').innerText = found.name || 'STAFF MEMBER';
     document.getElementById('profId').innerText = found.empId;
-    document.getElementById('profShift').innerText = found.shiftSeq || 'SHIFT-2';
+    const monthScopedFound = getStaffMonthScopedView(found, currentYear, currentMonth);
+    const profShiftEl = document.getElementById('profShift');
+    const shiftValTxt = monthScopedFound.shiftSeq || 'SHIFT-2';
+    profShiftEl.innerText = shiftValTxt;
+    const profShiftParent = profShiftEl.parentElement;
+    if (profShiftParent) {
+      profShiftParent.className = 'p-badge ' + getShiftColorClass(shiftValTxt);
+      const lblSpan = profShiftParent.querySelector('span');
+      if (lblSpan) lblSpan.style.color = '#0f172a';
+    }
 
-    const roleParts = [found.title, found.teamId].filter(Boolean);
+    const roleParts = [monthScopedFound.title, monthScopedFound.teamId].filter(Boolean);
     document.getElementById('profRole').innerText = roleParts.length ? roleParts.join(' • ') : 'OPERATIONS';
 
     const rBadge = document.getElementById('profRosterType');
@@ -6253,15 +7214,28 @@
   }
 
   function openSwapContextPopup(isoDate, dutyObj, clientX, clientY) {
-    if (!isSwapEligibleStaff(activeStaff)) {
-      alert('Only 3x3 (Non-9-to-9) and 4x4 roster staff can swap duties. 3x3 (9-to-9) and 4x2 staff are not eligible.');
+    const isRotDuty = Boolean(dutyObj && dutyObj.isOT);
+    if (!isRotDuty && !isSwapEligibleStaff(activeStaff)) {
+      alert('Only 3x3 (Non-9-to-9) and 4x4 roster staff can swap duties (or select a ROT duty for ROT Giveaway).');
       return;
     }
 
     pendingSwapIso = isoDate;
     const popup = document.getElementById('swapContextPopup');
-    const shiftStr = dutyObj.category === 'MORNING' ? '☀️ Morning Duty' : '🌙 Night Duty';
+    const shiftStr = dutyObj.category === 'MORNING'
+      ? (isRotDuty ? '🔥 Morning ROT (OT)' : '☀️ Morning Duty')
+      : (isRotDuty ? '🔥 Night ROT (OT)' : '🌙 Night Duty');
     document.getElementById('ctxHeaderText').innerText = formatHumanDate(isoDate) + ' • ' + shiftStr;
+
+    const mutualBtn = document.getElementById('btnTriggerSwapSearch');
+    const rotBtn = document.getElementById('btnTriggerRotGiveawaySearch');
+    if (mutualBtn) {
+      mutualBtn.style.display = (!isRotDuty && isSwapEligibleStaff(activeStaff)) ? 'flex' : 'none';
+    }
+    if (rotBtn) {
+      rotBtn.style.display = isRotDuty ? 'flex' : 'none';
+      rotBtn.innerHTML = '🔥 Find ROT Giveaway Staff (No Payback)';
+    }
 
     popup.style.display = 'block';
     const rect = popup.getBoundingClientRect();
@@ -6296,15 +7270,30 @@
   document.getElementById('btnTriggerSwapSearch').addEventListener('click', function() {
     hideSwapContextPopup();
     if (!pendingSwapIso || !activeStaff) return;
-    executeSwapSearch(pendingSwapIso);
+    executeSwapSearch(pendingSwapIso, 'MUTUAL');
   });
 
-  function executeSwapSearch(swapIso) {
+  document.getElementById('btnTriggerRotGiveawaySearch').addEventListener('click', function() {
+    hideSwapContextPopup();
+    if (!pendingSwapIso || !activeStaff) return;
+    const dObj = getDutyForDate(activeStaff, pendingSwapIso).duty;
+    if (!dObj || !dObj.isOT) {
+      alert('ROT Giveaway sirf ROT (OT) duty par allow hai. Normal duty ke liye Mutual Swap use karein.');
+      return;
+    }
+    executeSwapSearch(pendingSwapIso, 'ROT_GIVEAWAY');
+  });
+
+  function executeSwapSearch(swapIso, mode) {
+    currentSwapMode = mode || 'MUTUAL';
     selectedSwapIso = swapIso;
     renderCalendar();
 
     const dutyObj = getDutyForDate(activeStaff, swapIso).duty;
-    const result = findSwapMatchesForDate(activeStaff, swapIso);
+    const isRotMode = (currentSwapMode === 'ROT_GIVEAWAY');
+    const result = isRotMode
+      ? findRotGiveawayMatchesForDate(activeStaff, swapIso)
+      : findSwapMatchesForDate(activeStaff, swapIso);
     currentSwapMatches = result.matches;
     currentSwapFilter = 'ALL';
 
@@ -6313,15 +7302,31 @@
     });
 
     const shiftText = dutyObj.category === 'MORNING'
-      ? '☀️ Morning Duty (' + (dutyObj.time || '05:00-17:00') + ')'
-      : '🌙 Night Duty (' + (dutyObj.time || '17:00-05:00') + ')';
+      ? (isRotMode ? '🔥 Morning ROT (' + (dutyObj.time || '05:00-17:00') + ')' : '☀️ Morning Duty (' + (dutyObj.time || '05:00-17:00') + ')')
+      : (isRotMode ? '🔥 Night ROT (' + (dutyObj.time || '17:00-05:00') + ')' : '🌙 Night Duty (' + (dutyObj.time || '17:00-05:00') + ')');
 
     const myRType = activeStaff.cyclePattern ? activeStaff.cyclePattern.rosterType : '3x3';
 
-    document.getElementById('swapPanelTitle').innerText =
-      '🔄 Fair Mutual Duty Swap Options for ' + formatHumanDate(swapIso) + ' — ' + shiftText;
+    document.getElementById('swapPanelTitle').innerText = isRotMode
+      ? ('🔥 ROT Giveaway Staff (No Payback Needed) for ' + formatHumanDate(swapIso) + ' — ' + shiftText)
+      : ('🔄 Fair Mutual Duty Swap Options for ' + formatHumanDate(swapIso) + ' — ' + shiftText);
     document.getElementById('swapPanelSub').innerText =
       'Requester: ' + activeStaff.name + ' (' + activeStaff.empId + ' • ' + activeStaff.shiftSeq + ' • ' + (activeStaff.title || 'Staff') + ' • ' + myRType + ' Roster)';
+
+    const rulesStrip = document.querySelector('.swap-rules-strip');
+    if (rulesStrip) {
+      if (isRotMode) {
+        rulesStrip.innerHTML =
+          '<span>🔥 <strong>Rule 1 (ROT Giveaway — No Payback Required):</strong> ROT is extra overtime duty, so <strong>no payback duty is needed</strong> — you simply give away the ROT to an eligible same-role colleague.</span>' +
+          '<span>✅ <strong>Rule 2 (OFF Day or Same Shift + Max 4 Duties Including Existing ROT):</strong> Partner must either be on a valid <strong>OFF day</strong> (1st OFF = Night ROT, Last/3rd OFF = Morning ROT, max 4 consecutive duties including any existing ROT, max 3 Nights, 12h rest &amp; min 2 OFF safe) OR already on the <strong>Same Shift</strong>.</span>' +
+          '<span>✅ <strong>Rule 3 (Strict Same Role + Section Priority):</strong> Only exact same role staff (EO ↔ EO, TL ↔ TL, AA ↔ AA) are listed, prioritized by CMT / Same Section first.</span>';
+      } else {
+        rulesStrip.innerHTML =
+          '<span>✅ <strong>Rule 1 (Mutual Two-Way Fair Swap Only):</strong> A match is valid <strong>ONLY</strong> when the partner can cover your duty on their OFF day <strong>AND you can also repay their duty on your valid OFF day within the same month</strong> (one-sided swaps without payback are excluded).</span>' +
+          '<span>✅ <strong>Rule 2 (Strict Same Role + Dynamic Section Priority):</strong> <strong>Exact Same Role Only</strong> (EO ↔ EO, TL ↔ TL). For <strong>Cargo Handling EK</strong>, <strong>CMT</strong> is Priority 1 and <strong>PK15</strong> is Priority 2; for all other sheets/areas, <strong>Same Section/Area</strong> is prioritized first within the same sheet.</span>' +
+          '<span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties [Max 3 Nights / No 4th Night] + 4x4 Extended Rules + Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> (max 3 consecutive Nights; 4th Night strictly blocked), <strong>Last OFF (or 3rd/4th OFF in 4x4) = ☀️ Morning Only</strong> (up to 4 Mornings allowed; 3M+2N blocked), plus <strong>Same-Day Morning ↔ Night Swap</strong> (including 4x4 2M+2N ↔ 3M+1N / 1M+3N) when 12h rest &amp; min 2 OFF days remain safe.</span>';
+      }
+    }
 
     const reqZoneInfo = classifyOperationalZone(activeStaff);
     const tab1LabelEl = document.getElementById('tabSameSectionLabel');
@@ -6347,8 +7352,9 @@
       const allowedShiftTxt = o.requiredCategory === 'NIGHT' ? '🌙 Night Only' : '☀️ Morning Only';
       return formatHumanDate(o.iso) + ' [' + o.offPositionLabel + ' → ' + allowedShiftTxt + ']';
     }).join(', ');
-    document.getElementById('myEligibleOffSummary').innerText =
-      swapMonthName + ' Valid Repay OFF Dates (Same Month + 12h Gap Safe): ' + (offDatesPreview || 'No eligible OFF slots remaining in this month');
+    document.getElementById('myEligibleOffSummary').innerText = isRotMode
+      ? '🔥 ROT Giveaway Mode: No Payback Required (Pure Giveaway to OFF-Day or Same-Shift Colleague)'
+      : (swapMonthName + ' Valid Repay OFF Dates (Same Month + 12h Gap Safe): ' + (offDatesPreview || 'No eligible OFF slots remaining in this month'));
 
     renderSwapCards();
 
@@ -6420,7 +7426,11 @@
         let markerHtml = '';
         if (isSwapTarget) {
           extraCls = ' swap-target-mark';
-          if (isSameDaySwap) {
+          if (currentSwapMode === 'ROT_GIVEAWAY') {
+            markerHtml = isRequesterTrack
+              ? '<span class="mini-mark-badge badge-rot-mini">GIVE ROT</span>'
+              : '<span class="mini-mark-badge badge-swap-day">TAKE ROT</span>';
+          } else if (isSameDaySwap) {
             const partnerD = getDutyForDate(partnerStaff, swapIso).duty;
             const myD = getDutyForDate(requesterStaff, swapIso).duty;
             const pTargetLabel = (myD && myD.category === 'MORNING') ? 'DO MORNING' : 'DO NIGHT';
@@ -6469,7 +7479,7 @@
 
         '<div class="slider-row-block">' +
           '<div class="slider-row-label lbl-partner">' +
-            '<span>👤 ' + partnerShortName + ' (' + partnerStaff.shiftSeq + ')</span>' +
+            '<span>👤 ' + partnerShortName + ' ' + renderShiftBadgeHtml(partnerStaff.shiftSeq, 'padding:1px 5px; font-size:9.5px;') + '</span>' +
             '<span>🔵 Swap Day Marked</span>' +
           '</div>' +
           '<div class="roster-h-track track-partner">' +
@@ -6479,7 +7489,7 @@
 
         '<div class="slider-row-block">' +
           '<div class="slider-row-label lbl-me">' +
-            '<span>🙋 My Roster — ' + myShortName + ' (' + requesterStaff.shiftSeq + ')</span>' +
+            '<span>🙋 My Roster — ' + myShortName + ' ' + renderShiftBadgeHtml(requesterStaff.shiftSeq, 'padding:1px 5px; font-size:9.5px;') + '</span>' +
             '<span>' + (isSameDaySwap ? '🔄 Same-Day Shift Swap' : '🟢 Repay Days Marked') + '</span>' +
           '</div>' +
           '<div class="roster-h-track track-me">' +
@@ -6503,7 +7513,9 @@
     if (filtered.length === 0) {
       listEl.innerHTML =
         '<div style="grid-column: 1 / -1; padding: 20px; text-align:center; color:#64748b; font-weight:700;">' +
-        '⚠️ No fair mutual swap match found for this date (only same-role 3x3/4x4 staff whose duty you can also repay within the same month are shown).' +
+        (currentSwapMode === 'ROT_GIVEAWAY'
+          ? '⚠️ No eligible same-role staff found for ROT Giveaway on this date (must be on a valid OFF day with max 4 consecutive duties including existing ROTs, or on the Same Shift).'
+          : '⚠️ No fair mutual swap match found for this date (only same-role 3x3/4x4 staff whose duty you can also repay within the same month are shown).') +
         '</div>';
       return;
     }
@@ -6519,40 +7531,68 @@
       const card = document.createElement('div');
       card.className = 'swap-candidate-card mutual-match';
 
-      const chips = item.mutualRepayOptions.slice(0, 6).map(function(rep) {
-        return '<div class="repay-chip">' +
-          rep.repayHuman + ' (' + rep.otherDutyType + ')' +
-          '<small>Your ' + rep.myOffLabel + ' • Streak: ' + rep.myNewStreak + '/4 • ' + rep.myRemainingOff + ' OFF safe</small>' +
-        '</div>';
-      }).join('');
+      let repayHtml = '';
+      let copyMsg = '';
+      let statusBoxHtml = '';
 
-      const repayHtml = item.isSameDaySwap
-        ? '<div class="repay-section">' +
-            '<div class="repay-title">🔄 Same-Day Shift Exchange (No Extra Repay Day Needed):</div>' +
-            '<div class="repay-chips"><div class="repay-chip">' +
-              formatHumanDate(selectedSwapIso) + ' • You do ' + item.mutualRepayOptions[0].otherDutyType + ' (' + item.mutualRepayOptions[0].otherDutyTime + ')' +
-              '<small>' + st.name + ' does your ' + (reqDuty.category === 'MORNING' ? '☀️ Morning' : '🌙 Night') + ' on the same day</small>' +
+      if (item.isRotGiveaway) {
+        repayHtml =
+          '<div class="repay-section">' +
+            '<div class="repay-title" style="color:#9a3412;">🔥 ROT Giveaway (No Payback Duty Required):</div>' +
+            '<div class="repay-chips"><div class="repay-chip" style="background:#fff7ed; border-color:#fdba74; color:#9a3412;">' +
+              'Pure ROT Giveaway on ' + formatHumanDate(selectedSwapIso) +
+              '<small style="color:#c2410c;">' + (item.isSameShiftRot ? 'Same-shift ROT handover' : 'Takes ROT on OFF day — No payback needed') + '</small>' +
             '</div></div>' +
-          '</div>'
-        : '<div class="repay-section">' +
-            '<div class="repay-title">🤝 Days You Can Repay Their Duty (Fair Mutual Swap):</div>' +
-            '<div class="repay-chips">' + chips + '</div>' +
           '</div>';
 
-      const bestRepayText = item.mutualRepayOptions[0].repayHuman + ' (' + item.mutualRepayOptions[0].otherDutyType + ')';
+        statusBoxHtml = item.isSameShiftRot
+          ? ('🟡 <strong>' + formatHumanDate(selectedSwapIso) + ':</strong> ' + item.coverCheck.detailText)
+          : ('✅ <strong>' + formatHumanDate(selectedSwapIso) + ':</strong> ' + item.coverCheck.offPositionLabel + ' • Duty Streak (with ROT): <strong>' + item.coverCheck.newStreak + '/4 max</strong> • Remaining OFF: <strong>' + item.coverCheck.remainingOff + ' days</strong>');
 
-      const copyMsg = item.isSameDaySwap
-        ? 'Assalam-o-Alaikum ' + st.name + ', on ' + formatHumanDate(selectedSwapIso) +
-          ' I have ' + reqDutyShort + ' and you have ' + item.mutualRepayOptions[0].otherDutyType +
-          ' (' + item.mutualRepayOptions[0].otherDutyTime + '). Can we do a same-day shift swap (I take your ' +
-          item.mutualRepayOptions[0].otherDutyType + ' and you take my ' +
-          (reqDuty.category === 'MORNING' ? 'Morning' : 'Night') + ')?'
-        : 'Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' duty on ' +
-          formatHumanDate(selectedSwapIso) + ', and you are on your ' + item.coverCheck.offPositionLabel +
-          ' that day (Max 4 consecutive duties + ' + item.coverCheck.remainingOff + ' OFF days safe). ' +
-          'Would you be available to swap duties? I can repay your duty on ' + bestRepayText + '.';
+        copyMsg = item.isSameShiftRot
+          ? ('Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' ROT on ' + formatHumanDate(selectedSwapIso) +
+             '. Since you are on the same shift that day, would you like to take my ROT (no payback needed)?')
+          : ('Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' ROT on ' + formatHumanDate(selectedSwapIso) +
+             ', and you are on your ' + item.coverCheck.offPositionLabel + ' that day (Max 4 consecutive duties + ' +
+             item.coverCheck.remainingOff + ' OFF days safe). Would you like to take my ROT? No payback duty is needed.');
+      } else {
+        const chips = item.mutualRepayOptions.slice(0, 6).map(function(rep) {
+          return '<div class="repay-chip">' +
+            rep.repayHuman + ' (' + rep.otherDutyType + ')' +
+            '<small>Your ' + rep.myOffLabel + ' • Streak: ' + rep.myNewStreak + '/4 • ' + rep.myRemainingOff + ' OFF safe</small>' +
+          '</div>';
+        }).join('');
 
-      const dualSliderHtml = buildDualRosterSliderHtml(st, activeStaff, selectedSwapIso, item.mutualRepayOptions, Boolean(item.isSameDaySwap));
+        repayHtml = item.isSameDaySwap
+          ? '<div class="repay-section">' +
+              '<div class="repay-title">🔄 Same-Day Shift Exchange (No Extra Repay Day Needed):</div>' +
+              '<div class="repay-chips"><div class="repay-chip">' +
+                formatHumanDate(selectedSwapIso) + ' • You do ' + item.mutualRepayOptions[0].otherDutyType + ' (' + item.mutualRepayOptions[0].otherDutyTime + ')' +
+                '<small>' + st.name + ' does your ' + (reqDuty.category === 'MORNING' ? '☀️ Morning' : '🌙 Night') + ' on the same day</small>' +
+              '</div></div>' +
+            '</div>'
+          : '<div class="repay-section">' +
+              '<div class="repay-title">🤝 Days You Can Repay Their Duty (Fair Mutual Swap):</div>' +
+              '<div class="repay-chips">' + chips + '</div>' +
+            '</div>';
+
+        const bestRepayText = item.mutualRepayOptions[0].repayHuman + ' (' + item.mutualRepayOptions[0].otherDutyType + ')';
+
+        copyMsg = item.isSameDaySwap
+          ? 'Assalam-o-Alaikum ' + st.name + ', on ' + formatHumanDate(selectedSwapIso) +
+            ' I have ' + reqDutyShort + ' and you have ' + item.mutualRepayOptions[0].otherDutyType +
+            ' (' + item.mutualRepayOptions[0].otherDutyTime + '). Can we do a same-day shift swap (I take your ' +
+            item.mutualRepayOptions[0].otherDutyType + ' and you take my ' +
+            (reqDuty.category === 'MORNING' ? 'Morning' : 'Night') + ')?'
+          : 'Assalam-o-Alaikum ' + st.name + ', I have a ' + reqDutyShort + ' duty on ' +
+            formatHumanDate(selectedSwapIso) + ', and you are on your ' + item.coverCheck.offPositionLabel +
+            ' that day (Max 4 consecutive duties + ' + item.coverCheck.remainingOff + ' OFF days safe). ' +
+            'Would you be available to swap duties? I can repay your duty on ' + bestRepayText + '.';
+
+        statusBoxHtml = '✅ <strong>' + formatHumanDate(selectedSwapIso) + ':</strong> ' + item.coverCheck.offPositionLabel + ' • Duty Streak: <strong>' + item.coverCheck.newStreak + '/4 max</strong> • Remaining OFF: <strong>' + item.coverCheck.remainingOff + ' days</strong>';
+      }
+
+      const dualSliderHtml = buildDualRosterSliderHtml(st, activeStaff, selectedSwapIso, item.mutualRepayOptions, Boolean(item.isSameDaySwap || item.isRotGiveaway));
 
       card.innerHTML =
         '<div>' +
@@ -6563,17 +7603,17 @@
           '<div class="cand-top">' +
             '<div>' +
               '<div class="cand-name">' + st.name + '</div>' +
-              '<div class="cand-meta">ID: ' + st.empId + ' • <strong>' + st.shiftSeq + '</strong> • ' + (st.title || 'Staff') + (st.teamId ? ' (' + st.teamId + ')' : '') + ' • <strong>' + stType + '</strong></div>' +
+              '<div class="cand-meta">ID: ' + st.empId + ' • ' + renderShiftBadgeHtml(st.shiftSeq, 'padding:1px 6px; font-size:10px;') + ' • ' + (st.title || 'Staff') + (st.teamId ? ' (' + st.teamId + ')' : '') + ' • <strong>' + stType + '</strong></div>' +
             '</div>' +
             '<span class="off-pos-badge ' + (isFirst ? 'pos-first' : 'pos-last') + '">' + item.coverCheck.offPositionLabel + '</span>' +
           '</div>' +
           dualSliderHtml +
           '<div class="cand-status-box" style="margin-top:8px;">' +
-            '✅ <strong>' + formatHumanDate(selectedSwapIso) + ':</strong> ' + item.coverCheck.offPositionLabel + ' • Duty Streak: <strong>' + item.coverCheck.newStreak + '/4 max</strong> • Remaining OFF: <strong>' + item.coverCheck.remainingOff + ' days</strong>' +
+            statusBoxHtml +
           '</div>' +
           repayHtml +
         '</div>' +
-        '<button type="button" class="btn-copy-swap">📋 Copy WhatsApp Swap Request</button>';
+        '<button type="button" class="btn-copy-swap">' + (item.isRotGiveaway ? '📋 Copy WhatsApp ROT Giveaway Request' : '📋 Copy WhatsApp Swap Request') + '</button>';
 
       const copyBtn = card.querySelector('.btn-copy-swap');
       copyBtn.addEventListener('click', function() {
@@ -6729,7 +7769,7 @@
         else actualDaysInView++;
       }
 
-      const canSwap = staffEligible && isWorkingDuty(duty);
+      const canSwap = isWorkingDuty(duty) && (staffEligible || Boolean(duty && duty.isOT));
       const cell = document.createElement('div');
       cell.className = 'cal-cell' +
         (iso === todayIso ? ' today-cell' : '') +
@@ -6791,7 +7831,11 @@
         timeText = duty.time || '';
       }
 
-      const swapBtnHtml = canSwap ? '<button type="button" class="cell-swap-btn" title="Long press or click to swap duty">🔄 Swap</button>' : '';
+      const swapBtnHtml = canSwap
+        ? (duty && duty.isOT
+            ? '<button type="button" class="cell-swap-btn" style="background:#ffedd5; border-color:#fb923c; color:#9a3412;" title="Long press or click to find ROT Giveaway staff">🔥 ROT Swap</button>'
+            : '<button type="button" class="cell-swap-btn" title="Long press or click to swap duty">🔄 Swap</button>')
+        : '';
 
       cell.innerHTML =
         '<div class="cell-top">' +
@@ -6854,6 +7898,10 @@
       dirSec.style.display = 'block';
       if (tabCal) tabCal.classList.remove('active');
       if (tabDir) tabDir.classList.add('active');
+      if (hasLoadedRosterForMonth(currentYear, currentMonth)) {
+        dirCurrentYear = currentYear;
+        dirCurrentMonth = currentMonth;
+      }
       renderFullSheetMemberDirectory();
     } else {
       dirSec.style.display = 'none';
@@ -6868,12 +7916,34 @@
     selectStaffById(document.getElementById('staffIdInput').value, false);
   });
 
+  function refreshProfileHeaderForCalendarMonth() {
+    if (!activeStaff) return;
+    const scoped = getStaffMonthScopedView(activeStaff, currentYear, currentMonth);
+    const profShiftEl = document.getElementById('profShift');
+    if (profShiftEl) {
+      const shiftValTxt = scoped.shiftSeq || 'SHIFT-2';
+      profShiftEl.innerText = shiftValTxt;
+      const profShiftParent = profShiftEl.parentElement;
+      if (profShiftParent) {
+        profShiftParent.className = 'p-badge ' + getShiftColorClass(shiftValTxt);
+        const lblSpan = profShiftParent.querySelector('span');
+        if (lblSpan) lblSpan.style.color = '#0f172a';
+      }
+    }
+    const profRoleEl = document.getElementById('profRole');
+    if (profRoleEl) {
+      const roleParts = [scoped.title, scoped.teamId].filter(Boolean);
+      profRoleEl.innerText = roleParts.length ? roleParts.join(' • ') : 'OPERATIONS';
+    }
+  }
+
   document.getElementById('btnPrevMonth').addEventListener('click', function() {
     currentMonth--;
     if (currentMonth < 0) {
       currentMonth = 11;
       currentYear--;
     }
+    refreshProfileHeaderForCalendarMonth();
     closeSwapPanel();
   });
 
@@ -6883,12 +7953,14 @@
       currentMonth = 0;
       currentYear++;
     }
+    refreshProfileHeaderForCalendarMonth();
     closeSwapPanel();
   });
 
   document.getElementById('btnRosterMonth').addEventListener('click', function() {
     currentYear = baseRosterYear;
     currentMonth = baseRosterMonth;
+    refreshProfileHeaderForCalendarMonth();
     closeSwapPanel();
   });
 
@@ -7305,6 +8377,7 @@
 
     bindDesktopModalEvents();
     bindFullDirectoryEvents();
+    bindWorkAreaJumpSearchEvents();
     bindMultiCompareModalEvents();
     await ensureXlsxReady();
 
