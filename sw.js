@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cmt-roster-pwa-v22-18';
+const CACHE_NAME = 'cmt-roster-pwa-v22-19';
 const CORE_ASSETS = [
   './',
   './index.html'

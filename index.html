@@ -268,6 +268,62 @@
     background: #1d4ed8;
   }
 
+  .main-view-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-main-tab {
+    padding: 12px 18px;
+    font-size: 14.5px;
+    font-weight: 800;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    background: #f1f5f9;
+    color: #334155;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn-main-tab:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  .btn-main-tab.active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  }
+  .tab-count-pill {
+    background: rgba(148, 163, 184, 0.25);
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11.5px;
+  }
+  .btn-main-tab.active .tab-count-pill {
+    background: #2563eb;
+    color: #ffffff;
+  }
+  @media (max-width: 720px) {
+    .main-view-tabs {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .btn-main-tab {
+      width: 100%;
+      justify-content: center;
+      padding: 10px 10px;
+      font-size: 13px;
+    }
+  }
+
+
   .status-msg {
     margin-top: 10px;
     font-size: 12.5px;
@@ -1864,6 +1920,660 @@
     color: #1e3a8a;
   }
 
+
+  /* Full Sheet Member Roster Directory (By Role & Sub-Section) */
+  .full-directory-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e2e8f0;
+    margin-top: 18px;
+  }
+  .dir-header-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1.5px solid #e2e8f0;
+  }
+  .dir-title-group h3 {
+    margin: 0;
+    font-size: 16.5px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .dir-title-group p {
+    margin: 3px 0 0 0;
+    font-size: 12px;
+    color: #475569;
+    font-weight: 600;
+  }
+  .dir-sheet-bar {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 11px 13px;
+    border-radius: 11px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .dir-sheet-bar-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #facc15;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dir-sheet-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .dir-sheet-tab {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .dir-sheet-tab:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+  }
+  .dir-sheet-tab.active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #60a5fa;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
+  }
+  .dir-shift-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    align-items: center;
+  }
+  .dir-shift-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin-right: 4px;
+  }
+  .dir-shift-tab {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #93c5fd;
+    background: #ffffff;
+    color: #1e3a8a;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.14s ease;
+  }
+  .dir-shift-tab:hover {
+    background: #dbeafe;
+  }
+  .dir-shift-tab.active {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #1e40af;
+    box-shadow: 0 2px 6px rgba(29, 78, 216, 0.3);
+  }
+  .dir-shift-tab.active .dir-role-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
+  .dir-role-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .dir-role-tab {
+    padding: 7px 13px;
+    border-radius: 9px;
+    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.14s ease;
+  }
+  .dir-role-tab:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+  .dir-role-tab.active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+  }
+  .dir-role-count {
+    background: rgba(148, 163, 184, 0.25);
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10.5px;
+  }
+  .dir-role-tab.active .dir-role-count {
+    background: #2563eb;
+    color: #ffffff;
+  }
+  .dir-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 14px;
+    background: #f8fafc;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+  .dir-subsec-select, .dir-pattern-select, .dir-quick-filter {
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+    outline: none;
+  }
+  .dir-quick-filter {
+    flex: 1 1 200px;
+  }
+  .dir-role-group-box {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+  .dir-role-group-head {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .dir-role-group-head h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .dir-subsec-block {
+    margin: 14px 12px;
+    border: 2.5px solid #2563eb;
+    border-radius: 13px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.12);
+  }
+  .dir-subsec-block:last-child {
+    margin-bottom: 14px;
+  }
+  .dir-subsec-banner {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+    border-bottom: 2.5px solid #1e40af;
+    padding: 12px 16px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .dir-subsec-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .dir-subsec-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    color: #fde047;
+  }
+  .dir-subsec-main-title {
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+    line-height: 1.25;
+  }
+  .dir-subsec-count-pill {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .dir-shift-subbar {
+    padding: 8px 14px;
+    background: #eff6ff;
+    border-bottom: 1.5px solid #bfdbfe;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #1e3a8a;
+  }
+  .dir-staff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .dir-member-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 7px;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+  }
+  .dir-member-card:hover {
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.12);
+  }
+  .dir-member-card.dir-active-staff {
+    border: 2px solid #16a34a;
+    background: #f0fdf4;
+  }
+  .dir-m-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .dir-m-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+  }
+  .dir-m-id {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    margin-top: 2px;
+  }
+  .dir-roster-pill {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .dir-pill-4x4 {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #d8b4fe;
+  }
+  .dir-pill-3x3 {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+  }
+  .dir-pill-4x2 {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+  .dir-pill-other {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+  .dir-m-pattern {
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .dir-m-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #2563eb;
+  }
+  @media (max-width: 720px) {
+    .full-directory-card {
+      padding: 12px 8px;
+      margin-top: 12px;
+    }
+    .dir-subsec-block {
+      margin: 11px 7px;
+      border-width: 2px;
+    }
+    .dir-subsec-banner {
+      padding: 10px 12px;
+    }
+    .dir-subsec-main-title {
+      font-size: 14.5px;
+    }
+    .dir-role-tab {
+      padding: 5px 9px;
+      font-size: 11px;
+    }
+    .dir-staff-grid {
+      grid-template-columns: 1fr;
+      padding: 9px 10px;
+      gap: 8px;
+    }
+  }
+
+
+  /* Multi-Staff Roster Compare Selection & Synchronized Side-by-Side Monthly Slider */
+  .dir-member-card {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    position: relative;
+  }
+  .dir-member-card.dir-compare-selected {
+    border: 2.5px solid #7c3aed !important;
+    background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 45%) !important;
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.22) !important;
+  }
+  .dir-compare-check-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .dir-compare-check-pill:hover {
+    background: #ede9fe;
+    color: #6d28d9;
+    border-color: #c4b5fd;
+  }
+  .dir-member-card.dir-compare-selected .dir-compare-check-pill {
+    background: #7c3aed;
+    color: #ffffff;
+    border-color: #5b21b6;
+  }
+
+  .floating-compare-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9500;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    color: #ffffff;
+    border: 2px solid #8b5cf6;
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.45);
+    width: calc(100% - 24px);
+    max-width: 780px;
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    animation: popIn 0.16s ease-out;
+  }
+  .fcb-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 240px;
+  }
+  .fcb-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #fde047;
+  }
+  .fcb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .fcb-chip {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(196, 181, 253, 0.4);
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .fcb-chip button {
+    background: none;
+    border: none;
+    color: #fca5a5;
+    font-weight: 900;
+    cursor: pointer;
+    padding: 0;
+    font-size: 11px;
+  }
+  .fcb-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .btn-open-compare-modal {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: 1px solid #6ee7b7;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  }
+  .btn-open-compare-modal:hover {
+    background: #047857;
+  }
+  .btn-clear-compare-sel {
+    background: rgba(255, 255, 255, 0.14);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 8px 11px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Side-by-Side Full-Month Multi-Staff Compare Drawer / Modal */
+  .multi-compare-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 12000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  .multi-compare-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 2px solid #7c3aed;
+    width: 100%;
+    max-width: 1040px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.45);
+    animation: popIn 0.16s ease-out;
+  }
+  .mcp-header {
+    background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+    color: #ffffff;
+    padding: 13px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mcp-header h3 {
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 800;
+  }
+  .mcp-sub {
+    font-size: 11.5px;
+    color: #c7d2fe;
+    margin-top: 2px;
+  }
+  .mcp-toolbar {
+    background: #f8fafc;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding: 9px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .mcp-month-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mcp-month-controls button {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    border-radius: 7px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .mcp-month-controls button:hover {
+    background: #e2e8f0;
+  }
+  .mcp-month-lbl {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #1e1b4b;
+    min-width: 125px;
+    text-align: center;
+  }
+  .mcp-body {
+    padding: 12px 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mcp-staff-row-card {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 11px;
+    padding: 8px 10px;
+    background: #ffffff;
+  }
+  .mcp-staff-row-card.mcp-me-card {
+    border: 2px solid #16a34a;
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 30%);
+  }
+  .mcp-row-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .mcp-staff-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .mcp-staff-meta {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+  }
+  .mcp-remove-btn {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .mini-day-pill.mcp-today-pill {
+    border: 2.5px solid #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+  }
+  .mini-day-pill.mcp-mutual-swap-hint {
+    box-shadow: inset 0 0 0 2px #7c3aed;
+  }
+
 </style>
 </head>
 <body>
@@ -1892,7 +2602,7 @@
         <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span></h1>
   </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.18</div>
+        <div class="ver-pill-box">v22.25</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -1929,6 +2639,10 @@
           </div>
         </div>
         <button type="button" class="btn-search" id="btnViewRoster">🔍 View My Roster</button>
+        <div class="main-view-tabs" role="tablist" aria-label="Roster View Switcher">
+          <button type="button" class="btn-main-tab active" id="tabBtnMyCalendar" onclick="switchMainViewTab('CALENDAR')">📅 My Calendar &amp; Swap</button>
+          <button type="button" class="btn-main-tab" id="tabBtnFullDirectory" onclick="switchMainViewTab('DIRECTORY')">👥 Full Sheet Member Roster <span class="tab-count-pill" id="tabDirTotalCount">0</span></button>
+        </div>
       </div>
       <div class="status-msg">
         <div id="rosterStatusText">🔄 Loading Live Google Drive Roster...</div>
@@ -1936,6 +2650,8 @@
       </div>
     </div>
 
+    <!-- TAB 1: My Calendar & Duty Swap View -->
+    <div id="myCalendarViewSection">
     <!-- Staff Profile Card -->
     <div class="profile-card" id="profileCard">
       <div class="profile-main">
@@ -2030,6 +2746,41 @@
       </div>
 
       <div class="swap-cards-list" id="swapCardsList"></div>
+    </div>
+
+    </div><!-- End #myCalendarViewSection -->
+
+    <!-- TAB 2: Full Sheet Member Roster Directory (DO, TL, EO, Loader & Sub-Sections) -->
+    <div class="full-directory-card" id="fullSheetDirectoryCard" style="display:none; margin-top:0;">
+      <div class="dir-header-bar">
+        <div class="dir-title-group">
+          <h3>👥 Full Sheet Member Roster List <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
+          <p id="dirSummarySub">Tap a card to view Calendar, or <strong>Long Press</strong> (or tap <strong>☑️ Compare</strong>) on same-role staff (AA↔AA, TL↔TL, EO↔EO) to compare full-month rosters side-by-side!</p>
+        </div>
+        <button type="button" class="btn-live-refresh" id="btnToggleDirectoryBody" style="background:#334155;">🔽 Hide List</button>
+      </div>
+
+      <div id="fullDirectoryBody">
+        <div class="dir-shift-tabs" id="dirShiftTabs"></div>
+
+        <div class="dir-role-tabs" id="dirRoleTabs"></div>
+
+        <div class="dir-filter-row">
+          <select id="dirSubSectionSelect" class="dir-subsec-select" title="Filter by Sub-Section / Area">
+            <option value="ALL">🏢 All Sub-Sections / Areas</option>
+          </select>
+          <select id="dirPatternSelect" class="dir-pattern-select" title="Filter by Roster Type (4x4, 3x3, etc.)">
+            <option value="ALL">📅 All Roster Patterns (4x4 / 3x3 / 4x2)</option>
+            <option value="4x4">🟣 4x4 Roster Only</option>
+            <option value="3x3">🟢 3x3 Roster Only</option>
+            <option value="3x3_9TO9">🟡 3x3 (9-to-9) Only</option>
+            <option value="4x2">🔴 4x2 Roster Only</option>
+          </select>
+          <input type="text" id="dirQuickFilterInput" class="dir-quick-filter" placeholder="Filter in selected sheet by Name, ID, Sub-Section or Shift...">
+        </div>
+
+        <div id="dirGroupsContainer"></div>
+      </div>
     </div>
   </div>
 
@@ -3301,17 +4052,19 @@
 
   function getNormalizedRoleKey(staff) {
     const raw = String((staff && staff.title) || '').toUpperCase().trim();
+    const rawTeam = String((staff && staff.teamId) || '').toUpperCase().trim();
+    if (rawTeam === 'COP' || rawTeam.startsWith('COP ') || rawTeam.endsWith(' COP') || raw.includes('COP')) return 'SUPERVISOR';
     if (!raw) return 'UNKNOWN';
     if (raw.includes('EQUIPMENT OPERATOR') || /^0493\b/.test(raw) || raw === 'EO') return 'EO';
     if (raw.includes('TEAM LEADER') || /^6032\b/.test(raw) || /^7015\b/.test(raw) || raw === 'TL') return 'TEAM_LEADER';
     if (raw.includes('LOADER') || /^7033\b/.test(raw)) return 'LOADER';
-    if (raw.includes('AIRSIDE AGENT') || /^A866\b/.test(raw)) return 'AIRSIDE_AGENT';
+    if (raw.includes('CAA') || raw.includes('CARGO AIRSIDE AGENT') || raw.includes('AIRSIDE AGENT') || /^A866\b/.test(raw) || raw === 'AA') return 'AIRSIDE_AGENT';
     if (raw.includes('RESOURCE ALLOCATOR') || /^3551\b/.test(raw)) return 'RESOURCE_ALLOCATOR';
-    if (raw.includes('DEPARTMENT OFFICER') || /^6067\b/.test(raw)) return 'DEPARTMENT_OFFICER';
+    if (raw.includes('DEPARTMENT OFFICER') || /^6067\b/.test(raw) || raw === 'DO') return 'DEPARTMENT_OFFICER';
     if (raw.includes('SUPERVISOR') || /^4837\b/.test(raw) || /^2133\b/.test(raw)) return 'SUPERVISOR';
     if (raw.includes('CHIEF DRIVER') || /^0322\b/.test(raw)) return 'CHIEF_DRIVER';
     if (raw.includes('DRIVER') || /^7124\b/.test(raw)) return 'DRIVER';
-    return raw.replace(/^\d+\./, '').trim();
+    return raw.replace(/^[A-Z0-9]+\./, '').trim();
   }
 
   function areSameNormalizedRole(staffA, staffB) {
@@ -4044,7 +4797,864 @@
   function renderSampleChips() {
     const chipsBox = document.getElementById('sampleChipsBox');
     if (chipsBox) chipsBox.innerHTML = '';
+    renderFullSheetMemberDirectory();
   }
+  // =========================================================================
+  // FULL SHEET MEMBER ROSTER DIRECTORY (PER-SHEET ISOLATED: SHIFT-1/2 + DO/TL/EO/LOADER)
+  // =========================================================================
+  let dirSelectedShift = 'ALL';
+  let dirSelectedRole = 'ALL';
+  let dirSelectedSubSection = 'ALL';
+  let dirSelectedPattern = 'ALL';
+  let dirQuickQuery = '';
+  let dirIsCollapsed = false;
+
+  const DIR_ROLE_ORDER = [
+    { key: 'SUPERVISOR',         label: '🧭 COP / Supervisor',          shortLabel: 'COP / Supervisor' },
+    { key: 'DEPARTMENT_OFFICER', label: '🎖️ DO (Department Officer)',  shortLabel: 'DO' },
+    { key: 'CHIEF_DRIVER',       label: '🚛 Chief Driver',              shortLabel: 'Chief Driver' },
+    { key: 'TEAM_LEADER',        label: '👔 Team Leader (TL)',          shortLabel: 'Team Leader' },
+    { key: 'AIRSIDE_AGENT',      label: '✈️ CAA / Airside Agent (AA)',  shortLabel: 'CAA / Airside Agent' },
+    { key: 'EO',                 label: '🚜 EO (Equipment Operator)',   shortLabel: 'EO' },
+    { key: 'LOADER',             label: '📦 Loader',                    shortLabel: 'Loader' },
+    { key: 'DRIVER',             label: '🚐 Driver',                    shortLabel: 'Driver' },
+    { key: 'RESOURCE_ALLOCATOR', label: '📋 Resource Allocator',        shortLabel: 'Resource Allocator' }
+  ];
+
+  function getDirectoryRoleMeta(staff) {
+    const rawTitle = String((staff && staff.title) || '').toUpperCase().trim();
+    const rawTeam = String((staff && staff.teamId) || '').toUpperCase().trim();
+    let rKey = getNormalizedRoleKey(staff);
+
+    if (rawTeam === 'COP' || rawTeam.startsWith('COP ') || rawTeam.endsWith(' COP') || rawTitle.includes('COP')) {
+      rKey = 'SUPERVISOR';
+    } else if (rawTitle.includes('CAA') || rawTitle.includes('CARGO AIRSIDE AGENT') || rawTitle.includes('AIRSIDE AGENT')) {
+      rKey = 'AIRSIDE_AGENT';
+    }
+
+    const preset = DIR_ROLE_ORDER.find(function(item) { return item.key === rKey; });
+    if (preset) return preset;
+    const cleanTitle = String((staff && staff.title) || '').replace(/^[A-Z0-9]+\./, '').trim() || 'OTHER STAFF';
+    return {
+      key: rKey || 'OTHER',
+      label: '👷 ' + cleanTitle,
+      shortLabel: cleanTitle
+    };
+  }
+
+  function getNormalizedShiftKey(staff) {
+    const raw = String((staff && staff.shiftSeq) || '').toUpperCase().replace(/\s+/g, ' ').trim();
+    if (!raw || raw === 'ROSTER STAFF') return 'OTHER SHIFT';
+    return raw;
+  }
+
+  function getDirectoryRosterBadge(staff) {
+    const pat = staff && staff.cyclePattern;
+    const rType = pat ? pat.rosterType : 'OTHER';
+    if (rType === '4x4') {
+      return { text: '4x4 ROSTER', cls: 'dir-pill-4x4', code: '4x4' };
+    }
+    if (rType === '3x3') {
+      return { text: '3x3 ROSTER', cls: 'dir-pill-3x3', code: '3x3' };
+    }
+    if (rType === '3x3_9TO9') {
+      return { text: '3x3 (9 TO 9)', cls: 'dir-pill-other', code: '3x3_9TO9' };
+    }
+    if (rType === '4x2') {
+      return { text: '4x2 ROSTER', cls: 'dir-pill-4x2', code: '4x2' };
+    }
+    return { text: (pat && pat.patternText) ? 'CUSTOM ROSTER' : 'ROSTER STAFF', cls: 'dir-pill-other', code: 'OTHER' };
+  }
+
+  function renderDirectorySheetTabs() {
+    // Top sheetSelect dropdown is the single source of truth for the active sheet
+  }
+
+  function sortSubSectionNames(a, b) {
+    const uA = String(a || '').toUpperCase();
+    const uB = String(b || '').toUpperCase();
+    const rank = function(u) {
+      if (u.includes('CMT')) return 1;
+      if (/PK\s*15/.test(u)) return 2;
+      return 3;
+    };
+    const rA = rank(uA);
+    const rB = rank(uB);
+    if (rA !== rB) return rA - rB;
+    return uA.localeCompare(uB, undefined, { numeric: true });
+  }
+
+  function refreshSubSectionDropdownOptions(shiftScopedStaff) {
+    const subSel = document.getElementById('dirSubSectionSelect');
+    if (!subSel) return;
+    const prevVal = subSel.value || 'ALL';
+    const countsBySub = {};
+    shiftScopedStaff.forEach(function(st) {
+      if (dirSelectedRole !== 'ALL' && getDirectoryRoleMeta(st).key !== dirSelectedRole) return;
+      const subName = String(st.teamId || st.sectionTitle || 'GENERAL AREA').trim();
+      countsBySub[subName] = (countsBySub[subName] || 0) + 1;
+    });
+
+    const sortedSubs = Object.keys(countsBySub).sort();
+    subSel.innerHTML = '<option value="ALL">🏢 All Sub-Sections / Areas (' + sortedSubs.length + ')</option>';
+    sortedSubs.forEach(function(sub) {
+      const opt = document.createElement('option');
+      opt.value = sub;
+      opt.textContent = sub + ' (' + countsBySub[sub] + ' Staff)';
+      subSel.appendChild(opt);
+    });
+
+    if (prevVal !== 'ALL' && countsBySub[prevVal]) {
+      subSel.value = prevVal;
+      dirSelectedSubSection = prevVal;
+    } else {
+      subSel.value = 'ALL';
+      dirSelectedSubSection = 'ALL';
+    }
+  }
+
+  function renderFullSheetMemberDirectory() {
+    const container = document.getElementById('dirGroupsContainer');
+    const tabsEl = document.getElementById('dirRoleTabs');
+    const shiftTabsEl = document.getElementById('dirShiftTabs');
+    if (!container || !tabsEl) return;
+
+    renderDirectorySheetTabs();
+
+    // Strictly isolate to the currently selected sheet's staff only
+    const topSheetSel = document.getElementById('sheetSelect');
+    const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
+    const currentSheetStaff = staffRecords.filter(function(st) {
+      return !activeSheetName || !st.sheetName || st.sheetName === activeSheetName;
+    });
+
+    const sheetBadge = document.getElementById('dirSheetBadge');
+    const summarySub = document.getElementById('dirSummarySub');
+    const secName = (activeSheetName && sheetSectionMap[activeSheetName])
+      ? sheetSectionMap[activeSheetName]
+      : ((currentSheetStaff[0] && (currentSheetStaff[0].sectionTitle || currentSheetStaff[0].sheetName)) || 'Selected Sheet');
+    if (sheetBadge) {
+      sheetBadge.innerText = secName + (activeSheetName && activeSheetName !== secName ? ' (' + activeSheetName + ')' : '') + ' • ' + currentSheetStaff.length + ' Staff';
+    }
+    const tabCountPill = document.getElementById('tabDirTotalCount');
+    if (tabCountPill) {
+      tabCountPill.innerText = currentSheetStaff.length;
+    }
+
+    // 1. Build Shift Tabs (SHIFT-1, SHIFT-2, SHIFT-3, SHIFT-4, etc.) for THIS sheet only
+    const shiftCounts = {};
+    currentSheetStaff.forEach(function(st) {
+      const shKey = getNormalizedShiftKey(st);
+      shiftCounts[shKey] = (shiftCounts[shKey] || 0) + 1;
+    });
+    const sortedShiftKeys = Object.keys(shiftCounts).sort(function(a, b) {
+      return a.localeCompare(b, undefined, { numeric: true });
+    });
+
+    if (dirSelectedShift !== 'ALL' && !shiftCounts[dirSelectedShift]) {
+      dirSelectedShift = 'ALL';
+    }
+
+    if (shiftTabsEl) {
+      let shHtml = '<span class="dir-shift-label">🕒 Shift Filter (' + secName + '):</span>' +
+        '<button type="button" class="dir-shift-tab ' + (dirSelectedShift === 'ALL' ? 'active' : '') + '" data-shift="ALL">📋 All Shifts <span class="dir-role-count">' + currentSheetStaff.length + '</span></button>';
+      sortedShiftKeys.forEach(function(shKey) {
+        shHtml += '<button type="button" class="dir-shift-tab ' + (dirSelectedShift === shKey ? 'active' : '') + '" data-shift="' + shKey.replace(/"/g, '&quot;') + '">' + shKey + ' <span class="dir-role-count">' + shiftCounts[shKey] + '</span></button>';
+      });
+      shiftTabsEl.innerHTML = shHtml;
+
+      shiftTabsEl.querySelectorAll('.dir-shift-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          dirSelectedShift = this.getAttribute('data-shift') || 'ALL';
+          renderFullSheetMemberDirectory();
+        });
+      });
+    }
+
+    // Scope staff by Selected Sheet + Selected Shift (so DO, TL, EO, Loader counts update per Shift!)
+    const shiftScopedStaff = currentSheetStaff.filter(function(st) {
+      if (dirSelectedShift !== 'ALL' && getNormalizedShiftKey(st) !== dirSelectedShift) return false;
+      return true;
+    });
+
+    // 2. Count staff per role (DO first, then Supervisor, Team Leader, EO, Loader, etc.) inside selected sheet & shift
+    const roleCounts = {};
+    const roleLabelsMap = {};
+    shiftScopedStaff.forEach(function(st) {
+      const meta = getDirectoryRoleMeta(st);
+      roleCounts[meta.key] = (roleCounts[meta.key] || 0) + 1;
+      roleLabelsMap[meta.key] = meta;
+    });
+
+    const orderedKeys = [];
+    DIR_ROLE_ORDER.forEach(function(item) {
+      if (roleCounts[item.key]) orderedKeys.push(item.key);
+    });
+    Object.keys(roleCounts).sort().forEach(function(k) {
+      if (orderedKeys.indexOf(k) === -1) orderedKeys.push(k);
+    });
+
+    if (dirSelectedRole !== 'ALL' && !roleCounts[dirSelectedRole]) {
+      dirSelectedRole = 'ALL';
+    }
+
+    let tabsHtml = '<button type="button" class="dir-role-tab ' + (dirSelectedRole === 'ALL' ? 'active' : '') + '" data-role="ALL">👥 All Roles <span class="dir-role-count">' + shiftScopedStaff.length + '</span></button>';
+    orderedKeys.forEach(function(rKey) {
+      const meta = roleLabelsMap[rKey];
+      tabsHtml += '<button type="button" class="dir-role-tab ' + (dirSelectedRole === rKey ? 'active' : '') + '" data-role="' + rKey + '">' + meta.label + ' <span class="dir-role-count">' + roleCounts[rKey] + '</span></button>';
+    });
+    tabsEl.innerHTML = tabsHtml;
+
+    tabsEl.querySelectorAll('.dir-role-tab').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        dirSelectedRole = this.getAttribute('data-role') || 'ALL';
+        refreshSubSectionDropdownOptions(shiftScopedStaff);
+        renderFullSheetMemberDirectory();
+      });
+    });
+
+    refreshSubSectionDropdownOptions(shiftScopedStaff);
+
+    const qLower = String(dirQuickQuery || '').trim().toLowerCase();
+    const filteredStaff = shiftScopedStaff.filter(function(st) {
+      const meta = getDirectoryRoleMeta(st);
+      if (dirSelectedRole !== 'ALL' && meta.key !== dirSelectedRole) return false;
+
+      const subName = String(st.teamId || st.sectionTitle || 'GENERAL AREA').trim();
+      if (dirSelectedSubSection !== 'ALL' && subName !== dirSelectedSubSection) return false;
+
+      const rBadge = getDirectoryRosterBadge(st);
+      if (dirSelectedPattern !== 'ALL' && rBadge.code !== dirSelectedPattern) return false;
+
+      if (qLower) {
+        const hay = (
+          String(st.empId || '') + ' ' +
+          String(st.name || '') + ' ' +
+          String(st.title || '') + ' ' +
+          subName + ' ' +
+          String(st.shiftSeq || '') + ' ' +
+          rBadge.text
+        ).toLowerCase();
+        if (!hay.includes(qLower)) return false;
+      }
+      return true;
+    });
+
+    if (summarySub) {
+      const count4x4 = shiftScopedStaff.filter(function(s) { return getDirectoryRosterBadge(s).code === '4x4'; }).length;
+      const count3x3 = shiftScopedStaff.filter(function(s) { return getDirectoryRosterBadge(s).code === '3x3' || getDirectoryRosterBadge(s).code === '3x3_9TO9'; }).length;
+      const shiftScopeLabel = dirSelectedShift === 'ALL' ? ('Sheet: ' + secName) : ('Sheet: ' + secName + ' • ' + dirSelectedShift);
+      summarySub.innerText = shiftScopeLabel + ' — Showing ' + filteredStaff.length + ' of ' + shiftScopedStaff.length + ' Staff (🟣 ' + count4x4 + ' on 4x4 • 🟢 ' + count3x3 + ' on 3x3) — Click any member card to view their Monthly Calendar';
+    }
+
+    if (filteredStaff.length === 0) {
+      container.innerHTML = '<div style="padding:18px; text-align:center; color:#64748b; font-weight:700; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">No staff members match the selected Sheet / Shift / Role / Sub-Section filter.</div>';
+      return;
+    }
+
+    // Group filtered staff by:
+    // 1. Role Hierarchy: COP/Supervisor -> DO -> Chief Driver -> Team Leader -> CAA/AA -> EO -> Loader
+    // 2. Section / Area (e.g., CMT Team Leader, PK 15 Team Leader, EO CMT, EO PK 15, etc.)
+    // 3. Shift inside each Title & Section: SHIFT-1, SHIFT-2, SHIFT-3, SHIFT-4, etc.
+    const groupedByRole = {};
+    filteredStaff.forEach(function(st) {
+      const meta = getDirectoryRoleMeta(st);
+      if (!groupedByRole[meta.key]) {
+        groupedByRole[meta.key] = { meta: meta, subSections: {}, total: 0 };
+      }
+      const subName = String(st.teamId || st.sectionTitle || 'GENERAL AREA').trim();
+      if (!groupedByRole[meta.key].subSections[subName]) {
+        groupedByRole[meta.key].subSections[subName] = { shifts: {}, total: 0 };
+      }
+      const shKey = getNormalizedShiftKey(st);
+      if (!groupedByRole[meta.key].subSections[subName].shifts[shKey]) {
+        groupedByRole[meta.key].subSections[subName].shifts[shKey] = [];
+      }
+      groupedByRole[meta.key].subSections[subName].shifts[shKey].push(st);
+      groupedByRole[meta.key].subSections[subName].total++;
+      groupedByRole[meta.key].total++;
+    });
+
+    const activeEmpId = activeStaff ? String(activeStaff.empId) : '';
+    let htmlOut = '';
+
+    orderedKeys.forEach(function(rKey) {
+      const roleGrp = groupedByRole[rKey];
+      if (!roleGrp) return;
+
+      const subNames = Object.keys(roleGrp.subSections).sort(sortSubSectionNames);
+      let subBlocksHtml = '';
+
+      subNames.forEach(function(subName) {
+        const subObj = roleGrp.subSections[subName];
+        const shiftKeysInSub = Object.keys(subObj.shifts).sort(function(a, b) {
+          return a.localeCompare(b, undefined, { numeric: true });
+        });
+
+        let shiftsHtml = '';
+        shiftKeysInSub.forEach(function(shKey) {
+          const members = subObj.shifts[shKey].slice().sort(function(a, b) {
+            return String(a.name || '').localeCompare(String(b.name || ''));
+          });
+
+          const cardsHtml = members.map(function(st) {
+            const rBadge = getDirectoryRosterBadge(st);
+            const patLine = (st.cyclePattern && st.cyclePattern.patternText) ? st.cyclePattern.patternText : 'Regular Roster Schedule';
+            const isCurrent = activeEmpId && String(st.empId) === activeEmpId;
+
+            const isCompareSel = selectedCompareEmpIds.indexOf(String(st.empId)) !== -1;
+            const isSameRoleWithMe = activeStaff ? areSameNormalizedRole(activeStaff, st) : true;
+            const compareBtnHtml = isCurrent
+              ? '<span class="dir-compare-check-pill" style="background:#dcfce7; color:#166534; border-color:#86efac; cursor:default;">🙋 My Roster</span>'
+              : (isSameRoleWithMe
+                  ? '<button type="button" class="dir-compare-check-pill" data-cmp-empid="' + st.empId + '" title="Long press card or click here to select same-role staff for side-by-side roster comparison">' + (isCompareSel ? '☑️ Selected' : '⬜ Compare') + '</button>'
+                  : '<button type="button" class="dir-compare-check-pill" data-cmp-empid="' + st.empId + '" style="background:#fef2f2; color:#991b1b; border-color:#fca5a5;" title="Only same role selection compare allow">🚫 Diff Role</button>');
+
+            return (
+              '<div class="dir-member-card ' + (isCurrent ? 'dir-active-staff' : '') + (isCompareSel ? ' dir-compare-selected' : '') + '" data-empid="' + st.empId + '">' +
+                '<div class="dir-m-top">' +
+                  '<div>' +
+                    '<div class="dir-m-name">' + (isCurrent ? '✅ ' : (isCompareSel ? '🟣 ' : '')) + st.name + '</div>' +
+                    '<div class="dir-m-id">ID: <strong>' + st.empId + '</strong> • <strong>' + shKey + '</strong> • ' + subName + '</div>' +
+                  '</div>' +
+                  '<span class="dir-roster-pill ' + rBadge.cls + '">' + rBadge.text + '</span>' +
+                '</div>' +
+                '<div class="dir-m-pattern">🔄 ' + patLine + '</div>' +
+                '<div class="dir-m-footer">' +
+                  '<span>' + (st.title || roleGrp.meta.shortLabel) + '</span>' +
+                  '<div style="display:inline-flex; align-items:center; gap:6px;">' +
+                    compareBtnHtml +
+                    '<span>📅 View ➔</span>' +
+                  '</div>' +
+                '</div>' +
+              '</div>'
+            );
+          }).join('');
+
+          shiftsHtml +=
+            '<div style="border-top:1.5px solid #dbeafe; background:#ffffff;">' +
+              '<div class="dir-shift-subbar">' +
+                '<span>🕒 <strong>' + shKey + '</strong> • ' + subName + '</span>' +
+                '<span style="background:#1d4ed8; color:#ffffff; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:800;">' + members.length + ' Staff</span>' +
+              '</div>' +
+              '<div class="dir-staff-grid">' + cardsHtml + '</div>' +
+            '</div>';
+        });
+
+        subBlocksHtml +=
+          '<div class="dir-subsec-block">' +
+            '<div class="dir-subsec-banner">' +
+              '<div class="dir-subsec-title-wrap">' +
+                '<span class="dir-subsec-kicker">📍 WORKING AREA / SECTION • ' + roleGrp.meta.shortLabel.toUpperCase() + '</span>' +
+                '<div class="dir-subsec-main-title">' + subName + '</div>' +
+              '</div>' +
+              '<span class="dir-subsec-count-pill">👥 ' + subObj.total + ' Staff • ' + shiftKeysInSub.length + ' Shift' + (shiftKeysInSub.length > 1 ? 's' : '') + '</span>' +
+            '</div>' +
+            shiftsHtml +
+          '</div>';
+      });
+
+      htmlOut +=
+        '<div class="dir-role-group-box">' +
+          '<div class="dir-role-group-head">' +
+            '<h4>' + roleGrp.meta.label + '</h4>' +
+            '<span style="background:rgba(255,255,255,0.16); padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:800;">Total: ' + roleGrp.total + ' Staff (' + subNames.length + ' Section' + (subNames.length > 1 ? 's' : '') + ')</span>' +
+          '</div>' +
+          subBlocksHtml +
+        '</div>';
+    });
+
+    container.innerHTML = htmlOut;
+
+    container.querySelectorAll('.dir-member-card').forEach(function(cardEl) {
+      const empId = cardEl.getAttribute('data-empid');
+      if (!empId) return;
+      attachDirectoryCardCompareHandlers(cardEl, empId);
+    });
+  }
+
+  
+  // =========================================================================
+  // MULTI-STAFF FULL-MONTH SIDE-BY-SIDE ROSTER COMPARISON SLIDER
+  // =========================================================================
+  let selectedCompareEmpIds = [];
+  let mcpYear = 2026;
+  let mcpMonth = 10;
+
+  function getRoleFriendlyLabel(staffObj) {
+    if (!staffObj) return 'Unknown Role';
+    const meta = getDirectoryRoleMeta(staffObj);
+    return meta ? meta.shortLabel : getNormalizedRoleKey(staffObj);
+  }
+
+  function showCompareRoleError(targetStaff) {
+    const myRoleLabel = getRoleFriendlyLabel(activeStaff);
+    const otherRoleLabel = getRoleFriendlyLabel(targetStaff);
+    if (navigator.vibrate) {
+      try { navigator.vibrate([60, 40, 60]); } catch (e) {}
+    }
+    alert(
+      '❌ Only same role selection compare allow!\n\n' +
+      '• Your Role: ' + myRoleLabel + ' (' + (activeStaff ? activeStaff.name : '') + ')\n' +
+      '• Selected Staff Role: ' + otherRoleLabel + ' (' + (targetStaff ? targetStaff.name : '') + ')\n\n' +
+      'Compare sirf same role mein allow hai (AA to AA, Team Leader to Team Leader, EO to EO).'
+    );
+  }
+
+  function toggleCompareStaffSelection(empId) {
+    const cleanId = String(empId || '').trim();
+    if (!cleanId) return;
+    if (activeStaff && String(activeStaff.empId) === cleanId) {
+      return;
+    }
+    const targetStaff = staffRecords.find(function(s) { return String(s.empId) === cleanId; });
+    if (!targetStaff) return;
+
+    const idx = selectedCompareEmpIds.indexOf(cleanId);
+    if (idx === -1) {
+      if (activeStaff && !areSameNormalizedRole(activeStaff, targetStaff)) {
+        showCompareRoleError(targetStaff);
+        return;
+      }
+      selectedCompareEmpIds.push(cleanId);
+    } else {
+      selectedCompareEmpIds.splice(idx, 1);
+    }
+    if (navigator.vibrate) {
+      try { navigator.vibrate(35); } catch (e) {}
+    }
+    updateFloatingCompareBar();
+    renderFullSheetMemberDirectory();
+  }
+
+  function updateFloatingCompareBar() {
+    const bar = document.getElementById('floatingCompareBar');
+    const titleEl = document.getElementById('fcbTitle');
+    const chipsEl = document.getElementById('fcbChipsList');
+    if (!bar || !titleEl || !chipsEl) return;
+
+    // Filter out any IDs no longer in staffRecords, equal to activeStaff, or NOT same role
+    const myId = activeStaff ? String(activeStaff.empId) : '';
+    selectedCompareEmpIds = selectedCompareEmpIds.filter(function(id) {
+      if (id === myId) return false;
+      const st = staffRecords.find(function(s) { return String(s.empId) === id; });
+      if (!st) return false;
+      if (activeStaff && !areSameNormalizedRole(activeStaff, st)) return false;
+      return true;
+    });
+
+    if (selectedCompareEmpIds.length === 0) {
+      bar.style.display = 'none';
+      return;
+    }
+
+    const myShort = activeStaff ? activeStaff.name.split(' ').slice(0, 2).join(' ') : 'My Roster';
+    const myRoleTag = activeStaff ? getRoleFriendlyLabel(activeStaff) : 'Same Role';
+    titleEl.innerText = '📊 Same-Role Compare [' + myRoleTag + ']: ' + myShort + ' + ' + selectedCompareEmpIds.length + ' Selected';
+
+    chipsEl.innerHTML = selectedCompareEmpIds.map(function(id) {
+      const st = staffRecords.find(function(s) { return String(s.empId) === id; });
+      const label = st ? (st.name.split(' ').slice(0, 2).join(' ') + ' (' + id + ')') : id;
+      return '<span class="fcb-chip">' + label + ' <button type="button" data-rm-id="' + id + '" title="Remove">✕</button></span>';
+    }).join('');
+
+    chipsEl.querySelectorAll('button[data-rm-id]').forEach(function(rmBtn) {
+      rmBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleCompareStaffSelection(this.getAttribute('data-rm-id'));
+      });
+    });
+
+    bar.style.display = 'flex';
+  }
+
+  function attachDirectoryCardCompareHandlers(cardEl, empId) {
+    let pressTimer = null;
+    let startX = 0;
+    let startY = 0;
+    let didLongPress = false;
+
+    const cmpBtn = cardEl.querySelector('.dir-compare-check-pill[data-cmp-empid]');
+    if (cmpBtn) {
+      cmpBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleCompareStaffSelection(empId);
+      });
+    }
+
+    function startPress(cx, cy) {
+      startX = cx;
+      startY = cy;
+      didLongPress = false;
+      cardEl.classList.add('pressing');
+      if (pressTimer) clearTimeout(pressTimer);
+      pressTimer = setTimeout(function() {
+        didLongPress = true;
+        cardEl.classList.remove('pressing');
+        toggleCompareStaffSelection(empId);
+      }, 380);
+    }
+
+    function cancelPress() {
+      cardEl.classList.remove('pressing');
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    }
+
+    cardEl.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      if (e.target && e.target.closest('.dir-compare-check-pill')) return;
+      startPress(e.clientX, e.clientY);
+    });
+    cardEl.addEventListener('mousemove', function(e) {
+      if (Math.abs(e.clientX - startX) > 14 || Math.abs(e.clientY - startY) > 14) cancelPress();
+    });
+    cardEl.addEventListener('mouseup', cancelPress);
+    cardEl.addEventListener('mouseleave', cancelPress);
+
+    cardEl.addEventListener('touchstart', function(e) {
+      if (e.target && e.target.closest('.dir-compare-check-pill')) return;
+      if (e.touches.length === 1) startPress(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    cardEl.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 1) {
+        if (Math.abs(e.touches[0].clientX - startX) > 16 || Math.abs(e.touches[0].clientY - startY) > 16) cancelPress();
+      }
+    }, { passive: true });
+    cardEl.addEventListener('touchend', function(e) {
+      cancelPress();
+      if (didLongPress) {
+        e.preventDefault();
+      }
+    });
+    cardEl.addEventListener('touchcancel', cancelPress);
+
+    cardEl.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelPress();
+      toggleCompareStaffSelection(empId);
+    });
+
+    cardEl.addEventListener('click', function(e) {
+      if (e.target && e.target.closest('.dir-compare-check-pill')) return;
+      if (didLongPress) {
+        didLongPress = false;
+        return;
+      }
+      selectStaffById(empId, false);
+      switchMainViewTab('CALENDAR');
+      const profCard = document.getElementById('profileCard');
+      if (profCard) profCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function buildFullMonthCompareTrackHtml(staffObj, year, month0, isRequester) {
+    const daysInM = new Date(year, month0 + 1, 0).getDate();
+    const today = new Date();
+    const todayIso = toIsoDate(today.getFullYear(), today.getMonth(), today.getDate());
+    const pills = [];
+
+    for (let d = 1; d <= daysInM; d++) {
+      const iso = toIsoDate(year, month0, d);
+      const res = getDutyForDate(staffObj, iso);
+      const duty = res.duty;
+      const dt = new Date(Date.UTC(year, month0, d));
+      const wd = DAY_NAMES[dt.getUTCDay()];
+
+      let catClass = 'm-off';
+      let iconAndName = '🔴 OFF';
+      let timeShort = 'Rest';
+
+      if (!duty || duty.category === 'EMPTY') {
+        catClass = '';
+        iconAndName = '⬜ Blank';
+        timeShort = 'Repl./Swap';
+      } else if (duty.category === 'OFF') {
+        catClass = 'm-off';
+        iconAndName = '🔴 OFF';
+        timeShort = 'OFF';
+      } else if (duty.category === 'MORNING') {
+        catClass = 'm-morning';
+        iconAndName = duty.isOT ? '🔥 M-ROT' : '☀️ Morn';
+        timeShort = (duty.time || '05:00-17:00').replace(':00', '').replace(':00', '');
+      } else if (duty.category === 'NIGHT') {
+        catClass = 'm-night';
+        iconAndName = duty.isOT ? '🔥 N-ROT' : '🌙 Night';
+        timeShort = (duty.time || '17:00-05:00').replace(':00', '').replace(':00', '');
+      } else {
+        catClass = 'm-leave';
+        iconAndName = '📘 ' + (duty.label || 'LV');
+        timeShort = '';
+      }
+
+      // Highlight opposite shift / OFF opportunity compared to activeStaff on the same date
+      let highlightCls = (iso === todayIso) ? ' mcp-today-pill' : '';
+      let extraBadge = '';
+      if (!isRequester && activeStaff && duty) {
+        const myD = getDutyForDate(activeStaff, iso).duty;
+        if (myD && isWorkingDuty(myD) && isOffDay(duty)) {
+          highlightCls += ' mcp-mutual-swap-hint';
+          extraBadge = '<span class="mini-mark-badge" style="background:#7c3aed; color:#fff;">OFF FREE</span>';
+        } else if (myD && isWorkingDuty(myD) && isWorkingDuty(duty) && myD.category !== duty.category) {
+          highlightCls += ' mcp-mutual-swap-hint';
+          extraBadge = '<span class="mini-mark-badge" style="background:#2563eb; color:#fff;">OPP SHIFT</span>';
+        }
+      }
+      if (!extraBadge && duty && duty.isOT) {
+        extraBadge = '<span class="mini-mark-badge badge-rot-mini">ROT</span>';
+      }
+
+      pills.push(
+        '<div class="mini-day-pill ' + catClass + highlightCls + '" data-iso="' + iso + '">' +
+          '<div class="mini-date-top">' + d + ' ' + MONTH_SHORT[month0] + ' <span class="mini-wd">(' + wd + ')</span></div>' +
+          '<div class="mini-duty-tag">' + iconAndName + '</div>' +
+          (timeShort ? '<div class="mini-time-sub">' + timeShort + '</div>' : '') +
+          extraBadge +
+        '</div>'
+      );
+    }
+    return pills.join('');
+  }
+
+  function renderMultiCompareModal() {
+    const container = document.getElementById('mcpTracksContainer');
+    const monthLbl = document.getElementById('mcpMonthLabel');
+    const subTitle = document.getElementById('mcpSubTitle');
+    if (!container || !monthLbl) return;
+
+    monthLbl.innerText = MONTH_NAMES[mcpMonth] + ' ' + mcpYear;
+
+    const listToCompare = [];
+    if (activeStaff) listToCompare.push({ staff: activeStaff, isMe: true });
+    selectedCompareEmpIds.forEach(function(id) {
+      const st = staffRecords.find(function(s) { return String(s.empId) === id; });
+      if (st) listToCompare.push({ staff: st, isMe: false });
+    });
+
+    if (subTitle) {
+      const roleTag = activeStaff ? getRoleFriendlyLabel(activeStaff) : 'Same Role';
+      subTitle.innerText = 'Same-Role Compare [' + roleTag + ' ↔ ' + roleTag + '] • ' + listToCompare.length + ' Staff Full Month (' + MONTH_NAMES[mcpMonth] + ' ' + mcpYear + ') • Slide any row — all scroll together!';
+    }
+
+    container.innerHTML = listToCompare.map(function(entry) {
+      const st = entry.staff;
+      const rBadge = getDirectoryRosterBadge(st);
+      const trackHtml = buildFullMonthCompareTrackHtml(st, mcpYear, mcpMonth, entry.isMe);
+      return (
+        '<div class="mcp-staff-row-card ' + (entry.isMe ? 'mcp-me-card' : '') + '">' +
+          '<div class="mcp-row-head">' +
+            '<div>' +
+              '<div class="mcp-staff-title">' + (entry.isMe ? '🙋 MY ROSTER: ' : '👤 ') + st.name + ' <span style="color:#2563eb;">(' + st.empId + ')</span></div>' +
+              '<div class="mcp-staff-meta">' + (st.shiftSeq || '') + ' • ' + (st.teamId || st.sectionTitle || '') + ' • <strong>' + rBadge.text + '</strong></div>' +
+            '</div>' +
+            (entry.isMe
+              ? '<span style="background:#16a34a; color:#fff; padding:2px 8px; border-radius:6px; font-size:10.5px; font-weight:800;">ACTIVE</span>'
+              : '<button type="button" class="mcp-remove-btn" data-mcp-rm="' + st.empId + '">✖ Remove</button>') +
+          '</div>' +
+          '<div class="roster-h-track mcp-sync-track">' + trackHtml + '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    // Remove button inside modal
+    container.querySelectorAll('button[data-mcp-rm]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const rmId = this.getAttribute('data-mcp-rm');
+        toggleCompareStaffSelection(rmId);
+        if (selectedCompareEmpIds.length === 0) {
+          document.getElementById('multiCompareBackdrop').style.display = 'none';
+        } else {
+          renderMultiCompareModal();
+        }
+      });
+    });
+
+    // Synchronize horizontal scrolling & mouse drag across ALL tracks simultaneously
+    const tracks = Array.from(container.querySelectorAll('.mcp-sync-track'));
+    let activeSyncTrack = null;
+    let clearSyncTimer = null;
+
+    function syncAllTracksTo(scrollLeftVal) {
+      tracks.forEach(function(tr) {
+        tr.scrollLeft = scrollLeftVal;
+      });
+    }
+
+    tracks.forEach(function(tr) {
+      let isDown = false;
+      let startX = 0;
+      let startScroll = 0;
+
+      tr.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        isDown = true;
+        activeSyncTrack = tr;
+        tr.classList.add('is-dragging');
+        startX = e.pageX;
+        startScroll = tr.scrollLeft;
+      });
+
+      window.addEventListener('mousemove', function(e) {
+        if (!isDown) return;
+        e.preventDefault();
+        const dx = e.pageX - startX;
+        syncAllTracksTo(startScroll - dx);
+      });
+
+      window.addEventListener('mouseup', function() {
+        if (!isDown) return;
+        isDown = false;
+        tr.classList.remove('is-dragging');
+        activeSyncTrack = null;
+      });
+
+      tr.addEventListener('scroll', function() {
+        if (activeSyncTrack && activeSyncTrack !== tr) return;
+        activeSyncTrack = tr;
+        const val = tr.scrollLeft;
+        tracks.forEach(function(otherTr) {
+          if (otherTr !== tr) otherTr.scrollLeft = val;
+        });
+        clearTimeout(clearSyncTimer);
+        clearSyncTimer = setTimeout(function() { activeSyncTrack = null; }, 70);
+      }, { passive: true });
+    });
+
+    // Center on today if in current month, else start at Day 1
+    setTimeout(function() {
+      if (tracks.length === 0) return;
+      const todayPill = tracks[0].querySelector('.mcp-today-pill');
+      if (todayPill) {
+        const targetScroll = Math.max(0, todayPill.offsetLeft - (tracks[0].clientWidth / 2) + (todayPill.offsetWidth / 2));
+        syncAllTracksTo(targetScroll);
+      } else {
+        syncAllTracksTo(0);
+      }
+    }, 30);
+  }
+
+  function bindMultiCompareModalEvents() {
+    const backdrop = document.getElementById('multiCompareBackdrop');
+    const btnOpen = document.getElementById('btnOpenMultiCompare');
+    const btnClear = document.getElementById('btnClearMultiCompare');
+    const btnClose = document.getElementById('btnCloseMultiCompare');
+
+    if (btnOpen) {
+      btnOpen.addEventListener('click', function() {
+        if (selectedCompareEmpIds.length === 0) return;
+        mcpYear = currentYear;
+        mcpMonth = currentMonth;
+        renderMultiCompareModal();
+        if (backdrop) backdrop.style.display = 'flex';
+      });
+    }
+
+    if (btnClear) {
+      btnClear.addEventListener('click', function() {
+        selectedCompareEmpIds = [];
+        updateFloatingCompareBar();
+        renderFullSheetMemberDirectory();
+      });
+    }
+
+    if (btnClose && backdrop) {
+      btnClose.addEventListener('click', function() {
+        backdrop.style.display = 'none';
+      });
+      backdrop.addEventListener('click', function(e) {
+        if (e.target === backdrop) backdrop.style.display = 'none';
+      });
+    }
+
+    const btnPrev = document.getElementById('btnMcpPrevMonth');
+    const btnNext = document.getElementById('btnMcpNextMonth');
+    if (btnPrev) {
+      btnPrev.addEventListener('click', function() {
+        mcpMonth--;
+        if (mcpMonth < 0) { mcpMonth = 11; mcpYear--; }
+        renderMultiCompareModal();
+      });
+    }
+    if (btnNext) {
+      btnNext.addEventListener('click', function() {
+        mcpMonth++;
+        if (mcpMonth > 11) { mcpMonth = 0; mcpYear++; }
+        renderMultiCompareModal();
+      });
+    }
+
+    const btnSlideL = document.getElementById('btnMcpSlideLeft');
+    const btnSlideR = document.getElementById('btnMcpSlideRight');
+    const btnSlideT = document.getElementById('btnMcpSlideToday');
+    if (btnSlideL) {
+      btnSlideL.addEventListener('click', function() {
+        const tracks = document.querySelectorAll('#mcpTracksContainer .mcp-sync-track');
+        if (tracks.length > 0) {
+          const nextVal = Math.max(0, tracks[0].scrollLeft - 240);
+          tracks.forEach(function(tr) { tr.scrollLeft = nextVal; });
+        }
+      });
+    }
+    if (btnSlideR) {
+      btnSlideR.addEventListener('click', function() {
+        const tracks = document.querySelectorAll('#mcpTracksContainer .mcp-sync-track');
+        if (tracks.length > 0) {
+          const nextVal = tracks[0].scrollLeft + 240;
+          tracks.forEach(function(tr) { tr.scrollLeft = nextVal; });
+        }
+      });
+    }
+    if (btnSlideT) {
+      btnSlideT.addEventListener('click', function() {
+        const tracks = document.querySelectorAll('#mcpTracksContainer .mcp-sync-track');
+        if (tracks.length > 0) {
+          const todayPill = tracks[0].querySelector('.mcp-today-pill');
+          const target = todayPill
+            ? Math.max(0, todayPill.offsetLeft - (tracks[0].clientWidth / 2) + (todayPill.offsetWidth / 2))
+            : 0;
+          tracks.forEach(function(tr) { tr.scrollLeft = target; });
+        }
+      });
+    }
+  }
+
+  function bindFullDirectoryEvents() {
+    const subSel = document.getElementById('dirSubSectionSelect');
+    if (subSel) {
+      subSel.addEventListener('change', function() {
+        dirSelectedSubSection = this.value || 'ALL';
+        renderFullSheetMemberDirectory();
+      });
+    }
+    const patSel = document.getElementById('dirPatternSelect');
+    if (patSel) {
+      patSel.addEventListener('change', function() {
+        dirSelectedPattern = this.value || 'ALL';
+        renderFullSheetMemberDirectory();
+      });
+    }
+    const qInput = document.getElementById('dirQuickFilterInput');
+    if (qInput) {
+      qInput.addEventListener('input', function() {
+        dirQuickQuery = this.value || '';
+        renderFullSheetMemberDirectory();
+      });
+    }
+    const toggleBtn = document.getElementById('btnToggleDirectoryBody');
+    const bodyEl = document.getElementById('fullDirectoryBody');
+    if (toggleBtn && bodyEl) {
+      toggleBtn.addEventListener('click', function() {
+        dirIsCollapsed = !dirIsCollapsed;
+        bodyEl.style.display = dirIsCollapsed ? 'none' : 'block';
+        toggleBtn.innerText = dirIsCollapsed ? '🔼 Show List' : '🔽 Hide List';
+      });
+    }
+  }
+
 
   document.getElementById('rosterFileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -4075,6 +5685,13 @@
   });
 
   document.getElementById('sheetSelect').addEventListener('change', function() {
+    dirSelectedShift = 'ALL';
+    dirSelectedRole = 'ALL';
+    dirSelectedSubSection = 'ALL';
+    dirSelectedPattern = 'ALL';
+    dirQuickQuery = '';
+    const qInp = document.getElementById('dirQuickFilterInput');
+    if (qInp) qInp.value = '';
     if (loadedWorkbooksList && loadedWorkbooksList.length > 0) {
       parseMultiMonthWorkbooks(this.value, currentLiveFileName || 'Live Roster');
     } else {
@@ -4526,6 +6143,8 @@
     }
 
     renderCalendar();
+    updateFloatingCompareBar();
+    renderFullSheetMemberDirectory();
   }
 
   document.getElementById('btnForceSwapMode').addEventListener('click', function() {
@@ -5223,7 +6842,29 @@
     }
   }
 
+  function switchMainViewTab(tabName) {
+    const calSec = document.getElementById('myCalendarViewSection');
+    const dirSec = document.getElementById('fullSheetDirectoryCard');
+    const tabCal = document.getElementById('tabBtnMyCalendar');
+    const tabDir = document.getElementById('tabBtnFullDirectory');
+    if (!calSec || !dirSec) return;
+
+    if (tabName === 'DIRECTORY') {
+      calSec.style.display = 'none';
+      dirSec.style.display = 'block';
+      if (tabCal) tabCal.classList.remove('active');
+      if (tabDir) tabDir.classList.add('active');
+      renderFullSheetMemberDirectory();
+    } else {
+      dirSec.style.display = 'none';
+      calSec.style.display = 'block';
+      if (tabDir) tabDir.classList.remove('active');
+      if (tabCal) tabCal.classList.add('active');
+    }
+  }
+
   document.getElementById('btnViewRoster').addEventListener('click', function() {
+    switchMainViewTab('CALENDAR');
     selectStaffById(document.getElementById('staffIdInput').value, false);
   });
 
@@ -5324,6 +6965,7 @@
       itemEl.addEventListener('mousedown', function(e) {
         e.preventDefault();
         const empId = this.getAttribute('data-empid');
+        switchMainViewTab('CALENDAR');
         selectStaffById(empId, false);
       });
     });
@@ -5662,6 +7304,8 @@
     hasBootedRosterApp = true;
 
     bindDesktopModalEvents();
+    bindFullDirectoryEvents();
+    bindMultiCompareModalEvents();
     await ensureXlsxReady();
 
     if (window.__PRELOADED_ROSTER_APP__ && Array.isArray(window.__PRELOADED_ROSTER_APP__.staffRecords) && window.__PRELOADED_ROSTER_APP__.staffRecords.length > 0) {
@@ -5836,6 +7480,45 @@
     }, 1500);
   }
 </script>
+
+
+  <!-- Floating Multi-Staff Roster Compare Bar -->
+  <div class="floating-compare-bar" id="floatingCompareBar">
+    <div class="fcb-left">
+      <div class="fcb-title" id="fcbTitle">📊 Compare My Roster + 0 Selected Staff</div>
+      <div class="fcb-chips" id="fcbChipsList"></div>
+    </div>
+    <div class="fcb-actions">
+      <button type="button" class="btn-open-compare-modal" id="btnOpenMultiCompare">↔️ Compare Rosters</button>
+      <button type="button" class="btn-clear-compare-sel" id="btnClearMultiCompare">✖ Clear</button>
+    </div>
+  </div>
+
+  <!-- Synchronized Full-Month Side-by-Side Roster Compare Modal -->
+  <div class="multi-compare-backdrop" id="multiCompareBackdrop">
+    <div class="multi-compare-panel">
+      <div class="mcp-header">
+        <div>
+          <h3>↔️ Side-by-Side Monthly Roster Comparison Slider</h3>
+          <div class="mcp-sub" id="mcpSubTitle">Slide any row left or right — all selected staff calendars move together day-by-day!</div>
+        </div>
+        <button type="button" class="btn-close-swap" id="btnCloseMultiCompare">✖ Close</button>
+      </div>
+      <div class="mcp-toolbar">
+        <div class="mcp-month-controls">
+          <button type="button" id="btnMcpPrevMonth" title="Previous Month">◀ Prev Month</button>
+          <span class="mcp-month-lbl" id="mcpMonthLabel">November 2026</span>
+          <button type="button" id="btnMcpNextMonth" title="Next Month">Next Month ▶</button>
+        </div>
+        <div class="slider-nav-btns">
+          <button type="button" class="btn-slide-step" id="btnMcpSlideLeft">◀ Slide Days</button>
+          <button type="button" class="btn-slide-step btn-slide-center" id="btnMcpSlideToday">🎯 Today / Day 1</button>
+          <button type="button" class="btn-slide-step" id="btnMcpSlideRight">Slide Days ▶</button>
+        </div>
+      </div>
+      <div class="mcp-body" id="mcpTracksContainer"></div>
+    </div>
+  </div>
 
 </body>
 </html>
