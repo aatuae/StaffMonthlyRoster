@@ -1922,14 +1922,16 @@
 
 
 
-  /* Dedicated Work Area / Card Jump Search Bar inside Full Sheet Directory */
+  /* Dedicated Work Area / Card Jump Search Bar inside Full Sheet Directory (Full Width Row Below Controls) */
   .dir-area-jump-box {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    flex: 1 1 280px;
-    max-width: 440px;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
     position: relative;
+    margin-top: 2px;
   }
   .dir-area-jump-label {
     font-size: 11px;
@@ -2255,6 +2257,121 @@
     border-radius: 10px;
     border: 1px solid #e2e8f0;
   }
+  /* Multi-Checkbox Sub-Section / Work Area Dropdown */
+  .dir-subsec-multiselect {
+    position: relative;
+    min-width: 245px;
+    flex: 0 1 290px;
+  }
+  .dir-subsec-ms-btn {
+    width: 100%;
+    padding: 7px 11px;
+    border-radius: 8px;
+    border: 1.5px solid #2563eb;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+  }
+  .dir-subsec-ms-btn:hover {
+    background: #eff6ff;
+  }
+  .dir-subsec-ms-btn.has-selection {
+    background: #eff6ff;
+    border-color: #1d4ed8;
+    color: #1e3a8a;
+  }
+  .dir-subsec-ms-panel {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    min-width: 295px;
+    max-width: 370px;
+    background: #ffffff;
+    border: 2px solid #2563eb;
+    border-radius: 11px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.24);
+    z-index: 1100;
+    display: none;
+    overflow: hidden;
+  }
+  .dir-subsec-ms-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px 10px;
+    background: #eff6ff;
+    border-bottom: 1px solid #bfdbfe;
+  }
+  .dir-subsec-ms-actions button {
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid #93c5fd;
+    background: #ffffff;
+    color: #1e3a8a;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .dir-subsec-ms-actions button:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+  }
+  .dir-subsec-ms-list {
+    max-height: 270px;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  .dir-subsec-ms-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    user-select: none;
+  }
+  .dir-subsec-ms-item:last-child {
+    border-bottom: none;
+  }
+  .dir-subsec-ms-item:hover {
+    background: #f8fafc;
+  }
+  .dir-subsec-ms-item.checked-row {
+    background: #eff6ff;
+    color: #1e3a8a;
+  }
+  .dir-subsec-ms-item input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: #2563eb;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .dir-subsec-ms-item span.ms-lbl-txt {
+    flex: 1;
+    line-height: 1.25;
+  }
+  .dir-subsec-ms-item span.ms-cnt-pill {
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+  }
+
   .dir-subsec-select, .dir-pattern-select, .dir-quick-filter {
     padding: 7px 10px;
     border-radius: 8px;
@@ -2834,7 +2951,7 @@
         <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span></h1>
   </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.30</div>
+        <div class="ver-pill-box">v22.34</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2848,13 +2965,7 @@
       </div>
       <select id="liveFileSelect" class="sheet-select" style="display:none;" title="Available Monthly Rosters in Google Drive"></select>
       <button type="button" class="btn-live-refresh" id="btnRefreshLiveRoster" title="Force download the latest roster from Google Drive now">🔄 Sync Live</button>
-      <label class="file-label" title="Upload manual Excel roster file (Offline Backup)">
-        📂 Upload Excel
-        <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv">
-      </label>
-      <select id="sheetSelect" class="sheet-select" style="display:none;"></select>
       <button type="button" class="btn-desktop-app" id="btnAddToDesktop" title="Save this page to your Desktop / Home Screen as an App">📲 Add to Desktop / App</button>
-      <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
     </div>
   </div>
 
@@ -2862,7 +2973,7 @@
     <!-- Staff Search Box -->
     <div class="search-card">
       <div class="search-row">
-        <div class="input-group">
+        <div class="input-group" style="flex: 2 1 260px;">
           <label for="staffIdInput">Search Staff by ID Number OR Name (Full Roster Search)</label>
           <div class="search-input-wrap">
             <input type="text" id="staffIdInput" class="staff-input" placeholder="Enter Staff ID (e.g. 123456) or Staff Name (e.g. JOHN)..." autocomplete="off">
@@ -2870,11 +2981,15 @@
             <div class="search-dropdown-list" id="staffSearchDropdown"></div>
           </div>
         </div>
-        <button type="button" class="btn-search" id="btnViewRoster">🔍 View My Roster</button>
-        <div class="main-view-tabs" role="tablist" aria-label="Roster View Switcher">
-          <button type="button" class="btn-main-tab active" id="tabBtnMyCalendar" onclick="switchMainViewTab('CALENDAR')">📅 My Calendar &amp; Swap</button>
-          <button type="button" class="btn-main-tab" id="tabBtnFullDirectory" onclick="switchMainViewTab('DIRECTORY')">👥 Full Staff List <span class="tab-count-pill" id="tabDirTotalCount">0</span></button>
+        <div class="input-group" id="sheetSelectGroup" style="flex: 1 1 210px; display:none;">
+          <label for="sheetSelect">Shift Schedule / Section</label>
+          <select id="sheetSelect" class="staff-input" style="padding: 11px 12px; font-size: 14.5px; cursor: pointer; background: #f8fafc;"></select>
         </div>
+        <button type="button" class="btn-search" id="btnViewRoster">🔍 View My Roster</button>
+      </div>
+      <div class="main-view-tabs" role="tablist" aria-label="Roster View Switcher" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 12px;">
+        <button type="button" class="btn-main-tab active" id="tabBtnMyCalendar" onclick="switchMainViewTab('CALENDAR')" style="width: 100%; justify-content: center;">📅 My Calendar &amp; Swap</button>
+        <button type="button" class="btn-main-tab" id="tabBtnFullDirectory" onclick="switchMainViewTab('DIRECTORY')" style="width: 100%; justify-content: center;">👥 Full Staff List <span class="tab-count-pill" id="tabDirTotalCount">0</span></button>
       </div>
       <div class="status-msg">
         <div id="rosterStatusText">🔄 Loading Live Google Drive Roster...</div>
@@ -2964,15 +3079,24 @@
 
       <div class="swap-rules-strip">
         <span>✅ <strong>Rule 1 (Mutual Two-Way Fair Swap Only):</strong> A match is valid <strong>ONLY</strong> when the partner can cover your duty on their OFF day <strong>AND you can also repay their duty on your valid OFF day within the same month</strong> (one-sided swaps without payback are excluded).</span>
-        <span>✅ <strong>Rule 2 (Strict Same Role + Dynamic Section Priority):</strong> <strong>Exact Same Role Only</strong> (EO ↔ EO, TL ↔ TL). For <strong>Cargo Handling EK</strong>, <strong>CMT</strong> is Priority 1 and <strong>PK15</strong> is Priority 2; for all other sheets/areas, <strong>Same Section/Area</strong> is prioritized first within the same sheet.</span>
+        <span>✅ <strong>Rule 2 (Equal Duty Hours + Same Role + No 4x2 Staff):</strong> <strong>Exact Same Duty Hours Only</strong> (e.g., 12h ↔ 12h such as 05:00-17:00 ↔ 19:00-07:00 or 21:00-09:00; 7h/8h/9h &amp; <strong>4x2</strong> low-hour staff excluded) + <strong>Exact Same Role</strong> (EO ↔ EO, TL ↔ TL).</span>
         <span>✅ <strong>Rule 3 (12h Rest Gap + Max 4 Duties [Max 3 Nights / No 4th Night] + 4x4 Extended Rules + Min 2 OFF + Leave Safe):</strong> <strong>1st OFF = 🌙 Night Only</strong> (max 3 consecutive Nights; 4th Night strictly blocked), <strong>Last OFF (or 3rd/4th OFF in 4x4) = ☀️ Morning Only</strong> (up to 4 Mornings allowed; 3M+2N blocked), plus <strong>Same-Day Morning ↔ Night Swap</strong> (including 4x4 2M+2N ↔ 3M+1N / 1M+3N) when 12h rest &amp; min 2 OFF days remain safe.</span>
       </div>
 
       <div class="swap-filter-bar">
-        <div class="swap-filter-tabs">
-          <button type="button" class="s-tab active" data-filter="ALL" onclick="setSwapFilter('ALL', this)">🤝 All Fair Mutual Matches (<span id="cntAll">0</span>)</button>
-          <button type="button" class="s-tab" data-filter="SAME_SECTION" onclick="setSwapFilter('SAME_SECTION', this)"><span id="tabSameSectionLabel">🏢 Priority 1: Same Section</span> (<span id="cntSameSection">0</span>)</button>
-          <button type="button" class="s-tab" data-filter="SECOND_PRIORITY" onclick="setSwapFilter('SECOND_PRIORITY', this)"><span id="tabSecondPriorityLabel">📍 Priority 2: Other Area</span> (<span id="cntSecondPriority">0</span>)</button>
+        <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+          <div class="swap-filter-tabs">
+            <button type="button" class="s-tab active" data-filter="ALL" onclick="setSwapFilter('ALL', this)">🤝 All Fair Mutual Matches (<span id="cntAll">0</span>)</button>
+            <button type="button" class="s-tab" data-filter="SAME_SECTION" onclick="setSwapFilter('SAME_SECTION', this)"><span id="tabSameSectionLabel">🏢 Priority 1: Same Section</span> (<span id="cntSameSection">0</span>)</button>
+            <button type="button" class="s-tab" data-filter="SECOND_PRIORITY" onclick="setSwapFilter('SECOND_PRIORITY', this)"><span id="tabSecondPriorityLabel">📍 Priority 2: Other Area</span> (<span id="cntSecondPriority">0</span>)</button>
+          </div>
+          <div class="swap-filter-tabs" id="swapTypeFilterTabs">
+            <span style="font-size:11.5px; font-weight:800; color:#334155; display:inline-flex; align-items:center; margin-right:2px;">🎯 Swap Type:</span>
+            <button type="button" class="s-tab s-type-tab active" data-type="ALL" onclick="setSwapTypeFilter('ALL', this)">📋 All Types (<span id="cntTypeAll">0</span>)</button>
+            <button type="button" class="s-tab s-type-tab" data-type="SAME_DAY" onclick="setSwapTypeFilter('SAME_DAY', this)">🔄 Same-Day Shift Swap (<span id="cntTypeSameDay">0</span>)</button>
+            <button type="button" class="s-tab s-type-tab" data-type="OFF_DAY" onclick="setSwapTypeFilter('OFF_DAY', this)">🔴 OFF Day Staff (<span id="cntTypeOffDay">0</span>)</button>
+            <span id="swapEqualHoursBadge" style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:5px 10px; border-radius:8px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center;">⏱️ Equal Hours Only (4x2 Excluded)</span>
+          </div>
         </div>
         <div style="font-size:11.5px; color:#475569; font-weight:700;" id="myEligibleOffSummary"></div>
       </div>
@@ -2989,8 +3113,8 @@
           <h3>👥 Full staff list <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
           <p id="dirSummarySub">Tap a card to view Calendar, or <strong>Long Press</strong> (or tap <strong>☑️ Compare</strong>) on same-role staff (AA↔AA, TL↔TL, EO↔EO) to compare full-month rosters side-by-side!</p>
         </div>
-        <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; width:100%;">
-          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+        <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%;">
             <button type="button" class="btn-live-refresh" id="btnToggleDirectoryBody" style="background:#334155;">🔽 Hide List</button>
             <div class="dir-month-switcher-bar" id="dirMonthSwitcherBar" title="Switch Month for Full staff list (Next Month button stays grey until that month's roster is released & loaded)">
               <button type="button" id="btnDirPrevMonth" title="Previous Month">◀</button>
@@ -3017,9 +3141,19 @@
         <div class="dir-role-tabs" id="dirRoleTabs"></div>
 
         <div class="dir-filter-row">
-          <select id="dirSubSectionSelect" class="dir-subsec-select" title="Filter by Sub-Section / Area">
-            <option value="ALL">🏢 All Sub-Sections / Areas</option>
-          </select>
+          <div class="dir-subsec-multiselect" id="dirSubSectionMultiWrap">
+            <button type="button" class="dir-subsec-ms-btn" id="dirSubSectionMsBtn" title="Check one or multiple Sub-Sections / Work Areas to filter">
+              <span id="dirSubSectionMsLabel">🏢 All Sub-Sections / Areas</span>
+              <span>▼</span>
+            </button>
+            <div class="dir-subsec-ms-panel" id="dirSubSectionMsPanel">
+              <div class="dir-subsec-ms-actions">
+                <button type="button" id="btnSubSecSelectAll">☑️ Select All</button>
+                <button type="button" id="btnSubSecClearAll">✖ Clear (Show All)</button>
+              </div>
+              <div class="dir-subsec-ms-list" id="dirSubSectionMsList"></div>
+            </div>
+          </div>
           <select id="dirPatternSelect" class="dir-pattern-select" title="Filter by Roster Type (4x4, 3x3, etc.)">
             <option value="ALL">📅 All Roster Patterns (4x4 / 3x3 / 4x2)</option>
             <option value="4x4">🟣 4x4 Roster Only</option>
@@ -3082,6 +3216,7 @@
   let currentSwapMode = 'MUTUAL'; // 'MUTUAL' | 'ROT_GIVEAWAY'
   let currentSwapMatches = [];
   let currentSwapFilter = 'ALL';
+  let currentSwapTypeFilter = 'ALL';
 
   function base64ToUint8Array(base64Str) {
     const binaryString = window.atob(base64Str);
@@ -3631,7 +3766,9 @@
     if (sheetSel.options.length > 0) {
       sheetSel.selectedIndex = defaultSelectedIdx;
     }
-    sheetSel.style.display = wb.SheetNames.length > 0 ? 'inline-block' : 'none';
+    sheetSel.style.display = wb.SheetNames.length > 0 ? 'block' : 'none';
+    const sheetGrp = document.getElementById('sheetSelectGroup');
+    if (sheetGrp) sheetGrp.style.display = wb.SheetNames.length > 0 ? 'flex' : 'none';
   }
 
   function updateHeaderSectionDisplay(sheetName) {
@@ -4497,8 +4634,37 @@
     return duty && duty.category === 'LEAVE';
   }
 
+  function getDutyDurationHours(duty) {
+    if (!duty || !isWorkingDuty(duty)) return 0;
+    const t = String(duty.time || '').trim();
+    const m = t.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+    if (m) {
+      let s = parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+      let e = parseInt(m[3], 10) + parseInt(m[4], 10) / 60;
+      if (e <= s) e += 24;
+      const diff = e - s;
+      return Math.round(diff * 100) / 100;
+    }
+    return 12;
+  }
+
+  function hasEqualDutyDuration(dutyA, dutyB) {
+    const hA = getDutyDurationHours(dutyA);
+    const hB = getDutyDurationHours(dutyB);
+    if (hA <= 0 || hB <= 0) return false;
+    return Math.abs(hA - hB) <= 0.25;
+  }
+
+  function is4x2Staff(staff) {
+    if (!staff) return false;
+    const rType = staff.cyclePattern ? staff.cyclePattern.rosterType : '';
+    return rType === '4x2';
+  }
+
   function isSwapEligibleStaff(staff) {
-    return Boolean(staff && staff.cyclePattern && staff.cyclePattern.swapEligible);
+    if (!staff || !staff.cyclePattern) return false;
+    if (is4x2Staff(staff)) return false;
+    return Boolean(staff.cyclePattern.swapEligible);
   }
 
   function hasMinimum12HourRest(prevDuty, nextDuty) {
@@ -4782,11 +4948,13 @@
       const otherDutyOnSwapIso = getDutyForDate(other, swapIso).duty;
 
       // Case A: Direct Same-Day Shift Exchange (e.g., 2nd Night <-> Morning on the SAME date)
+      // Strict Rule: Both duties MUST have equal duty hours (e.g., 12h <-> 12h like 05:00-17:00 <-> 19:00-07:00; never 12h <-> 9h/7h)
       if (
         isWorkingDuty(otherDutyOnSwapIso) &&
         !otherDutyOnSwapIso.isOT &&
         !reqDutyObj.isOT &&
-        otherDutyOnSwapIso.category !== reqDutyObj.category
+        otherDutyOnSwapIso.category !== reqDutyObj.category &&
+        hasEqualDutyDuration(reqDutyObj, otherDutyOnSwapIso)
       ) {
         const reqSimSameDay = {};
         reqSimSameDay[swapIso] = {
@@ -4862,6 +5030,7 @@
         const otherDutyOnRepay = getDutyForDate(other, myOff.iso).duty;
         if (!isWorkingDuty(otherDutyOnRepay) || otherDutyOnRepay.isOT) return;
         if (otherDutyOnRepay.category !== myOff.requiredCategory) return;
+        if (!hasEqualDutyDuration(reqDutyObj, otherDutyOnRepay)) return;
 
         const exactReqCheck = evaluateOffSlotForSwapOrRepay(requesterStaff, myOff.iso, otherDutyOnRepay, reqBaseOverride);
         if (!exactReqCheck.valid) return;
@@ -5011,8 +5180,17 @@
   // =========================================================================
   function evaluatePartnerForRotGiveaway(partnerStaff, rotIso, reqDutyObj) {
     if (!partnerStaff) return { valid: false, reason: 'Invalid staff' };
+    if (is4x2Staff(partnerStaff) || !isSwapEligibleStaff(partnerStaff)) {
+      return { valid: false, reason: '4x2 / non-eligible roster staff cannot take ROT swap' };
+    }
     if (!areSameNormalizedRole(activeStaff, partnerStaff)) {
       return { valid: false, reason: 'Different role' };
+    }
+    if (partnerStaff.cyclePattern && Array.isArray(partnerStaff.cyclePattern.template)) {
+      const sampleWork = partnerStaff.cyclePattern.template.find(function(t) { return isWorkingDuty(t); });
+      if (sampleWork && !hasEqualDutyDuration(reqDutyObj, sampleWork)) {
+        return { valid: false, reason: 'Different duty hours (' + getDutyDurationHours(sampleWork) + 'h vs ' + getDutyDurationHours(reqDutyObj) + 'h)' };
+      }
     }
 
     const partnerDutyOnDate = getDutyForDate(partnerStaff, rotIso).duty;
@@ -5020,30 +5198,9 @@
       return { valid: false, reason: 'Partner on Leave/Unavailable' };
     }
 
-    // If partner is ALREADY working on that date:
-    // User note: "wo tu same shift main b ho jata hai ya us staff say us staff ki off honi chaiey"
-    // Note: If partner is working the SAME shift (e.g. Morning when ROT is Morning), they are already on duty that shift (same-shift ROT takeover/coverage if needed), OR if partner is OFF, they take the ROT!
+    // Strict Rule: Partner MUST be on an OFF day to take a ROT giveaway (cannot already be working Morning or Night)
     if (isWorkingDuty(partnerDutyOnDate)) {
-      if (partnerDutyOnDate.isOT) {
-        return { valid: false, reason: 'Partner already has ROT on this date' };
-      }
-      if (partnerDutyOnDate.category === reqDutyObj.category) {
-        let wBefore = 0, wAfter = 0;
-        for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(partnerStaff, addDaysIso(rotIso, -i)).duty)) wBefore++; else break; }
-        for (let i = 1; i <= 8; i++) { if (isWorkingDuty(getDutyForDate(partnerStaff, addDaysIso(rotIso, i)).duty)) wAfter++; else break; }
-        const curStreak = wBefore + 1 + wAfter;
-        const shiftName = partnerDutyOnDate.category === 'MORNING' ? '☀️ Morning' : '🌙 Night';
-        return {
-          valid: true,
-          matchType: 'SAME_SHIFT',
-          badgeLabel: '🟡 Same Shift (' + shiftName + ')',
-          isSameShift: true,
-          newStreak: curStreak,
-          remainingOff: 2,
-          detailText: 'Already scheduled on ' + shiftName + ' (' + (partnerDutyOnDate.time || '') + ') — Same-shift ROT handover possible'
-        };
-      }
-      return { valid: false, reason: 'Partner working opposite shift on this date' };
+      return { valid: false, reason: 'Partner is already working on this date (must be on an OFF day for ROT)' };
     }
 
     if (!isOffDay(partnerDutyOnDate)) {
@@ -5292,7 +5449,7 @@
   // =========================================================================
   let dirSelectedShift = 'ALL';
   let dirSelectedRole = 'ALL';
-  let dirSelectedSubSection = 'ALL';
+  let dirSelectedSubSections = [];
   let dirSelectedPattern = 'ALL';
   let dirQuickQuery = '';
   let dirIsCollapsed = false;
@@ -5507,10 +5664,27 @@
     return uA.localeCompare(uB, undefined, { numeric: true });
   }
 
+  function updateSubSectionMultiButtonLabel(totalAreasCount) {
+    const btn = document.getElementById('dirSubSectionMsBtn');
+    const lbl = document.getElementById('dirSubSectionMsLabel');
+    if (!btn || !lbl) return;
+
+    if (!Array.isArray(dirSelectedSubSections) || dirSelectedSubSections.length === 0) {
+      btn.classList.remove('has-selection');
+      lbl.innerText = '🏢 All Sub-Sections / Areas (' + totalAreasCount + ')';
+    } else if (dirSelectedSubSections.length === 1) {
+      btn.classList.add('has-selection');
+      lbl.innerText = '☑️ ' + dirSelectedSubSections[0];
+    } else {
+      btn.classList.add('has-selection');
+      lbl.innerText = '☑️ ' + dirSelectedSubSections.length + ' Areas Selected (' + dirSelectedSubSections.slice(0, 2).join(', ') + (dirSelectedSubSections.length > 2 ? '...' : '') + ')';
+    }
+  }
+
   function refreshSubSectionDropdownOptions(shiftScopedStaff) {
-    const subSel = document.getElementById('dirSubSectionSelect');
-    if (!subSel) return;
-    const prevVal = subSel.value || 'ALL';
+    const msList = document.getElementById('dirSubSectionMsList');
+    if (!msList) return;
+
     const countsBySub = {};
     shiftScopedStaff.forEach(function(st) {
       if (dirSelectedRole !== 'ALL' && getDirectoryRoleMeta(st).key !== dirSelectedRole) return;
@@ -5519,21 +5693,36 @@
     });
 
     const sortedSubs = Object.keys(countsBySub).sort();
-    subSel.innerHTML = '<option value="ALL">🏢 All Sub-Sections / Areas (' + sortedSubs.length + ')</option>';
-    sortedSubs.forEach(function(sub) {
-      const opt = document.createElement('option');
-      opt.value = sub;
-      opt.textContent = sub + ' (' + countsBySub[sub] + ' Staff)';
-      subSel.appendChild(opt);
+    dirSelectedSubSections = (dirSelectedSubSections || []).filter(function(sub) {
+      return Boolean(countsBySub[sub]);
     });
 
-    if (prevVal !== 'ALL' && countsBySub[prevVal]) {
-      subSel.value = prevVal;
-      dirSelectedSubSection = prevVal;
-    } else {
-      subSel.value = 'ALL';
-      dirSelectedSubSection = 'ALL';
-    }
+    updateSubSectionMultiButtonLabel(sortedSubs.length);
+
+    msList.innerHTML = sortedSubs.map(function(sub) {
+      const isChecked = dirSelectedSubSections.indexOf(sub) !== -1;
+      const escSub = sub.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return (
+        '<label class="dir-subsec-ms-item ' + (isChecked ? 'checked-row' : '') + '">' +
+          '<input type="checkbox" value="' + escSub + '" ' + (isChecked ? 'checked' : '') + '>' +
+          '<span class="ms-lbl-txt">' + escSub + '</span>' +
+          '<span class="ms-cnt-pill">' + countsBySub[sub] + ' Staff</span>' +
+        '</label>'
+      );
+    }).join('');
+
+    msList.querySelectorAll('input[type="checkbox"]').forEach(function(chk) {
+      chk.addEventListener('change', function() {
+        const val = this.value;
+        const idx = dirSelectedSubSections.indexOf(val);
+        if (this.checked && idx === -1) {
+          dirSelectedSubSections.push(val);
+        } else if (!this.checked && idx !== -1) {
+          dirSelectedSubSections.splice(idx, 1);
+        }
+        renderFullSheetMemberDirectory();
+      });
+    });
   }
 
   function renderFullSheetMemberDirectory() {
@@ -5657,7 +5846,7 @@
       if (dirSelectedRole !== 'ALL' && meta.key !== dirSelectedRole) return false;
 
       const subName = String(st.teamId || st.sectionTitle || 'GENERAL AREA').trim();
-      if (dirSelectedSubSection !== 'ALL' && subName !== dirSelectedSubSection) return false;
+      if (Array.isArray(dirSelectedSubSections) && dirSelectedSubSections.length > 0 && dirSelectedSubSections.indexOf(subName) === -1) return false;
 
       const rBadge = getDirectoryRosterBadge(st);
       if (dirSelectedPattern !== 'ALL' && rBadge.code !== dirSelectedPattern) return false;
@@ -6306,8 +6495,9 @@
 
     // Reset Shift to ALL so the entire Work Area card with ALL shifts (SHIFT-1, SHIFT-2, etc.) is visible
     dirSelectedShift = 'ALL';
+    const jumpedSubName = String(targetStaff.teamId || targetStaff.sectionTitle || 'GENERAL AREA').trim();
     dirSelectedRole = getDirectoryRoleMeta(targetStaff).key;
-    dirSelectedSubSection = String(targetStaff.teamId || targetStaff.sectionTitle || 'GENERAL AREA').trim();
+    dirSelectedSubSections = [jumpedSubName];
     dirSelectedPattern = 'ALL';
     dirQuickQuery = '';
     const qInp = document.getElementById('dirQuickFilterInput');
@@ -6323,7 +6513,7 @@
     const jumpDd = document.getElementById('dirWorkAreaJumpDropdown');
     const jumpClr = document.getElementById('btnClearWorkAreaJump');
     if (jumpInput) {
-      jumpInput.value = targetStaff.empId + ' - ' + targetStaff.name + ' (' + dirSelectedSubSection + ')';
+      jumpInput.value = targetStaff.empId + ' - ' + targetStaff.name + ' (' + jumpedSubName + ')';
     }
     if (jumpClr) jumpClr.style.display = 'flex';
     if (jumpDd) jumpDd.style.display = 'none';
@@ -6471,9 +6661,7 @@
         jumpInput.value = '';
         jumpClr.style.display = 'none';
         dirHighlightedEmpId = '';
-        dirSelectedSubSection = 'ALL';
-        const subSel = document.getElementById('dirSubSectionSelect');
-        if (subSel) subSel.value = 'ALL';
+        dirSelectedSubSections = [];
         renderFullSheetMemberDirectory();
         jumpInput.focus();
         renderJumpDropdown('');
@@ -6488,10 +6676,44 @@
   }
 
   function bindFullDirectoryEvents() {
-    const subSel = document.getElementById('dirSubSectionSelect');
-    if (subSel) {
-      subSel.addEventListener('change', function() {
-        dirSelectedSubSection = this.value || 'ALL';
+    const msBtn = document.getElementById('dirSubSectionMsBtn');
+    const msPanel = document.getElementById('dirSubSectionMsPanel');
+    const btnSelAll = document.getElementById('btnSubSecSelectAll');
+    const btnClrAll = document.getElementById('btnSubSecClearAll');
+
+    if (msBtn && msPanel) {
+      msBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = msPanel.style.display === 'block';
+        msPanel.style.display = isOpen ? 'none' : 'block';
+      });
+      msPanel.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('#dirSubSectionMultiWrap')) {
+          msPanel.style.display = 'none';
+        }
+      });
+    }
+
+    if (btnSelAll) {
+      btnSelAll.addEventListener('click', function() {
+        const msList = document.getElementById('dirSubSectionMsList');
+        if (!msList) return;
+        const allVals = [];
+        msList.querySelectorAll('input[type="checkbox"]').forEach(function(chk) {
+          chk.checked = true;
+          allVals.push(chk.value);
+        });
+        dirSelectedSubSections = allVals;
+        renderFullSheetMemberDirectory();
+      });
+    }
+
+    if (btnClrAll) {
+      btnClrAll.addEventListener('click', function() {
+        dirSelectedSubSections = [];
         renderFullSheetMemberDirectory();
       });
     }
@@ -6556,7 +6778,8 @@
   }
 
 
-  document.getElementById('rosterFileInput').addEventListener('change', function(e) {
+  const rosterFileInputEl = document.getElementById('rosterFileInput');
+  if (rosterFileInputEl) rosterFileInputEl.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
     if (typeof XLSX === 'undefined') {
@@ -6587,7 +6810,7 @@
   document.getElementById('sheetSelect').addEventListener('change', function() {
     dirSelectedShift = 'ALL';
     dirSelectedRole = 'ALL';
-    dirSelectedSubSection = 'ALL';
+    dirSelectedSubSections = [];
     dirSelectedPattern = 'ALL';
     dirQuickQuery = '';
     const qInp = document.getElementById('dirQuickFilterInput');
@@ -7296,9 +7519,13 @@
       : findSwapMatchesForDate(activeStaff, swapIso);
     currentSwapMatches = result.matches;
     currentSwapFilter = 'ALL';
+    currentSwapTypeFilter = 'ALL';
 
-    document.querySelectorAll('.s-tab').forEach(function(btn) {
+    document.querySelectorAll('.s-tab[data-filter]').forEach(function(btn) {
       btn.classList.toggle('active', btn.getAttribute('data-filter') === 'ALL');
+    });
+    document.querySelectorAll('.s-type-tab[data-type]').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-type') === 'ALL');
     });
 
     const shiftText = dutyObj.category === 'MORNING'
@@ -7318,7 +7545,7 @@
       if (isRotMode) {
         rulesStrip.innerHTML =
           '<span>🔥 <strong>Rule 1 (ROT Giveaway — No Payback Required):</strong> ROT is extra overtime duty, so <strong>no payback duty is needed</strong> — you simply give away the ROT to an eligible same-role colleague.</span>' +
-          '<span>✅ <strong>Rule 2 (OFF Day or Same Shift + Max 4 Duties Including Existing ROT):</strong> Partner must either be on a valid <strong>OFF day</strong> (1st OFF = Night ROT, Last/3rd OFF = Morning ROT, max 4 consecutive duties including any existing ROT, max 3 Nights, 12h rest &amp; min 2 OFF safe) OR already on the <strong>Same Shift</strong>.</span>' +
+          '<span>✅ <strong>Rule 2 (OFF Day Only + Max 4 Duties Including Existing ROT):</strong> Partner MUST be on a valid <strong>OFF day</strong> (1st OFF = Night ROT, Last/3rd OFF = Morning ROT, max 4 consecutive duties including any existing ROT, max 3 Nights, 12h rest &amp; min 2 OFF safe). Staff already on Morning or Night duty are excluded.</span>' +
           '<span>✅ <strong>Rule 3 (Strict Same Role + Section Priority):</strong> Only exact same role staff (EO ↔ EO, TL ↔ TL, AA ↔ AA) are listed, prioritized by CMT / Same Section first.</span>';
       } else {
         rulesStrip.innerHTML =
@@ -7340,12 +7567,12 @@
       if (tab2LabelEl) tab2LabelEl.innerText = '📍 Priority 2: Other Area (' + (reqZoneInfo.sectionTitle || 'Same Sheet') + ')';
     }
 
-    const p1Count = currentSwapMatches.filter(function(m) { return m.isPriority1; }).length;
-    const p2Count = currentSwapMatches.filter(function(m) { return m.isPriority2; }).length;
-
-    document.getElementById('cntAll').innerText = currentSwapMatches.length;
-    document.getElementById('cntSameSection').innerText = p1Count;
-    document.getElementById('cntSecondPriority').innerText = p2Count;
+    const reqHrs = getDutyDurationHours(dutyObj);
+    const eqBadge = document.getElementById('swapEqualHoursBadge');
+    if (eqBadge && reqHrs > 0) {
+      eqBadge.innerText = '⏱️ ' + reqHrs + 'h ↔ ' + reqHrs + 'h Equal Hours Only (4x2 Excluded)';
+    }
+    updateSwapFilterCounts();
 
     const swapMonthName = MONTH_NAMES[parseInt(swapIso.split('-')[1], 10) - 1];
     const offDatesPreview = result.myEligibleOffDates.map(function(o) {
@@ -7353,7 +7580,7 @@
       return formatHumanDate(o.iso) + ' [' + o.offPositionLabel + ' → ' + allowedShiftTxt + ']';
     }).join(', ');
     document.getElementById('myEligibleOffSummary').innerText = isRotMode
-      ? '🔥 ROT Giveaway Mode: No Payback Required (Pure Giveaway to OFF-Day or Same-Shift Colleague)'
+      ? '🔥 ROT Giveaway Mode: No Payback Required (Pure Giveaway to Eligible OFF-Day Colleague)'
       : (swapMonthName + ' Valid Repay OFF Dates (Same Month + 12h Gap Safe): ' + (offDatesPreview || 'No eligible OFF slots remaining in this month'));
 
     renderSwapCards();
@@ -7363,10 +7590,57 @@
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function isSameDayMatchItem(item) {
+    return Boolean(item && (item.isSameDaySwap || item.isSameShiftRot));
+  }
+
+  function updateSwapFilterCounts() {
+    const typeScoped = currentSwapMatches.filter(function(m) {
+      if (currentSwapTypeFilter === 'SAME_DAY') return isSameDayMatchItem(m);
+      if (currentSwapTypeFilter === 'OFF_DAY') return !isSameDayMatchItem(m);
+      return true;
+    });
+
+    const p1Count = typeScoped.filter(function(m) { return m.isPriority1; }).length;
+    const p2Count = typeScoped.filter(function(m) { return m.isPriority2; }).length;
+
+    const elAll = document.getElementById('cntAll');
+    const elP1 = document.getElementById('cntSameSection');
+    const elP2 = document.getElementById('cntSecondPriority');
+    if (elAll) elAll.innerText = typeScoped.length;
+    if (elP1) elP1.innerText = p1Count;
+    if (elP2) elP2.innerText = p2Count;
+
+    const prioScoped = currentSwapMatches.filter(function(m) {
+      if (currentSwapFilter === 'SAME_SECTION') return m.isPriority1;
+      if (currentSwapFilter === 'SECOND_PRIORITY') return m.isPriority2;
+      return true;
+    });
+
+    const sameDayCount = prioScoped.filter(isSameDayMatchItem).length;
+    const offDayCount = prioScoped.filter(function(m) { return !isSameDayMatchItem(m); }).length;
+
+    const elTypeAll = document.getElementById('cntTypeAll');
+    const elTypeSame = document.getElementById('cntTypeSameDay');
+    const elTypeOff = document.getElementById('cntTypeOffDay');
+    if (elTypeAll) elTypeAll.innerText = prioScoped.length;
+    if (elTypeSame) elTypeSame.innerText = sameDayCount;
+    if (elTypeOff) elTypeOff.innerText = offDayCount;
+  }
+
   function setSwapFilter(filterKey, btnEl) {
     currentSwapFilter = filterKey;
-    document.querySelectorAll('.s-tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.s-tab[data-filter]').forEach(function(b) { b.classList.remove('active'); });
     btnEl.classList.add('active');
+    updateSwapFilterCounts();
+    renderSwapCards();
+  }
+
+  function setSwapTypeFilter(typeKey, btnEl) {
+    currentSwapTypeFilter = typeKey;
+    document.querySelectorAll('.s-type-tab[data-type]').forEach(function(b) { b.classList.remove('active'); });
+    btnEl.classList.add('active');
+    updateSwapFilterCounts();
     renderSwapCards();
   }
 
@@ -7505,8 +7779,10 @@
     listEl.innerHTML = '';
 
     const filtered = currentSwapMatches.filter(function(item) {
-      if (currentSwapFilter === 'SAME_SECTION') return item.isPriority1;
-      if (currentSwapFilter === 'SECOND_PRIORITY') return item.isPriority2;
+      if (currentSwapFilter === 'SAME_SECTION' && !item.isPriority1) return false;
+      if (currentSwapFilter === 'SECOND_PRIORITY' && !item.isPriority2) return false;
+      if (currentSwapTypeFilter === 'SAME_DAY' && !isSameDayMatchItem(item)) return false;
+      if (currentSwapTypeFilter === 'OFF_DAY' && isSameDayMatchItem(item)) return false;
       return true;
     });
 
@@ -7514,7 +7790,7 @@
       listEl.innerHTML =
         '<div style="grid-column: 1 / -1; padding: 20px; text-align:center; color:#64748b; font-weight:700;">' +
         (currentSwapMode === 'ROT_GIVEAWAY'
-          ? '⚠️ No eligible same-role staff found for ROT Giveaway on this date (must be on a valid OFF day with max 4 consecutive duties including existing ROTs, or on the Same Shift).'
+          ? '⚠️ No eligible same-role staff found for ROT Giveaway on this date (partner must be on a valid OFF day with max 4 consecutive duties including existing ROTs, max 3 Nights, 12h rest & min 2 OFF safe).'
           : '⚠️ No fair mutual swap match found for this date (only same-role 3x3/4x4 staff whose duty you can also repay within the same month are shown).') +
         '</div>';
       return;
@@ -7599,6 +7875,7 @@
           '<div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">' +
             '<span class="sec-priority-pill ' + item.sectionBadgeClass + '">' + item.sectionBadgeText + '</span>' +
             '<span class="role-lock-pill">👷 Same Role: ' + getNormalizedRoleKey(st) + '</span>' +
+            '<span class="role-lock-pill" style="background:#ecfdf5; color:#065f46; border-color:#6ee7b7;">⏱️ ' + getDutyDurationHours(reqDuty) + 'h Match</span>' +
           '</div>' +
           '<div class="cand-top">' +
             '<div>' +
