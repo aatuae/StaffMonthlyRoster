@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="./manifest.json">
 <title>Staff Monthly Roster Calendar</title>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1893,7 +1892,7 @@
         <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span></h1>
   </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.17</div>
+        <div class="ver-pill-box">v22.18</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2155,58 +2154,147 @@
     });
   }
 
-  const ROSTER_LS_ARCHIVE_KEY = 'cmt_roster_ls_archive_v23';
+  const ROSTER_COMPACT_JSON_KEY = 'cmt_roster_compact_json_v24';
 
-  function saveFilesToLocalStorageFallback(filesArr) {
+  function saveCompactParsedRosterToLocalStorage(sheetName, staffList, monthLabels, savedAtMs) {
     try {
-      let existingMap = {};
-      const raw = localStorage.getItem(ROSTER_LS_ARCHIVE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') existingMap = parsed;
-      }
-      filesArr.forEach(function(item) {
-        if (item && item.fileName && item.data) {
-          existingMap[item.fileName] = {
-            fileName: item.fileName,
-            lastUpdated: item.lastUpdated || new Date().toISOString(),
-            data: item.data,
-            savedAt: Date.now()
-          };
+      if (!Array.isArray(staffList) || staffList.length === 0) return;
+      const compactStaff = staffList.map(function(st) {
+        const compactSched = {};
+        if (st.scheduleByIsoDate) {
+          Object.keys(st.scheduleByIsoDate).forEach(function(iso) {
+            const d = st.scheduleByIsoDate[iso];
+            if (!d || d.category === 'EMPTY') return;
+            const catCode = d.category === 'MORNING' ? 'M'
+              : (d.category === 'NIGHT' ? 'N'
+              : (d.category === 'OFF' ? 'O'
+              : (d.category === 'LEAVE' ? 'L' : 'O')));
+            compactSched[iso] = [catCode, d.time || '', d.isOT ? 1 : 0, (catCode === 'L' ? (d.label || 'LEAVE') : '')];
+          });
         }
+        return {
+          i: st.empId,
+          n: st.name,
+          t: st.title,
+          m: st.teamId,
+          s: st.sheetName,
+          c: st.sectionTitle,
+          q: st.shiftSeq,
+          d: compactSched
+        };
       });
-      // Keep up to 4 most recent months in localStorage fallback to avoid 5MB quota overflow
-      const keys = Object.keys(existingMap).sort(function(a, b) {
-        return getCanonicalMonthSortKey(a) - getCanonicalMonthSortKey(b);
-      });
-      while (keys.length > 4) {
-        const oldest = keys.shift();
-        delete existingMap[oldest];
-      }
-      localStorage.setItem(ROSTER_LS_ARCHIVE_KEY, JSON.stringify(existingMap));
-    } catch (e) {}
+
+      const payload = {
+        v: 24,
+        savedAt: savedAtMs || Date.now(),
+        sheetName: sheetName || '',
+        monthLabels: monthLabels || '',
+        sectionMap: sheetSectionMap || {},
+        staff: compactStaff
+      };
+      localStorage.setItem(ROSTER_COMPACT_JSON_KEY, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Compact JSON cache warning:', e);
+    }
   }
 
-  function getFilesFromLocalStorageFallback() {
+  function loadCompactParsedRosterFromLocalStorage() {
     try {
-      const raw = localStorage.getItem(ROSTER_LS_ARCHIVE_KEY);
-      if (!raw) return [];
+      const raw = localStorage.getItem(ROSTER_COMPACT_JSON_KEY);
+      if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') return [];
-      const list = Object.keys(parsed).map(function(k) { return parsed[k]; }).filter(Boolean);
-      list.sort(function(a, b) {
-        return getCanonicalMonthSortKey(a.fileName) - getCanonicalMonthSortKey(b.fileName);
+      if (!parsed || !Array.isArray(parsed.staff) || parsed.staff.length === 0) return null;
+
+      if (parsed.sectionMap && typeof parsed.sectionMap === 'object') {
+        sheetSectionMap = Object.assign({}, parsed.sectionMap);
+      }
+
+      const restoredStaff = parsed.staff.map(function(item) {
+        const sched = {};
+        if (item.d && typeof item.d === 'object') {
+          Object.keys(item.d).forEach(function(iso) {
+            const arr = item.d[iso];
+            if (!Array.isArray(arr)) return;
+            const catCode = arr[0];
+            const category = catCode === 'M' ? 'MORNING'
+              : (catCode === 'N' ? 'NIGHT'
+              : (catCode === 'L' ? 'LEAVE' : 'OFF'));
+            const label = category === 'MORNING' ? 'Morning Duty'
+              : (category === 'NIGHT' ? 'Night Duty'
+              : (category === 'LEAVE' ? (arr[3] || 'LEAVE') : 'OFF'));
+            sched[iso] = {
+              category: category,
+              label: label,
+              time: arr[1] || '',
+              isOT: Boolean(arr[2])
+            };
+          });
+        }
+        return {
+          empId: item.i || '',
+          name: item.n || '',
+          title: item.t || '',
+          teamId: item.m || '',
+          sheetName: item.s || parsed.sheetName || 'Live',
+          sectionTitle: item.c || parsed.sheetName || 'Live',
+          shiftSeq: item.q || 'ROSTER STAFF',
+          scheduleByIsoDate: sched,
+          cyclePattern: detectRegularCyclePattern(sched, item.q, item.m)
+        };
       });
-      return list;
+
+      return {
+        savedAt: parsed.savedAt || Date.now(),
+        sheetName: parsed.sheetName || '',
+        monthLabels: parsed.monthLabels || '',
+        staffList: restoredStaff
+      };
     } catch (e) {
-      return [];
+      return null;
     }
+  }
+
+  function applyCompactCachedRosterToApp(compactObj, isFresh) {
+    if (!compactObj || !Array.isArray(compactObj.staffList) || compactObj.staffList.length === 0) return false;
+    staffRecords = compactObj.staffList;
+
+    if (compactObj.sheetName) {
+      updateHeaderSectionDisplay(compactObj.sheetName);
+    }
+
+    const dubaiYm = getDubaiCurrentYearMonth();
+    baseRosterYear = dubaiYm.year;
+    baseRosterMonth = dubaiYm.month0;
+    currentYear = baseRosterYear;
+    currentMonth = baseRosterMonth;
+
+    const countEligible = staffRecords.filter(isSwapEligibleStaff).length;
+    const activeLabel = MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year;
+    const monthsText = compactObj.monthLabels || activeLabel;
+    lastDownloadedTimestampMs = compactObj.savedAt || Date.now();
+    const remStr = formatRemainingCooldown(lastDownloadedTimestampMs);
+
+    renderSampleChips();
+    document.getElementById('rosterStatusText').innerText =
+      '✅ Saved Roster Ready [' + monthsText + '] (' + staffRecords.length + ' Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to view past/next months or Long Press any Duty Day to swap:';
+
+    setLiveSyncBadgeState('live', isFresh
+      ? ('SAVED (' + activeLabel + ') • Next sync in ' + remStr)
+      : ('LIVE (' + activeLabel + ') • Next sync in 6h 0m'));
+
+    closeSwapPanel();
+    const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
+    if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
+      selectStaffById(preferredId, true);
+    } else {
+      const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
+      selectStaffById(firstEligible.empId, true);
+    }
+    return true;
   }
 
   async function saveFilesToPermanentArchive(filesArr) {
     if (!Array.isArray(filesArr) || filesArr.length === 0) return;
-    // Always write to localStorage fallback too (critical for iOS Safari / Standalone PWA)
-    saveFilesToLocalStorageFallback(filesArr);
     try {
       const db = await openRosterArchiveDB();
       await new Promise(function(resolve, reject) {
@@ -2231,10 +2319,9 @@
   }
 
   async function getAllArchivedFilesFromBrowser() {
-    let idbList = [];
     try {
       const db = await openRosterArchiveDB();
-      idbList = await new Promise(function(resolve) {
+      return await new Promise(function(resolve) {
         const tx = db.transaction(ROSTER_IDB_STORE, 'readonly');
         const store = tx.objectStore(ROSTER_IDB_STORE);
         const req = store.getAll();
@@ -2248,10 +2335,8 @@
         req.onerror = function() { resolve([]); };
       });
     } catch (e) {
-      idbList = [];
+      return [];
     }
-    if (idbList.length > 0) return idbList;
-    return getFilesFromLocalStorageFallback();
   }
 
   function getArchiveMeta() {
@@ -2634,17 +2719,23 @@
     const expectedCurFile = MONTH_NAMES[dubaiYm.month0] + dubaiYm.year + '.xlsx';
 
     const archivedFiles = await getAllArchivedFilesFromBrowser();
+    const compactCache = loadCompactParsedRosterFromLocalStorage();
     const meta = getArchiveMeta();
-    const hasArchive = archivedFiles.length > 0;
-    const isFresh = meta && meta.lastSyncedAt && ((Date.now() - meta.lastSyncedAt) < SIX_HOURS_MS);
+    const hasArchive = (archivedFiles.length > 0) || Boolean(compactCache);
+    const effectiveSyncedAt = (meta && meta.lastSyncedAt) || (compactCache && compactCache.savedAt) || 0;
+    const isFresh = effectiveSyncedAt > 0 && ((Date.now() - effectiveSyncedAt) < SIX_HOURS_MS);
     const isMonthRolledOver = meta && meta.currentMonthFile && (meta.currentMonthFile.toLowerCase() !== expectedCurFile.toLowerCase());
 
     if (!forceRefresh && hasArchive && isFresh && !isMonthRolledOver) {
       if (staffRecords.length === 0) {
-        await ensureXlsxReady();
-        applyArchivedWorkbooksToApp(archivedFiles, meta.lastSyncedAt, true);
+        if (archivedFiles.length > 0) {
+          await ensureXlsxReady();
+          applyArchivedWorkbooksToApp(archivedFiles, effectiveSyncedAt, true);
+        } else if (compactCache) {
+          applyCompactCachedRosterToApp(compactCache, true);
+        }
       } else {
-        const remStr = formatRemainingCooldown(meta.lastSyncedAt);
+        const remStr = formatRemainingCooldown(effectiveSyncedAt);
         setLiveSyncBadgeState('live', 'SAVED (' + MONTH_SHORT[dubaiYm.month0] + ' ' + dubaiYm.year + ') • Next sync in ' + remStr);
       }
       hideLiveProgressBar();
@@ -2652,7 +2743,7 @@
     }
 
     const refreshBtn = document.getElementById('btnRefreshLiveRoster');
-    const needFullHistoryBootstrap = (!hasArchive); // First-time load on this browser: fetch all months (Nov, Dec, Jan...)
+    const needFullHistoryBootstrap = (archivedFiles.length === 0 && !compactCache);
 
     if (!isSilentBackgroundCheck) {
       setLiveSyncBadgeState('syncing', needFullHistoryBootstrap ? 'Downloading Full Roster Archive...' : 'Syncing Active Roster...');
@@ -4177,6 +4268,7 @@
         return MONTH_SHORT[mObj.month0] + ' ' + mObj.year;
       }).join(' • ');
 
+      saveCompactParsedRosterToLocalStorage(sheetName, staffRecords, loadedMonthsLabels || sourceFileLabel, lastDownloadedTimestampMs || Date.now());
       renderSampleChips();
       document.getElementById('rosterStatusText').innerText =
         '✅ Archive & Live Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to view past/next months or Long Press any Duty Day to swap:';
@@ -5588,13 +5680,19 @@
     const dubaiYm = getDubaiCurrentYearMonth();
     const expectedCurFile = MONTH_NAMES[dubaiYm.month0] + dubaiYm.year + '.xlsx';
     const archivedFiles = await getAllArchivedFilesFromBrowser();
+    const compactCache = loadCompactParsedRosterFromLocalStorage();
     const meta = getArchiveMeta();
-    const hasArchive = archivedFiles.length > 0;
-    const isFresh = meta && meta.lastSyncedAt && ((Date.now() - meta.lastSyncedAt) < SIX_HOURS_MS);
+    const hasArchive = (archivedFiles.length > 0) || Boolean(compactCache);
+    const effectiveSyncedAt = (meta && meta.lastSyncedAt) || (compactCache && compactCache.savedAt) || 0;
+    const isFresh = effectiveSyncedAt > 0 && ((Date.now() - effectiveSyncedAt) < SIX_HOURS_MS);
     const isMonthRolledOver = meta && meta.currentMonthFile && (meta.currentMonthFile.toLowerCase() !== expectedCurFile.toLowerCase());
 
     if (hasArchive) {
-      applyArchivedWorkbooksToApp(archivedFiles, meta ? meta.lastSyncedAt : Date.now(), isFresh && !isMonthRolledOver);
+      if (archivedFiles.length > 0) {
+        applyArchivedWorkbooksToApp(archivedFiles, effectiveSyncedAt || Date.now(), isFresh && !isMonthRolledOver);
+      } else if (compactCache) {
+        applyCompactCachedRosterToApp(compactCache, isFresh && !isMonthRolledOver);
+      }
       if (isFresh && !isMonthRolledOver) {
         return;
       }
@@ -5732,10 +5830,10 @@
       iosPopup.id = 'ios-auto-popup';
       iosPopup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:14px 16px; border-radius:14px; border:1px solid #334155; box-shadow:0 10px 28px rgba(0,0,0,0.48); z-index:99999; width:92%; max-width:380px; text-align:center; font-family:inherit;';
       iosPopup.innerHTML =
-        '<p style="margin:0 0 9px 0; font-size:13px; line-height:1.45;">📲 Save <b>My Roster' + staffTag + '</b> to iPhone Home Screen:<br>Tap Safari <b>Share (⍐)</b> → <b>"Add to Home Screen"</b></p>' +
+        '<p style="margin:0 0 9px 0; font-size:13px; line-height:1.45;">📲 Save <b>My Roster' + staffTag + '</b> to iPhone Home Screen:<br>1) Select your Staff ID above<br>2) Tap Safari <b>Share (⍐)</b> → <b>"Add to Home Screen"</b></p>' +
         '<button type="button" onclick="this.parentElement.remove()" style="background:#2563eb; color:#fff; border:none; padding:6px 14px; border-radius:7px; cursor:pointer; font-size:12px; font-weight:800;">Got It</button>';
       document.body.appendChild(iosPopup);
-    }, 1200);
+    }, 1500);
   }
 </script>
 

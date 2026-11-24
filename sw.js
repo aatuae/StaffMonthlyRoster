@@ -1,8 +1,7 @@
-const CACHE_NAME = 'cmt-roster-pwa-v22-17';
+const CACHE_NAME = 'cmt-roster-pwa-v22-18';
 const CORE_ASSETS = [
   './',
-  './index.html',
-  './manifest.json'
+  './index.html'
 ];
 
 self.addEventListener('install', (event) => {
@@ -22,7 +21,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
-  // Never intercept Google Apps Script live API calls
   if (url.includes('script.google.com') || url.includes('script.googleusercontent.com')) {
     return;
   }
