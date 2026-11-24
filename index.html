@@ -2247,30 +2247,38 @@
     color: #ffffff;
   }
   .dir-filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: stretch;
     margin-bottom: 14px;
     background: #f8fafc;
     padding: 9px 12px;
     border-radius: 10px;
     border: 1px solid #e2e8f0;
+    width: 100%;
+  }
+  @media (max-width: 600px) {
+    .dir-filter-row {
+      grid-template-columns: 1fr;
+    }
   }
   /* Multi-Checkbox Sub-Section / Work Area Dropdown */
   .dir-subsec-multiselect {
     position: relative;
-    min-width: 245px;
-    flex: 0 1 290px;
+    width: 100%;
+    min-width: 0;
   }
   .dir-subsec-ms-btn {
     width: 100%;
-    padding: 7px 11px;
+    height: 100%;
+    min-height: 36px;
+    padding: 8px 12px;
     border-radius: 8px;
     border: 1.5px solid #2563eb;
     background: #ffffff;
     color: #0f172a;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 800;
     cursor: pointer;
     display: flex;
@@ -2372,18 +2380,19 @@
     border-radius: 999px;
   }
 
-  .dir-subsec-select, .dir-pattern-select, .dir-quick-filter {
-    padding: 7px 10px;
+  .dir-subsec-select, .dir-pattern-select {
+    width: 100%;
+    min-width: 0;
+    min-height: 36px;
+    padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border: 1.5px solid #cbd5e1;
     background: #ffffff;
     color: #0f172a;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 12.5px;
+    font-weight: 800;
     outline: none;
-  }
-  .dir-quick-filter {
-    flex: 1 1 200px;
+    cursor: pointer;
   }
   .dir-role-group-box {
     border: 1.5px solid #cbd5e1;
@@ -2951,7 +2960,7 @@
         <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span></h1>
   </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.34</div>
+        <div class="ver-pill-box">v22.35</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -3110,13 +3119,13 @@
     <div class="full-directory-card" id="fullSheetDirectoryCard" style="display:none; margin-top:0;">
       <div class="dir-header-bar">
         <div class="dir-title-group">
-          <h3>👥 Full Staff List <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
+          <h3>👥 Full staff list <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
           <p id="dirSummarySub">Tap a card to view Calendar, or <strong>Long Press</strong> (or tap <strong>☑️ Compare</strong>) on same-role staff (AA↔AA, TL↔TL, EO↔EO) to compare full-month rosters side-by-side!</p>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
           <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%;">
             <button type="button" class="btn-live-refresh" id="btnToggleDirectoryBody" style="background:#334155;">🔽 Hide List</button>
-            <div class="dir-month-switcher-bar" id="dirMonthSwitcherBar" title="Switch Month for Full Staff List (Next Month button stays grey until that month's roster is released & loaded)">
+            <div class="dir-month-switcher-bar" id="dirMonthSwitcherBar" title="Switch Month for Full staff list (Next Month button stays grey until that month's roster is released & loaded)">
               <button type="button" id="btnDirPrevMonth" title="Previous Month">◀</button>
               <div class="dir-month-title-pill" id="dirMonthYearTitle">November 2026</div>
               <button type="button" id="btnDirNextMonth" title="Next Month (Active only when next month's roster is loaded)">Next Month ▶</button>
@@ -3161,7 +3170,6 @@
             <option value="3x3_9TO9">🟡 3x3 (9-to-9) Only</option>
             <option value="4x2">🔴 4x2 Roster Only</option>
           </select>
-          <input type="text" id="dirQuickFilterInput" class="dir-quick-filter" placeholder="Filter in selected sheet by Name, ID, Sub-Section or Shift...">
         </div>
 
         <div id="dirGroupsContainer"></div>
@@ -5531,7 +5539,7 @@
       prevBtn.disabled = !prevLoaded;
       prevBtn.classList.toggle('btn-month-locked', !prevLoaded);
       prevBtn.title = prevLoaded
-        ? ('View ' + MONTH_NAMES[prevM] + ' ' + prevY + ' Full Staff List')
+        ? ('View ' + MONTH_NAMES[prevM] + ' ' + prevY + ' Full staff list')
         : (MONTH_NAMES[prevM] + ' ' + prevY + ' roster is not loaded');
     }
 
@@ -5542,7 +5550,7 @@
         ? (MONTH_SHORT[nextM] + ' ' + nextY + ' ▶')
         : (MONTH_SHORT[nextM] + ' Not Loaded ▶');
       nextBtn.title = nextLoaded
-        ? ('Switch Full Staff List to ' + MONTH_NAMES[nextM] + ' ' + nextY)
+        ? ('Switch Full staff list to ' + MONTH_NAMES[nextM] + ' ' + nextY)
         : (MONTH_NAMES[nextM] + ' ' + nextY + ' roster not released/loaded yet');
     }
 
