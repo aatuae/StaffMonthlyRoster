@@ -1893,7 +1893,7 @@
         <h1>📅 Staff Monthly Roster Calendar <span id="headerSectionBadge" style="background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.5); color:#fde047; padding:3px 10px; border-radius:8px; font-size:14px; font-weight:800; letter-spacing:0.3px;"></span></h1>
   </div>
       <div class="creator-version-badge" title="Application Version & Creator">
-        <div class="ver-pill-box">v22.16</div>
+        <div class="ver-pill-box">v22.17</div>
         <div class="creator-text-box">
           <span class="creator-lbl-top">CREATED BY</span>
           <span class="creator-name-gold">ADEEL ASGHAR (497038)</span>
@@ -2155,8 +2155,58 @@
     });
   }
 
+  const ROSTER_LS_ARCHIVE_KEY = 'cmt_roster_ls_archive_v23';
+
+  function saveFilesToLocalStorageFallback(filesArr) {
+    try {
+      let existingMap = {};
+      const raw = localStorage.getItem(ROSTER_LS_ARCHIVE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') existingMap = parsed;
+      }
+      filesArr.forEach(function(item) {
+        if (item && item.fileName && item.data) {
+          existingMap[item.fileName] = {
+            fileName: item.fileName,
+            lastUpdated: item.lastUpdated || new Date().toISOString(),
+            data: item.data,
+            savedAt: Date.now()
+          };
+        }
+      });
+      // Keep up to 4 most recent months in localStorage fallback to avoid 5MB quota overflow
+      const keys = Object.keys(existingMap).sort(function(a, b) {
+        return getCanonicalMonthSortKey(a) - getCanonicalMonthSortKey(b);
+      });
+      while (keys.length > 4) {
+        const oldest = keys.shift();
+        delete existingMap[oldest];
+      }
+      localStorage.setItem(ROSTER_LS_ARCHIVE_KEY, JSON.stringify(existingMap));
+    } catch (e) {}
+  }
+
+  function getFilesFromLocalStorageFallback() {
+    try {
+      const raw = localStorage.getItem(ROSTER_LS_ARCHIVE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return [];
+      const list = Object.keys(parsed).map(function(k) { return parsed[k]; }).filter(Boolean);
+      list.sort(function(a, b) {
+        return getCanonicalMonthSortKey(a.fileName) - getCanonicalMonthSortKey(b.fileName);
+      });
+      return list;
+    } catch (e) {
+      return [];
+    }
+  }
+
   async function saveFilesToPermanentArchive(filesArr) {
     if (!Array.isArray(filesArr) || filesArr.length === 0) return;
+    // Always write to localStorage fallback too (critical for iOS Safari / Standalone PWA)
+    saveFilesToLocalStorageFallback(filesArr);
     try {
       const db = await openRosterArchiveDB();
       await new Promise(function(resolve, reject) {
@@ -2181,9 +2231,10 @@
   }
 
   async function getAllArchivedFilesFromBrowser() {
+    let idbList = [];
     try {
       const db = await openRosterArchiveDB();
-      return await new Promise(function(resolve) {
+      idbList = await new Promise(function(resolve) {
         const tx = db.transaction(ROSTER_IDB_STORE, 'readonly');
         const store = tx.objectStore(ROSTER_IDB_STORE);
         const req = store.getAll();
@@ -2197,8 +2248,10 @@
         req.onerror = function() { resolve([]); };
       });
     } catch (e) {
-      return [];
+      idbList = [];
     }
+    if (idbList.length > 0) return idbList;
+    return getFilesFromLocalStorageFallback();
   }
 
   function getArchiveMeta() {
@@ -4328,8 +4381,11 @@
 
     try {
       localStorage.setItem(LAST_SAVED_STAFF_KEY, String(found.empId));
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState(null, '', '#staff=' + encodeURIComponent(found.empId));
+      if (window.history && window.history.replaceState && window.location.protocol.startsWith('http')) {
+        const urlObj = new URL(window.location.href);
+        urlObj.searchParams.set('staff', String(found.empId));
+        urlObj.hash = 'staff=' + encodeURIComponent(found.empId);
+        window.history.replaceState(null, '', urlObj.toString());
       }
     } catch (e) {}
     updateDynamicPwaManifestForStaff(found);
@@ -5234,8 +5290,52 @@
   let dynamicManifestObjectUrl = null;
   const LAST_SAVED_STAFF_KEY = 'cmt_last_selected_staff_id_v20';
 
-  function buildStaffIconDataUrl(staffIdText) {
+  function buildStaffIconPngDataUrl(staffIdText) {
     const labelText = staffIdText ? String(staffIdText).slice(0, 7) : 'ROSTER';
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Dark Navy Rounded Background
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Blue Top Header Card
+        ctx.fillStyle = '#2563eb';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(36, 44, 440, 424, 52);
+        else ctx.rect(36, 44, 440, 424);
+        ctx.fill();
+
+        // White Calendar Body
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(36, 156, 440, 312, 42);
+        else ctx.rect(36, 156, 440, 312);
+        ctx.fill();
+
+        // Header Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 50px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('MY ROSTER', 256, 104);
+
+        // Staff ID Center Text
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '900 94px Arial, sans-serif';
+        ctx.fillText(labelText, 256, 286);
+
+        // Subtitle
+        ctx.fillStyle = '#16a34a';
+        ctx.font = '800 42px Arial, sans-serif';
+        ctx.fillText('LIVE CALENDAR', 256, 386);
+
+        return canvas.toDataURL('image/png');
+      }
+    } catch (e) {}
     const iconSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'>" +
       "<rect width='512' height='512' rx='104' fill='#0f172a'/>" +
       "<rect x='44' y='56' width='424' height='400' rx='54' fill='#2563eb'/>" +
@@ -5257,7 +5357,7 @@
         ? ('Roster - ' + staffObj.name + ' (' + empId + ')')
         : 'Staff Monthly Roster & Swap App';
 
-      const iconUrl = buildStaffIconDataUrl(empId || '3x3');
+      const iconUrl = buildStaffIconPngDataUrl(empId || '3x3');
 
       let appleIcon = document.querySelector("link[rel='apple-touch-icon']");
       if (!appleIcon) {
@@ -5302,7 +5402,7 @@
           display: 'standalone',
           background_color: '#0f172a',
           theme_color: '#0f172a',
-          icons: [{ src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }]
+          icons: [{ src: iconUrl, sizes: '512x512', type: iconUrl.startsWith('data:image/png') ? 'image/png' : 'image/svg+xml', purpose: 'any maskable' }]
         };
 
         if (dynamicManifestObjectUrl) {
@@ -5567,75 +5667,75 @@
     </div>
   </div>
 <script>
-  // Service Worker Register Karein
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+  // Service Worker Register (HTTP/HTTPS safe)
+  if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('./sw.js').catch(function() {});
   }
 
-  let deferredPrompt;
   const nativeInstallBtn = document.getElementById('btnInstallNativeApp');
 
-  // Android / Chrome par Auto Popup + Existing Button Show Karein
-  window.addEventListener('beforeinstallprompt', (e) => {
+  // Android / Chrome: Auto Popup + Sync with deferredInstallPrompt
+  window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();
-    deferredPrompt = e;
+    deferredInstallPrompt = e;
 
-    // 1. Aapka existing modal wala button show kar dein (jo pehle display:none tha)
     if (nativeInstallBtn) {
-      nativeInstallBtn.style.display = 'inline-block';
+      nativeInstallBtn.style.display = 'flex';
     }
 
-    // 2. Agar mobile screen size hai to automatic neeche popup bhi dikhayein
     if (window.innerWidth <= 768) {
       showMobileInstallPopup();
     }
   });
 
-  // Aapke existing button par click lagayein
-  if (nativeInstallBtn) {
-    nativeInstallBtn.addEventListener('click', triggerInstallPrompt);
-  }
-
   function triggerInstallPrompt() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
+    if (deferredInstallPrompt) {
+      if (activeStaff) {
+        updateDynamicPwaManifestForStaff(activeStaff);
+        try { localStorage.setItem(LAST_SAVED_STAFF_KEY, String(activeStaff.empId)); } catch (e) {}
+      }
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function() {
+        deferredInstallPrompt = null;
         if (nativeInstallBtn) nativeInstallBtn.style.display = 'none';
         const popup = document.getElementById('mobile-auto-popup');
         if (popup) popup.remove();
-      });
+      }).catch(function() {});
     } else {
-      alert('Browser menu (⋮ ya Share) open karein aur "Add to Home Screen" select karein.');
+      triggerOneTapHomeScreenInstall();
     }
   }
 
   function showMobileInstallPopup() {
     if (document.getElementById('mobile-auto-popup')) return;
+    const staffLabel = activeStaff ? (activeStaff.name + ' (' + activeStaff.empId + ')') : 'My Roster';
 
     const popup = document.createElement('div');
     popup.id = 'mobile-auto-popup';
-    popup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:15px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.4); z-index:99999; width:90%; max-width:360px; text-align:center; font-family:sans-serif;';
-    popup.innerHTML = `
-      <p style="margin:0 0 10px 0; font-size:14px;">📲 <b>My Roster</b> Add to mobile home screen </p>
-      <button onclick="triggerInstallPrompt()" style="background:#22c55e; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">Add to Home Screen</button>
-      <button onclick="this.parentElement.remove()" style="background:transparent; color:#94a3b8; border:none; margin-left:10px; cursor:pointer;">Close</button>
-    `;
+    popup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:14px 16px; border-radius:14px; border:1px solid #334155; box-shadow:0 10px 28px rgba(0,0,0,0.48); z-index:99999; width:92%; max-width:380px; text-align:center; font-family:inherit;';
+    popup.innerHTML =
+      '<p style="margin:0 0 10px 0; font-size:13.5px; line-height:1.4;">📲 Add <b>' + staffLabel + '</b> to your Home Screen as an App</p>' +
+      '<button type="button" onclick="triggerInstallPrompt()" style="background:#16a34a; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:800; cursor:pointer; font-size:13px;">Add to Home Screen</button>' +
+      '<button type="button" onclick="this.parentElement.remove()" style="background:transparent; color:#94a3b8; border:none; margin-left:10px; cursor:pointer; font-size:12.5px; font-weight:700;">Close</button>';
     document.body.appendChild(popup);
   }
 
-  // iPhone (Safari) Users ke liye Auto Popup
-  const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-  const isStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+  // iPhone / iPad (Safari) Auto Popup (URL already has ?staff=ID so Home Screen icon opens directly!)
+  const isIosDevice = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+  const isIosStandalone = ('standalone' in window.navigator) && (window.navigator.standalone);
 
-  if (isIos() && !isStandalone() && window.innerWidth <= 768) {
-    const iosPopup = document.createElement('div');
-    iosPopup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:15px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.4); z-index:99999; width:90%; max-width:360px; text-align:center; font-family:sans-serif;';
-    iosPopup.innerHTML = `
-      <p style="margin:0 0 8px 0; font-size:13px;">📲 ADD TO Home screen <b>Share (⍐)</b> dabayein aur <b>"Add to Home Screen"</b> select karein.</p>
-      <button onclick="this.parentElement.remove()" style="background:#334155; color:#fff; border:none; padding:5px 12px; border-radius:5px; cursor:pointer; font-size:12px;">Theek hai</button>
-    `;
-    document.body.appendChild(iosPopup);
+  if (isIosDevice && !isIosStandalone && window.innerWidth <= 768) {
+    setTimeout(function() {
+      if (document.getElementById('ios-auto-popup')) return;
+      const staffTag = activeStaff ? (' (' + activeStaff.empId + ')') : '';
+      const iosPopup = document.createElement('div');
+      iosPopup.id = 'ios-auto-popup';
+      iosPopup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:14px 16px; border-radius:14px; border:1px solid #334155; box-shadow:0 10px 28px rgba(0,0,0,0.48); z-index:99999; width:92%; max-width:380px; text-align:center; font-family:inherit;';
+      iosPopup.innerHTML =
+        '<p style="margin:0 0 9px 0; font-size:13px; line-height:1.45;">📲 Save <b>My Roster' + staffTag + '</b> to iPhone Home Screen:<br>Tap Safari <b>Share (⍐)</b> → <b>"Add to Home Screen"</b></p>' +
+        '<button type="button" onclick="this.parentElement.remove()" style="background:#2563eb; color:#fff; border:none; padding:6px 14px; border-radius:7px; cursor:pointer; font-size:12px; font-weight:800;">Got It</button>';
+      document.body.appendChild(iosPopup);
+    }, 1200);
   }
 </script>
 
