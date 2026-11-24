@@ -3110,13 +3110,13 @@
     <div class="full-directory-card" id="fullSheetDirectoryCard" style="display:none; margin-top:0;">
       <div class="dir-header-bar">
         <div class="dir-title-group">
-          <h3>👥 Full staff list <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
+          <h3>👥 Full Staff List <span id="dirSheetBadge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-size:11.5px;"></span></h3>
           <p id="dirSummarySub">Tap a card to view Calendar, or <strong>Long Press</strong> (or tap <strong>☑️ Compare</strong>) on same-role staff (AA↔AA, TL↔TL, EO↔EO) to compare full-month rosters side-by-side!</p>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
           <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%;">
             <button type="button" class="btn-live-refresh" id="btnToggleDirectoryBody" style="background:#334155;">🔽 Hide List</button>
-            <div class="dir-month-switcher-bar" id="dirMonthSwitcherBar" title="Switch Month for Full staff list (Next Month button stays grey until that month's roster is released & loaded)">
+            <div class="dir-month-switcher-bar" id="dirMonthSwitcherBar" title="Switch Month for Full Staff List (Next Month button stays grey until that month's roster is released & loaded)">
               <button type="button" id="btnDirPrevMonth" title="Previous Month">◀</button>
               <div class="dir-month-title-pill" id="dirMonthYearTitle">November 2026</div>
               <button type="button" id="btnDirNextMonth" title="Next Month (Active only when next month's roster is loaded)">Next Month ▶</button>
@@ -5531,7 +5531,7 @@
       prevBtn.disabled = !prevLoaded;
       prevBtn.classList.toggle('btn-month-locked', !prevLoaded);
       prevBtn.title = prevLoaded
-        ? ('View ' + MONTH_NAMES[prevM] + ' ' + prevY + ' Full staff list')
+        ? ('View ' + MONTH_NAMES[prevM] + ' ' + prevY + ' Full Staff List')
         : (MONTH_NAMES[prevM] + ' ' + prevY + ' roster is not loaded');
     }
 
@@ -5542,7 +5542,7 @@
         ? (MONTH_SHORT[nextM] + ' ' + nextY + ' ▶')
         : (MONTH_SHORT[nextM] + ' Not Loaded ▶');
       nextBtn.title = nextLoaded
-        ? ('Switch Full staff list to ' + MONTH_NAMES[nextM] + ' ' + nextY)
+        ? ('Switch Full Staff List to ' + MONTH_NAMES[nextM] + ' ' + nextY)
         : (MONTH_NAMES[nextM] + ' ' + nextY + ' roster not released/loaded yet');
     }
 
