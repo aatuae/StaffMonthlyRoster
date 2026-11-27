@@ -905,6 +905,41 @@
     display: none !important;
   }
 
+  /* ===== UI v2: Today / Tomorrow bar ===== */
+  .tt-bar { flex-basis: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tt-box { border-radius: 12px; padding: 10px 12px; border: 1.5px solid transparent; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tt-label { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.85; }
+  .tt-value { font-size: 16px; font-weight: 900; line-height: 1.2; }
+  .tt-time { font-size: 13px; font-weight: 800; }
+  .tt-morning { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
+  .tt-night { background: #e0e7ff; border-color: #6366f1; color: #1e1b4b; }
+  .tt-off { background: #dcfce7; border-color: #22c55e; color: #14532d; }
+  .tt-rot { background: #ffedd5; border-color: #ea580c; color: #7c2d12; }
+  .tt-leave { background: #ccfbf1; border-color: #14b8a6; color: #134e4a; }
+  .tt-blank { background: #f1f5f9; border-color: #94a3b8; color: #334155; }
+
+  /* ===== UI v2: Compact search after staff is selected ===== */
+  .compact-staff-bar { display: none; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .search-card.search-collapsed .compact-staff-bar { display: flex; }
+  .search-card.search-collapsed .search-row,
+  .search-card.search-collapsed .status-msg { display: none !important; }
+  .csb-name { font-weight: 800; font-size: 15px; color: #0f172a; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .csb-id { color: #64748b; font-weight: 700; font-size: 13px; }
+  .csb-change { flex-shrink: 0; border: 1px solid #cbd5e1; background: #f8fafc; color: #1e3a8a; font-weight: 800; border-radius: 10px; padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  .csb-change:hover { background: #eff6ff; }
+
+  /* ===== UI v2: TODAY label on calendar ===== */
+  .cal-cell.today-cell .date-num::after { content: 'TODAY'; display: inline-block; margin-left: 4px; padding: 1px 5px; border-radius: 4px; background: #1d4ed8; color: #ffffff; font-size: 9px; font-weight: 800; letter-spacing: 0.3px; vertical-align: middle; }
+
+  @media (max-width: 720px) {
+    .cell-swap-btn { display: none !important; }
+    .cal-cell.today-cell .date-num::after { font-size: 6.5px; padding: 1px 2px; margin-left: 2px; letter-spacing: 0; }
+    .tt-bar { gap: 8px; }
+    .tt-box { padding: 8px 10px; }
+    .tt-value { font-size: 14px; }
+    .tt-time { font-size: 12px; }
+  }
+
   .swap-filter-bar {
     padding: 12px 18px;
     background: #f8fafc;
@@ -3054,8 +3089,8 @@
           <span class="lbl">🌙 Night</span>
         </div>
         <div class="stat-pill">
-          <span class="num" id="statOff" style="color:#fca5a5;">0</span>
-          <span class="lbl">🔴 OFF Days</span>
+          <span class="num" id="statOff" style="color:#86efac;">0</span>
+          <span class="lbl">🟢 OFF Days</span>
         </div>
         <div class="stat-pill" id="statRotPill">
           <span class="num" id="statRot" style="color:#fdba74;">0</span>
@@ -3077,7 +3112,7 @@
         <div class="legend-bar">
           <span class="leg-item leg-morn">☀️ Morning Duty</span>
           <span class="leg-item leg-night"><span class="grey-moon">🌙</span> Night Duty</span>
-          <span class="leg-item leg-off">🔴 OFF Day</span>
+          <span class="leg-item leg-off">🟢 OFF Day</span>
           <span class="leg-item leg-rot" id="legendRotItem">🔥 Morning / Night ROT</span>
           <span class="leg-item leg-leave">📘 Leave / Trg</span>
           <span class="leg-item leg-blank" title="Blank in Roster: Not specified (Likely Replacement / Duty Swap)">⬜ Blank (Unassigned / Likely Replacement)</span>
@@ -3122,7 +3157,7 @@
             <span style="font-size:11.5px; font-weight:800; color:#334155; display:inline-flex; align-items:center; margin-right:2px;">🎯 Swap Type:</span>
             <button type="button" class="s-tab s-type-tab active" data-type="ALL" onclick="setSwapTypeFilter('ALL', this)">📋 All Types (<span id="cntTypeAll">0</span>)</button>
             <button type="button" class="s-tab s-type-tab" data-type="SAME_DAY" onclick="setSwapTypeFilter('SAME_DAY', this)">🔄 Same-Day Shift Swap (<span id="cntTypeSameDay">0</span>)</button>
-            <button type="button" class="s-tab s-type-tab" data-type="OFF_DAY" onclick="setSwapTypeFilter('OFF_DAY', this)">🔴 OFF Day Staff (<span id="cntTypeOffDay">0</span>)</button>
+            <button type="button" class="s-tab s-type-tab" data-type="OFF_DAY" onclick="setSwapTypeFilter('OFF_DAY', this)">🟢 OFF Day Staff (<span id="cntTypeOffDay">0</span>)</button>
             <span id="swapEqualHoursBadge" style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding:5px 10px; border-radius:8px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center;">⏱️ Equal Hours Only (4x2 Excluded)</span>
           </div>
         </div>
@@ -6223,7 +6258,7 @@
       const wd = DAY_NAMES[dt.getUTCDay()];
 
       let catClass = 'm-off';
-      let iconAndName = '🔴 OFF';
+      let iconAndName = '🟢 OFF';
       let timeShort = 'Rest';
 
       if (!duty || duty.category === 'EMPTY') {
@@ -6232,7 +6267,7 @@
         timeShort = 'Repl./Swap';
       } else if (duty.category === 'OFF') {
         catClass = 'm-off';
-        iconAndName = '🔴 OFF';
+        iconAndName = '🟢 OFF';
         timeShort = 'OFF';
       } else if (duty.category === 'MORNING') {
         catClass = 'm-morning';
@@ -7305,6 +7340,7 @@
     closeSwapPanel();
     hideStaffDropdown();
     document.getElementById('staffIdInput').value = found.empId + ' - ' + found.name;
+    try { collapseSearchCard(found); } catch (e) {}
     const clearBtnEl = document.getElementById('btnClearSearch');
     if (clearBtnEl) clearBtnEl.style.display = 'flex';
     document.getElementById('avatarInitials').innerText = getInitials(found.name);
@@ -7371,6 +7407,96 @@
   });
 
   let suppressNextOutsideClick = false;
+
+  function describeDutyForBar(isoDate) {
+    const res = getDutyForDate(activeStaff, isoDate);
+    const duty = res && res.duty;
+    const est = (res && res.isProjected) ? ' (Est.)' : '';
+    if (!duty) return { name: 'Not in roster yet', time: '', cls: 'tt-blank' };
+    if (duty.category === 'EMPTY') return { name: 'Blank', time: 'Not specified', cls: 'tt-blank' };
+    if (duty.category === 'OFF') return { name: '🟢 ' + (duty.label || 'OFF'), time: 'Rest Day', cls: 'tt-off' };
+    if (duty.category === 'MORNING') return { name: '☀️ ' + (duty.isOT ? 'Morning ROT' : 'Morning Duty') + est, time: duty.time || '05:00-17:00', cls: duty.isOT ? 'tt-rot' : 'tt-morning' };
+    if (duty.category === 'NIGHT') return { name: '🌙 ' + (duty.isOT ? 'Night ROT' : 'Night Duty') + est, time: duty.time || '17:00-05:00', cls: duty.isOT ? 'tt-rot' : 'tt-night' };
+    return { name: '📘 ' + (duty.label || 'Leave'), time: duty.time || '', cls: 'tt-leave' };
+  }
+
+  function renderTodayTomorrowBar(todayIso) {
+    if (!activeStaff || !todayIso) return;
+    const card = document.getElementById('profileCard');
+    if (!card) return;
+    let bar = document.getElementById('todayTomorrowBar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'todayTomorrowBar';
+      bar.className = 'tt-bar';
+      const mainEl = card.querySelector('.profile-main');
+      if (mainEl && mainEl.nextSibling) card.insertBefore(bar, mainEl.nextSibling);
+      else card.appendChild(bar);
+    }
+    const dNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    bar.innerHTML = '';
+    [['Today', todayIso], ['Tomorrow', addDaysIso(todayIso, 1)]].forEach(function(pair) {
+      const info = describeDutyForBar(pair[1]);
+      const p = pair[1].split('-');
+      const dt = new Date(Date.UTC(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10)));
+      const box = document.createElement('div');
+      box.className = 'tt-box ' + info.cls;
+      const lab = document.createElement('span');
+      lab.className = 'tt-label';
+      lab.textContent = pair[0] + ' • ' + dNames[dt.getUTCDay()] + ' ' + dt.getUTCDate() + ' ' + mNames[dt.getUTCMonth()];
+      const val = document.createElement('span');
+      val.className = 'tt-value';
+      val.textContent = info.name;
+      box.appendChild(lab);
+      box.appendChild(val);
+      if (info.time) {
+        const tm = document.createElement('span');
+        tm.className = 'tt-time';
+        tm.textContent = info.time;
+        box.appendChild(tm);
+      }
+      bar.appendChild(box);
+    });
+  }
+
+  function collapseSearchCard(staffObj) {
+    const card = document.querySelector('.search-card');
+    if (!card || !staffObj) return;
+    let bar = document.getElementById('compactStaffBar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'compactStaffBar';
+      bar.className = 'compact-staff-bar';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'csb-name';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'csb-change';
+      btn.textContent = '🔍 Change Staff';
+      btn.addEventListener('click', expandSearchCard);
+      bar.appendChild(nameEl);
+      bar.appendChild(btn);
+      card.insertBefore(bar, card.firstChild);
+    }
+    const nameSpan = bar.querySelector('.csb-name');
+    nameSpan.textContent = '👤 ' + (staffObj.name || 'STAFF') + ' ';
+    const idSpan = document.createElement('span');
+    idSpan.className = 'csb-id';
+    idSpan.textContent = '(' + staffObj.empId + ')';
+    nameSpan.appendChild(idSpan);
+    card.classList.add('search-collapsed');
+  }
+
+  function expandSearchCard() {
+    const card = document.querySelector('.search-card');
+    if (card) card.classList.remove('search-collapsed');
+    const inp = document.getElementById('staffIdInput');
+    if (inp) {
+      inp.focus();
+      try { inp.select(); } catch (e) {}
+    }
+  }
 
   function attachLongPressHandlers(cellEl, isoDate, dutyObj) {
     let pressTimer = null;
@@ -7461,6 +7587,18 @@
         openSwapContextPopup(isoDate, dutyObj, rect.left + rect.width / 2, rect.bottom);
       });
     }
+
+    cellEl.addEventListener('click', function(e) {
+      if (window.innerWidth > 720) return;
+      if (e.target && e.target.closest && e.target.closest('.cell-swap-btn')) return;
+      if (didLongPressTrigger) return;
+      e.stopPropagation();
+      cancelPress();
+      suppressNextOutsideClick = true;
+      const rect = cellEl.getBoundingClientRect();
+      openSwapContextPopup(isoDate, dutyObj, rect.left + rect.width / 2, rect.bottom);
+      setTimeout(function() { suppressNextOutsideClick = false; }, 600);
+    });
   }
 
   function openSwapContextPopup(isoDate, dutyObj, clientX, clientY) {
@@ -7699,7 +7837,7 @@
         const wd = DAY_NAMES[dt.getUTCDay()];
 
         let catClass = 'm-off';
-        let iconAndName = '🔴 OFF';
+        let iconAndName = '🟢 OFF';
         let timeShort = 'Rest';
 
         if (!duty || duty.category === 'EMPTY') {
@@ -7708,7 +7846,7 @@
           timeShort = 'Repl./Swap';
         } else if (duty.category === 'OFF') {
           catClass = 'm-off';
-          iconAndName = '🔴 OFF';
+          iconAndName = '🟢 OFF';
           timeShort = 'OFF';
         } else if (duty.category === 'MORNING') {
           catClass = 'm-morning';
@@ -8170,6 +8308,7 @@
     document.getElementById('statNight').innerText = countNight;
     document.getElementById('statOff').innerText = countOff;
     document.getElementById('statRot').innerText = countRot;
+    try { renderTodayTomorrowBar(todayIso); } catch (e) {}
 
     const isPureProjected = (projectedDaysInView > 0 && actualDaysInView === 0);
     document.getElementById('statRotPill').style.display = isPureProjected ? 'none' : 'block';
