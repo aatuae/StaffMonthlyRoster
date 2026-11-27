@@ -7670,8 +7670,12 @@
     }
 
     const windowIsos = [];
-    for (let offset = -10; offset <= 10; offset++) {
-      windowIsos.push(addDaysIso(swapIso, offset));
+    const swapParts = String(swapIso).split('-');
+    const swapYear = parseInt(swapParts[0], 10);
+    const swapMonth = parseInt(swapParts[1], 10);
+    const monthLastDay = new Date(Date.UTC(swapYear, swapMonth, 0)).getUTCDate();
+    for (let d = 1; d <= monthLastDay; d++) {
+      windowIsos.push(toIsoDate(swapYear, swapMonth - 1, d));
     }
 
     function renderTrackPills(staffObj, isRequesterTrack) {
