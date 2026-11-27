@@ -6010,7 +6010,7 @@
                 '</div>' +
                 '<div class="dir-m-pattern">🔄 ' + patLine + '</div>' +
                 '<div class="dir-m-footer">' +
-                  '<span>' + (st.title || roleGrp.meta.shortLabel) + '</span>' +
+                  '<span></span>' +
                   '<div style="display:inline-flex; align-items:center; gap:6px;">' +
                     compareBtnHtml +
                     '<span>📅 View ➔</span>' +
@@ -7357,7 +7357,7 @@
       if (lblSpan) lblSpan.style.color = '#0f172a';
     }
 
-    const roleParts = [monthScopedFound.title, monthScopedFound.teamId].filter(Boolean);
+    const roleParts = [monthScopedFound.teamId].filter(Boolean);
     document.getElementById('profRole').innerText = roleParts.length ? roleParts.join(' • ') : 'OPERATIONS';
 
     const rBadge = document.getElementById('profRosterType');
@@ -7703,7 +7703,7 @@
       ? ('🔥 ROT Giveaway Staff (No Payback Needed) for ' + formatHumanDate(swapIso) + ' — ' + shiftText)
       : ('🔄 Fair Mutual Duty Swap Options for ' + formatHumanDate(swapIso) + ' — ' + shiftText);
     document.getElementById('swapPanelSub').innerText =
-      'Requester: ' + activeStaff.name + ' (' + activeStaff.empId + ' • ' + activeStaff.shiftSeq + ' • ' + (activeStaff.title || 'Staff') + ' • ' + myRType + ' Roster)';
+      'Requester: ' + activeStaff.name + ' (' + activeStaff.empId + ' • ' + activeStaff.shiftSeq + ' • ' + myRType + ' Roster)';
 
     const rulesStrip = document.querySelector('.swap-rules-strip');
     if (rulesStrip) {
@@ -8049,7 +8049,7 @@
           '<div class="cand-top">' +
             '<div>' +
               '<div class="cand-name">' + st.name + '</div>' +
-              '<div class="cand-meta">ID: ' + st.empId + ' • ' + renderShiftBadgeHtml(st.shiftSeq, 'padding:1px 6px; font-size:10px;') + ' • ' + (st.title || 'Staff') + (st.teamId ? ' (' + st.teamId + ')' : '') + ' • <strong>' + stType + '</strong></div>' +
+              '<div class="cand-meta">ID: ' + st.empId + ' • ' + renderShiftBadgeHtml(st.shiftSeq, 'padding:1px 6px; font-size:10px;') + (st.teamId ? ' • ' + st.teamId : '') + ' • <strong>' + stType + '</strong></div>' +
             '</div>' +
             '<span class="off-pos-badge ' + (isFirst ? 'pos-first' : 'pos-last') + '">' + item.coverCheck.offPositionLabel + '</span>' +
           '</div>' +
@@ -8381,7 +8381,7 @@
     }
     const profRoleEl = document.getElementById('profRole');
     if (profRoleEl) {
-      const roleParts = [scoped.title, scoped.teamId].filter(Boolean);
+      const roleParts = [scoped.teamId].filter(Boolean);
       profRoleEl.innerText = roleParts.length ? roleParts.join(' • ') : 'OPERATIONS';
     }
   }
@@ -8471,7 +8471,7 @@
         '<div class="dd-item" data-empid="' + st.empId + '" data-idx="' + idx + '">' +
           '<div class="dd-item-left">' +
             '<div class="dd-item-name">' + st.empId + ' — ' + st.name + '</div>' +
-            '<div class="dd-item-sub">' + (st.shiftSeq || '') + (st.title ? ' • ' + st.title : '') + (st.teamId ? ' • ' + st.teamId : '') + '</div>' +
+            '<div class="dd-item-sub">' + (st.shiftSeq || '') + (st.teamId ? ' • ' + st.teamId : '') + '</div>' +
           '</div>' +
           '<span class="dd-item-badge ' + badgeCls + '">' + badgeTxt + '</span>' +
         '</div>'
