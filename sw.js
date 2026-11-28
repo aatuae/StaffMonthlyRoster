@@ -1,7 +1,11 @@
-const CACHE_NAME = 'cmt-roster-pwa-v22-19';
+const CACHE_NAME = 'cmt-roster-pwa-v22-22';
 const CORE_ASSETS = [
   './',
-  './index.html'
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

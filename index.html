@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Staff Monthly Roster Calendar</title>
+<!-- PWA: Install App (Android / iPhone / Desktop) -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Roster">
+<script>
+  // iPhone: remove the manifest so the Home Screen icon opens the current URL (?staff=ID)
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+    var m = document.querySelector('link[rel="manifest"]'); if (m) m.remove();
+  }
+  // Capture the Chrome / Edge install event as early as possible
+  window.__bip = null;
+  window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); window.__bip = e; });
+</script>
 <!-- SheetJS (XLSX) CDN with multi-CDN fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1889,6 +1906,30 @@
   .install-steps-box strong {
     color: #0f172a;
   }
+  body.no-staff #myCalendarViewSection { display: none !important; }
+  #noStaffHint { background: #fff; border: 1px dashed #94a3b8; border-radius: 12px; padding: 18px; text-align: center; font-weight: 700; color: #334155; }
+  .btn-mobile-install {
+    display: none; width: 100%; margin: 0 0 12px; padding: 13px;
+    background: linear-gradient(135deg, #10b981, #059669); color: #fff;
+    border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer;
+  }
+  .install-guide-backdrop {
+    position: fixed; inset: 0; z-index: 100000; background: rgba(15,23,42,.75);
+    display: flex; align-items: flex-end; justify-content: center; padding: 12px;
+  }
+  .install-guide-card {
+    background: #fff; color: #0f172a; width: 100%; max-width: 420px; max-height: 85vh;
+    overflow-y: auto; border-radius: 16px; padding: 16px; font-size: 14px; line-height: 1.5;
+  }
+  .install-guide-card h3 { margin: 0 0 8px; font-size: 16px; }
+  .install-guide-card ol { margin: 8px 0; padding-left: 20px; }
+  .install-guide-card li { margin-bottom: 6px; }
+  .install-guide-card button, .install-guide-card a.ig-btn {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 8px; padding: 11px;
+    border-radius: 10px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #0f172a;
+    font-size: 13.5px; font-weight: 800; text-align: center; text-decoration: none; cursor: pointer;
+  }
+  .install-guide-card a.ig-btn { background: #2563eb; border-color: #2563eb; color: #fff; }
 
   /* Live Roster Loading Progress Overlay */
   .live-loader-overlay {
@@ -2988,7 +3029,7 @@
 
 </style>
 </head>
-<body>
+<body class="no-staff">
 
   <!-- Live Roster Loading Progress Overlay -->
   <div class="live-loader-overlay" id="liveLoaderOverlay" style="display:none;">
@@ -3033,6 +3074,7 @@
   </div>
 
   <div class="container">
+    <button type="button" class="btn-mobile-install" id="btnMobileInstall">📲 Install App (Mobile Home Screen)</button>
     <!-- Staff Search Box -->
     <div class="search-card">
       <div class="search-row">
@@ -3061,15 +3103,16 @@
     </div>
 
     <!-- TAB 1: My Calendar & Duty Swap View -->
+    <div id="noStaffHint" style="display:none;">🔍 Search your Staff ID or Name above, or pick it from the Full Staff List.</div>
     <div id="myCalendarViewSection">
     <!-- Staff Profile Card -->
     <div class="profile-card" id="profileCard">
       <div class="profile-main">
-        <div class="avatar-circle" id="avatarInitials">AA</div>
+        <div class="avatar-circle" id="avatarInitials">-</div>
         <div class="profile-details">
-          <h2 id="profName">ADEEL ASGHAR</h2>
+          <h2 id="profName">-</h2>
           <div class="profile-badges">
-            <div class="p-badge"><span>ID:</span><strong id="profId">497038</strong></div>
+            <div class="p-badge"><span>ID:</span><strong id="profId">-</strong></div>
             <div class="p-badge"><span>SHIFT:</span><strong id="profShift">SHIFT-2</strong></div>
             <div class="p-badge"><span>ROLE / AREA:</span><strong id="profRole">EO • EO CMT</strong></div>
             <div class="p-badge p-badge-roster" id="profRosterType">✅ 3x3 ROSTER (SWAP ELIGIBLE)</div>
@@ -3505,13 +3548,7 @@
       : ('LIVE (' + activeLabel + ') • Next sync in 6h 0m'));
 
     closeSwapPanel();
-    const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
-    if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
-      selectStaffById(preferredId, true);
-    } else {
-      const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
-      selectStaffById(firstEligible.empId, true);
-    }
+    autoSelectStaff();
     return true;
   }
 
@@ -3799,15 +3836,105 @@
   }
 
   let sheetSectionMap = {};
+  const ALL_SHEETS = '__ALL__';
+  let switchingSheet = false;
+
+  function isStaffId(value) { return /^\d{4,10}$/.test(String(value || '').trim()); }
+
+  // Sheets that hold real staff rows (shift code / legend sheets are skipped)
+  function getStaffSheetNames(wb) {
+    return wb.SheetNames.filter(function(sName) {
+      if (/code|legend/i.test(sName)) return false;
+      const res = extractStaffFromWorkbookSheet(wb, sName);
+      return res.dateCols.length > 0 && res.staffList.some(function(s) { return isStaffId(s.empId); });
+    });
+  }
+
+  function extractStaffFromAllSheets(wb) {
+    const byId = {};
+    const staffList = [];
+    const dateCols = [];
+    const names = getStaffSheetNames(wb);
+    // Main schedule sheet first, so it wins when a person appears on two sheets
+    names.sort(function(a, b) {
+      const main = function(n) { return (n.toLowerCase().includes('schedule') || n.includes('2534')) ? 0 : 1; };
+      return main(a) - main(b);
+    });
+    names.forEach(function(sName) {
+      const res = extractStaffFromWorkbookSheet(wb, sName);
+      Array.prototype.push.apply(dateCols, res.dateCols);
+      res.staffList.forEach(function(st) {
+        if (!isStaffId(st.empId) || byId[st.empId]) return;
+        byId[st.empId] = true;
+        staffList.push(st);
+      });
+    });
+    return { staffList: staffList, dateCols: dateCols };
+  }
+
+  // Swap matches stay inside the requester's own sheet, also in All Sheets view
+  function isSameSheetStaff(a, b) {
+    const rec = staffRecords.find(function(s) { return String(s.empId) === String(a.empId); }) || a;
+    return !rec.sheetName || !b.sheetName || rec.sheetName === b.sheetName;
+  }
+
+  // Empty string means "no sheet filter"
+  function getActiveSheetFilter() {
+    const sel = document.getElementById('sheetSelect');
+    if (sel && sel.value === ALL_SHEETS) return '';
+    return (sel && sel.value) || (activeStaff && activeStaff.sheetName) || '';
+  }
+
+  function resetDirectoryFilters() {
+    dirSelectedShift = 'ALL';
+    dirSelectedRole = 'ALL';
+    dirSelectedSubSections = [];
+    dirSelectedPattern = 'ALL';
+    dirQuickQuery = '';
+    const qInp = document.getElementById('dirQuickFilterInput');
+    if (qInp) qInp.value = '';
+  }
+
+  // Found through All Sheets: select that person's own sheet, so the Full Staff List shows it
+  function switchToStaffSheet(staff) {
+    const sel = document.getElementById('sheetSelect');
+    if (!sel || sel.value !== ALL_SHEETS || !loadedWorkbooksList.length) return staff;
+    const now = getDubaiCurrentYearMonth();
+    const meta = staff.monthlyMeta && staff.monthlyMeta[now.year + '-' + now.month0];
+    const options = Array.from(sel.options).map(function(o) { return o.value; });
+    const target = [meta && meta.sheetName, staff.sheetName].find(function(n) { return n && options.indexOf(n) !== -1; });
+    if (!target) return staff;
+
+    const view = [currentYear, currentMonth, dirCurrentYear, dirCurrentMonth];
+    sel.value = target;
+    resetDirectoryFilters();
+    switchingSheet = true;
+    try {
+      parseMultiMonthWorkbooks(target, currentLiveFileName || 'Live Roster');
+    } finally {
+      switchingSheet = false;
+    }
+    currentYear = view[0]; currentMonth = view[1]; dirCurrentYear = view[2]; dirCurrentMonth = view[3];
+    renderFullSheetMemberDirectory();
+    return staffRecords.find(function(s) { return String(s.empId) === String(staff.empId); }) || staff;
+  }
 
   function populateSheetDropdownWithSections(wb) {
     const sheetSel = document.getElementById('sheetSelect');
     if (!sheetSel || !wb) return;
+    const previousChoice = sheetSel.value;
     sheetSel.innerHTML = '';
     sheetSectionMap = {};
 
-    let defaultSelectedIdx = 0;
-    wb.SheetNames.forEach(function(sName, idx) {
+    const allOpt = document.createElement('option');
+    allOpt.value = ALL_SHEETS;
+    allOpt.textContent = 'All Sheets';
+    sheetSel.appendChild(allOpt);
+    sheetSectionMap[ALL_SHEETS] = 'All Sheets';
+
+    let staffSheets = getStaffSheetNames(wb);
+    if (staffSheets.length === 0) staffSheets = wb.SheetNames;
+    staffSheets.forEach(function(sName) {
       const secName = extractSectionNameFromSheet(wb.Sheets[sName], sName);
       sheetSectionMap[sName] = secName;
 
@@ -3818,16 +3945,10 @@
       } else {
         opt.textContent = sName;
       }
-
-      if (sName.toLowerCase().includes('schedule') || sName.includes('2534')) {
-        defaultSelectedIdx = idx;
-      }
       sheetSel.appendChild(opt);
     });
 
-    if (sheetSel.options.length > 0) {
-      sheetSel.selectedIndex = defaultSelectedIdx;
-    }
+    sheetSel.value = (sheetBrowseMode && staffSheets.indexOf(previousChoice) !== -1) ? previousChoice : ALL_SHEETS;
     sheetSel.style.display = wb.SheetNames.length > 0 ? 'block' : 'none';
     const sheetGrp = document.getElementById('sheetSelectGroup');
     if (sheetGrp) sheetGrp.style.display = wb.SheetNames.length > 0 ? 'flex' : 'none';
@@ -5006,6 +5127,7 @@
       if (String(other.empId) === String(requesterStaff.empId)) return;
       if (!isSwapEligibleStaff(other)) return;
       if (!areSameNormalizedRole(requesterStaff, other)) return;
+      if (!isSameSheetStaff(requesterStaff, other)) return;
 
       const otherDutyOnSwapIso = getDutyForDate(other, swapIso).duty;
 
@@ -5383,6 +5505,7 @@
     staffRecords.forEach(function(other) {
       if (String(other.empId) === String(requesterStaff.empId)) return;
       if (!areSameNormalizedRole(requesterStaff, other)) return;
+      if (!isSameSheetStaff(requesterStaff, other)) return;
 
       const check = evaluatePartnerForRotGiveaway(other, rotIso, reqDutyObj);
       if (!check.valid) return;
@@ -5497,8 +5620,7 @@
     dirCurrentYear = 2026;
     dirCurrentMonth = 10;
     renderSampleChips();
-    const startId = getRequestedStaffFromUrl() || '497038';
-    selectStaffById(startId, true);
+    autoSelectStaff();
   }
 
   function renderSampleChips() {
@@ -5798,7 +5920,7 @@
 
     // Strictly isolate to the currently selected sheet's staff + selected directory month's Work Area/Shift/Role
     const topSheetSel = document.getElementById('sheetSelect');
-    const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
+    const activeSheetName = getActiveSheetFilter();
     const dirMonthKey = getMonthKeyYM(dirCurrentYear, dirCurrentMonth);
     const hasMonthSpecificRoster = Boolean(loadedRosterMonthsMap && loadedRosterMonthsMap[dirMonthKey]);
 
@@ -5818,7 +5940,7 @@
     const summarySub = document.getElementById('dirSummarySub');
     const secName = (activeSheetName && sheetSectionMap[activeSheetName])
       ? sheetSectionMap[activeSheetName]
-      : ((currentSheetStaff[0] && (currentSheetStaff[0].sectionTitle || currentSheetStaff[0].sheetName)) || 'Selected Sheet');
+      : (!activeSheetName ? 'All Sheets' : ((currentSheetStaff[0] && (currentSheetStaff[0].sectionTitle || currentSheetStaff[0].sheetName)) || 'Selected Sheet'));
     if (sheetBadge) {
       sheetBadge.innerText = MONTH_SHORT[dirCurrentMonth] + ' ' + dirCurrentYear + ' • ' + secName + (activeSheetName && activeSheetName !== secName ? ' (' + activeSheetName + ')' : '') + ' • ' + currentSheetStaff.length + ' Staff';
     }
@@ -6087,7 +6209,7 @@
       '❌ Only same role selection compare allow!\n\n' +
       '• Your Role: ' + myRoleLabel + ' (' + (activeStaff ? activeStaff.name : '') + ')\n' +
       '• Selected Staff Role: ' + otherRoleLabel + ' (' + (targetStaff ? targetStaff.name : '') + ')\n\n' +
-      'Compare sirf same role mein allow hai (AA to AA, Team Leader to Team Leader, EO to EO).'
+      'Compare is allowed only within the same role (AA to AA, Team Leader to Team Leader, EO to EO).'
     );
   }
 
@@ -6525,7 +6647,7 @@
     if (!cleanId) return;
 
     const topSheetSel = document.getElementById('sheetSelect');
-    const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
+    const activeSheetName = getActiveSheetFilter();
     const jumpMonthKey = getMonthKeyYM(dirCurrentYear, dirCurrentMonth);
     const hasJumpMonthRoster = Boolean(loadedRosterMonthsMap && loadedRosterMonthsMap[jumpMonthKey]);
     const currentSheetStaff = staffRecords
@@ -6613,7 +6735,7 @@
       if (jumpClr) jumpClr.style.display = q.length > 0 ? 'flex' : 'none';
 
       const topSheetSel = document.getElementById('sheetSelect');
-      const activeSheetName = (topSheetSel && topSheetSel.value) || (staffRecords[0] && staffRecords[0].sheetName) || '';
+      const activeSheetName = getActiveSheetFilter();
       const ddMonthKey = getMonthKeyYM(dirCurrentYear, dirCurrentMonth);
       const hasDdMonthRoster = Boolean(loadedRosterMonthsMap && loadedRosterMonthsMap[ddMonthKey]);
       const sheetList = staffRecords
@@ -6870,6 +6992,9 @@
   });
 
   document.getElementById('sheetSelect').addEventListener('change', function() {
+    sheetBrowseMode = true;
+    staffPickerShown = false;
+    activeStaff = null;
     dirSelectedShift = 'ALL';
     dirSelectedRole = 'ALL';
     dirSelectedSubSections = [];
@@ -7013,7 +7138,9 @@
 
     loadedRosterMonthsMap = {};
     loadedWorkbooksList.forEach(function(wbEntry) {
-      const res = extractStaffFromWorkbookSheet(wbEntry.wb, sheetName);
+      const res = sheetName === ALL_SHEETS
+        ? extractStaffFromAllSheets(wbEntry.wb)
+        : extractStaffFromWorkbookSheet(wbEntry.wb, sheetName);
       const wbMonthKeys = {};
       res.dateCols.forEach(function(dc) {
         const mKey = dc.dateObj.year + '-' + dc.dateObj.month0;
@@ -7096,24 +7223,23 @@
         return MONTH_SHORT[mObj.month0] + ' ' + mObj.year;
       }).join(' • ');
 
-      saveCompactParsedRosterToLocalStorage(sheetName, staffRecords, loadedMonthsLabels || sourceFileLabel, lastDownloadedTimestampMs || Date.now());
+      if (sheetName === ALL_SHEETS) saveCompactParsedRosterToLocalStorage(sheetName, staffRecords, loadedMonthsLabels || sourceFileLabel, lastDownloadedTimestampMs || Date.now());
       renderSampleChips();
       document.getElementById('rosterStatusText').innerText =
         '✅ Archive & Live Ready [' + (loadedMonthsLabels || sourceFileLabel) + '] (' + staffRecords.length + ' Staff • ' + countEligible + ' Swap-Eligible) — Use ◀ ▶ arrows to view past/next months or Long Press any Duty Day to swap:';
 
       closeSwapPanel();
-      const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
-      if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
-        selectStaffById(preferredId, true);
-      } else {
-        const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
-        selectStaffById(firstEligible.empId, true);
-      }
+      autoSelectStaff();
     }
   }
 
   function parseExcelSheet(sheetName, sourceFileLabel) {
     if (!workbook || !sheetName) return;
+    if (sheetName === ALL_SHEETS) {
+      loadedWorkbooksList = [{ fileName: sourceFileLabel || 'Roster.xlsx', wb: workbook }];
+      parseMultiMonthWorkbooks(sheetName, sourceFileLabel);
+      return;
+    }
     updateHeaderSectionDisplay(sheetName);
     const sheet = workbook.Sheets[sheetName];
     const rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
@@ -7261,13 +7387,7 @@
         '✅ Roster Ready' + srcTag + ' (' + staffRecords.length + ' Total Staff • ' + countEligible + ' Swap-Eligible 3x3/4x4 Staff) — Long Press on any Duty Day to find fair mutual swap matches:';
 
       closeSwapPanel();
-      const preferredId = (activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || '497038';
-      if (preferredId && staffRecords.some(function(s) { return String(s.empId) === String(preferredId); })) {
-        selectStaffById(preferredId, true);
-      } else {
-        const firstEligible = staffRecords.find(isSwapEligibleStaff) || staffRecords[0];
-        selectStaffById(firstEligible.empId, true);
-      }
+      autoSelectStaff();
     }
   }
 
@@ -7309,6 +7429,38 @@
     return null;
   }
 
+  let staffPickerShown = false;
+  let sheetBrowseMode = false; // true after the user changes the sheet, until a staff member is picked
+
+  // Open the user's own saved roster; otherwise show the search box + staff list
+  function autoSelectStaff(fallbackId) {
+    if (switchingSheet) return;
+    const id = sheetBrowseMode ? '' : String((activeStaff && activeStaff.empId) || getRequestedStaffFromUrl() || fallbackId || '');
+    if (id && staffRecords.some(function(s) { return String(s.empId) === id; })) {
+      selectStaffById(id, true);
+    } else {
+      showStaffPicker();
+    }
+  }
+
+  function showStaffPicker() {
+    const firstTime = !staffPickerShown || Boolean(activeStaff);
+    staffPickerShown = true;
+    activeStaff = null;
+    closeSwapPanel();
+    document.body.classList.add('no-staff');
+    expandSearchCardOnly();
+    const inp = document.getElementById('staffIdInput');
+    if (inp && document.activeElement !== inp) inp.value = '';
+    if (firstTime) switchMainViewTab('DIRECTORY');
+    else renderFullSheetMemberDirectory();
+  }
+
+  function expandSearchCardOnly() {
+    const card = document.querySelector('.search-card');
+    if (card) card.classList.remove('search-collapsed');
+  }
+
   function selectStaffById(queryId, isAutoInit) {
     const clean = String(queryId || '').trim();
     if (!clean) {
@@ -7316,7 +7468,7 @@
       return;
     }
 
-    const found = findStaffByIdOrName(clean);
+    let found = findStaffByIdOrName(clean);
 
     if (!found) {
       if (!isAutoInit) {
@@ -7326,9 +7478,11 @@
     }
 
     try {
-      localStorage.setItem(LAST_SAVED_STAFF_KEY, String(found.empId));
+      // Remember only a staff member the user picked on this device
+      if (!isAutoInit) localStorage.setItem(LAST_SAVED_STAFF_KEY, String(found.empId));
       if (window.history && window.history.replaceState && window.location.protocol.startsWith('http')) {
         const urlObj = new URL(window.location.href);
+        urlObj.searchParams.delete('open');
         urlObj.searchParams.set('staff', String(found.empId));
         urlObj.hash = 'staff=' + encodeURIComponent(found.empId);
         window.history.replaceState(null, '', urlObj.toString());
@@ -7336,7 +7490,13 @@
     } catch (e) {}
     updateDynamicPwaManifestForStaff(found);
 
+    found = switchToStaffSheet(found);
+    const wasPicking = document.body.classList.contains('no-staff');
     activeStaff = found;
+    sheetBrowseMode = false;
+    staffPickerShown = false;
+    document.body.classList.remove('no-staff');
+    if (wasPicking || !isAutoInit) switchMainViewTab('CALENDAR');
     closeSwapPanel();
     hideStaffDropdown();
     document.getElementById('staffIdInput').value = found.empId + ' - ' + found.name;
@@ -7666,7 +7826,7 @@
     if (!pendingSwapIso || !activeStaff) return;
     const dObj = getDutyForDate(activeStaff, pendingSwapIso).duty;
     if (!dObj || !dObj.isOT) {
-      alert('ROT Giveaway sirf ROT (OT) duty par allow hai. Normal duty ke liye Mutual Swap use karein.');
+      alert('ROT Giveaway is allowed only on a ROT (OT) duty. For a normal duty, use Mutual Swap.');
       return;
     }
     executeSwapSearch(pendingSwapIso, 'ROT_GIVEAWAY');
@@ -8341,6 +8501,8 @@
     const tabCal = document.getElementById('tabBtnMyCalendar');
     const tabDir = document.getElementById('tabBtnFullDirectory');
     if (!calSec || !dirSec) return;
+    const hint = document.getElementById('noStaffHint');
+    if (hint) hint.style.display = (tabName !== 'DIRECTORY' && !activeStaff) ? 'block' : 'none';
 
     if (tabName === 'DIRECTORY') {
       calSec.style.display = 'none';
@@ -8541,174 +8703,31 @@
   // =========================================================================
   // ADD TO DESKTOP / APP INSTALLATION & PERSONAL HOME SCREEN SHORTCUT
   // =========================================================================
-  let deferredInstallPrompt = null;
-  let dynamicManifestObjectUrl = null;
-  const LAST_SAVED_STAFF_KEY = 'cmt_last_selected_staff_id_v20';
-
-  function buildStaffIconPngDataUrl(staffIdText) {
-    const labelText = staffIdText ? String(staffIdText).slice(0, 7) : 'ROSTER';
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Dark Navy Rounded Background
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Blue Top Header Card
-        ctx.fillStyle = '#2563eb';
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(36, 44, 440, 424, 52);
-        else ctx.rect(36, 44, 440, 424);
-        ctx.fill();
-
-        // White Calendar Body
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(36, 156, 440, 312, 42);
-        else ctx.rect(36, 156, 440, 312);
-        ctx.fill();
-
-        // Header Text
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '900 50px Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('MY ROSTER', 256, 104);
-
-        // Staff ID Center Text
-        ctx.fillStyle = '#0f172a';
-        ctx.font = '900 94px Arial, sans-serif';
-        ctx.fillText(labelText, 256, 286);
-
-        // Subtitle
-        ctx.fillStyle = '#16a34a';
-        ctx.font = '800 42px Arial, sans-serif';
-        ctx.fillText('LIVE CALENDAR', 256, 386);
-
-        return canvas.toDataURL('image/png');
-      }
-    } catch (e) {}
-    const iconSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'>" +
-      "<rect width='512' height='512' rx='104' fill='#0f172a'/>" +
-      "<rect x='44' y='56' width='424' height='400' rx='54' fill='#2563eb'/>" +
-      "<rect x='44' y='162' width='424' height='294' rx='42' fill='#ffffff'/>" +
-      "<text x='256' y='128' font-family='Arial,sans-serif' font-size='52' font-weight='900' fill='#ffffff' text-anchor='middle'>MY ROSTER</text>" +
-      "<text x='256' y='315' font-family='Arial,sans-serif' font-size='96' font-weight='900' fill='#0f172a' text-anchor='middle'>" + labelText + "</text>" +
-      "<text x='256' y='395' font-family='Arial,sans-serif' font-size='44' font-weight='800' fill='#16a34a' text-anchor='middle'>LIVE CALENDAR</text>" +
-      "</svg>";
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
-  }
+  const LAST_SAVED_STAFF_KEY = 'cmt_my_staff_id_v21';
 
   function updateDynamicPwaManifestForStaff(staffObj) {
-    try {
-      const empId = staffObj && staffObj.empId ? String(staffObj.empId).trim() : '';
-      const shortName = staffObj && staffObj.name
-        ? (staffObj.name.split(' ')[0] + ' ' + empId).slice(0, 14)
-        : 'My Roster';
-      const fullAppName = staffObj && staffObj.name
-        ? ('Roster - ' + staffObj.name + ' (' + empId + ')')
-        : 'Staff Monthly Roster & Swap App';
-
-      const iconUrl = buildStaffIconPngDataUrl(empId || '3x3');
-
-      let appleIcon = document.querySelector("link[rel='apple-touch-icon']");
-      if (!appleIcon) {
-        appleIcon = document.createElement('link');
-        appleIcon.rel = 'apple-touch-icon';
-        document.head.appendChild(appleIcon);
-      }
-      appleIcon.href = iconUrl;
-
-      let appleTitle = document.querySelector("meta[name='apple-mobile-web-app-title']");
-      if (!appleTitle) {
-        appleTitle = document.createElement('meta');
-        appleTitle.name = 'apple-mobile-web-app-title';
-        document.head.appendChild(appleTitle);
-      }
-      appleTitle.content = shortName;
-
-      if (!document.querySelector("meta[name='apple-mobile-web-app-capable']")) {
-        const metaCapable = document.createElement('meta');
-        metaCapable.name = 'apple-mobile-web-app-capable';
-        metaCapable.content = 'yes';
-        document.head.appendChild(metaCapable);
-      }
-      if (!document.querySelector("meta[name='mobile-web-app-capable']")) {
-        const metaMobileCapable = document.createElement('meta');
-        metaMobileCapable.name = 'mobile-web-app-capable';
-        metaMobileCapable.content = 'yes';
-        document.head.appendChild(metaMobileCapable);
-      }
-
-      if (window.location.protocol.startsWith('http')) {
-        const baseUrl = window.location.href.split('#')[0].split('?')[0];
-        const personalizedStartUrl = empId
-          ? (baseUrl + '?staff=' + encodeURIComponent(empId) + '#staff=' + encodeURIComponent(empId))
-          : window.location.href;
-
-        const manifestObj = {
-          name: fullAppName,
-          short_name: shortName,
-          start_url: personalizedStartUrl,
-          scope: baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1) || '/',
-          display: 'standalone',
-          background_color: '#0f172a',
-          theme_color: '#0f172a',
-          icons: [{ src: iconUrl, sizes: '512x512', type: iconUrl.startsWith('data:image/png') ? 'image/png' : 'image/svg+xml', purpose: 'any maskable' }]
-        };
-
-        if (dynamicManifestObjectUrl) {
-          try { URL.revokeObjectURL(dynamicManifestObjectUrl); } catch (e) {}
-        }
-        const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
-        dynamicManifestObjectUrl = URL.createObjectURL(blob);
-
-        let manifestLink = document.querySelector("link[rel='manifest']");
-        if (!manifestLink) {
-          manifestLink = document.createElement('link');
-          manifestLink.rel = 'manifest';
-          document.head.appendChild(manifestLink);
-        }
-        manifestLink.href = dynamicManifestObjectUrl;
-      }
-    } catch (e) {}
+    // Icons and manifest are real files; only the iPhone icon title is set per staff member
+    const meta = document.querySelector("meta[name='apple-mobile-web-app-title']");
+    if (!meta) return;
+    meta.content = (staffObj && staffObj.name)
+      ? (staffObj.name.split(' ')[0] + ' Roster')
+      : 'My Roster';
   }
 
   updateDynamicPwaManifestForStaff(null);
 
-  async function triggerOneTapHomeScreenInstall() {
+  function triggerOneTapHomeScreenInstall() {
     if (activeStaff) {
-      updateDynamicPwaManifestForStaff(activeStaff);
       try { localStorage.setItem(LAST_SAVED_STAFF_KEY, String(activeStaff.empId)); } catch (e) {}
     }
-
-    if (deferredInstallPrompt) {
-      try {
-        deferredInstallPrompt.prompt();
-        const choice = await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-        const nativeBtn = document.getElementById('btnInstallNativeApp');
-        if (nativeBtn) nativeBtn.style.display = 'none';
-        if (choice && choice.outcome === 'accepted') {
-          return;
-        }
-      } catch (err) {}
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if ((window.__bip || isMobile) && window.installRosterApp) {
+      window.installRosterApp();
+      return;
     }
-
     const desktopModal = document.getElementById('desktopAppModal');
-    if (desktopModal) {
-      if (activeStaff) {
-        const sumEl = document.getElementById('modalStaffSummary');
-        if (sumEl) {
-          sumEl.innerText =
-            '👤 Personal Shortcut Ready: ' + activeStaff.name + ' (ID: ' + activeStaff.empId + ' • ' + (activeStaff.shiftSeq || '') + ')';
-        }
-      }
-      desktopModal.style.display = 'flex';
-    }
+    if (desktopModal) desktopModal.style.display = 'flex';
   }
 
   function bindDesktopModalEvents() {
@@ -8748,19 +8767,15 @@
 
     const btnNative = document.getElementById('btnInstallNativeApp');
     if (btnNative) {
-      btnNative.addEventListener('click', async function() {
-        if (!deferredInstallPrompt) return;
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-        this.style.display = 'none';
+      btnNative.addEventListener('click', function() {
+        if (window.installRosterApp) window.installRosterApp();
       });
     }
 
     const btnOffline = document.getElementById('btnDownloadOfflineApp');
     if (btnOffline) {
       btnOffline.addEventListener('click', function() {
-        const targetId = activeStaff ? activeStaff.empId : '497038';
+        const targetId = activeStaff ? activeStaff.empId : '';
         const targetName = activeStaff ? activeStaff.name.replace(/[^A-Za-z0-9]+/g, '_') : 'Staff';
         const payload = {
           staffRecords: staffRecords,
@@ -8787,9 +8802,10 @@
     const btnCopyLink = document.getElementById('btnCopyDirectStaffLink');
     if (btnCopyLink) {
       btnCopyLink.addEventListener('click', function() {
-        const targetId = activeStaff ? activeStaff.empId : '497038';
+        if (!activeStaff) { alert('Please search and select a Staff ID first.'); return; }
+        const targetId = activeStaff.empId;
         const baseUrl = window.location.href.split('#')[0].split('?')[0];
-        const directUrl = baseUrl + '?staff=' + encodeURIComponent(targetId) + '#staff=' + encodeURIComponent(targetId);
+        const directUrl = baseUrl + '?open=' + encodeURIComponent(targetId);
         const btn = this;
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(directUrl).then(function() {
@@ -8806,10 +8822,11 @@
   function getRequestedStaffFromUrl() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('staff')) return urlParams.get('staff').trim();
-      if (window.location.hash && window.location.hash.includes('staff=')) {
-        return decodeURIComponent(window.location.hash.split('staff=')[1].split('&')[0]).trim();
-      }
+      // ?open=ID is an explicit direct link (Copy Direct Staff Roster Link)
+      if (urlParams.get('open')) return urlParams.get('open').trim();
+      // ?staff=ID is honoured only by an installed Home Screen app, so a shared address does not open someone else's roster
+      const isApp = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+      if (isApp && urlParams.get('staff')) return urlParams.get('staff').trim();
       const savedId = localStorage.getItem(LAST_SAVED_STAFF_KEY);
       if (savedId) return savedId.trim();
     } catch (e) {}
@@ -8838,8 +8855,7 @@
       currentYear = baseRosterYear;
       currentMonth = baseRosterMonth;
       renderSampleChips();
-      const startId = getRequestedStaffFromUrl() || pre.defaultStaffId || staffRecords[0].empId;
-      selectStaffById(startId, true);
+      autoSelectStaff(pre.defaultStaffId);
       return;
     }
 
@@ -8908,7 +8924,7 @@
       </div>
       <div class="app-modal-body">
         <div id="modalStaffSummary" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:9px 12px; border-radius:9px; font-weight:700; font-size:12.5px;">
-          Selected Staff: ADEEL ASGHAR (497038)
+          No staff selected
         </div>
         <p style="margin:10px 0 6px;">You can save this page to your Desktop or Mobile Home Screen so your roster opens directly like an app with one click:</p>
         <div class="app-action-grid">
@@ -8936,71 +8952,85 @@
     navigator.serviceWorker.register('./sw.js').catch(function() {});
   }
 
-  const nativeInstallBtn = document.getElementById('btnInstallNativeApp');
+  (function() {
+    const ua = navigator.userAgent;
+    const isIos = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /android/i.test(ua);
+    const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    // In-app browsers (WhatsApp / Facebook / Instagram etc.)
+    const isInApp = /FBAN|FBAV|FB_IAB|Instagram|Line\/|WhatsApp|Snapchat|; wv\)/i.test(ua) ||
+      (isIos && !/Safari\//i.test(ua) && !isStandalone);
+    const mobileBtn = document.getElementById('btnMobileInstall');
+    const nativeBtn = document.getElementById('btnInstallNativeApp');
 
-  // Android / Chrome: Auto Popup + Sync with deferredInstallPrompt
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    deferredInstallPrompt = e;
+    if (mobileBtn && (isIos || isAndroid) && !isStandalone) mobileBtn.style.display = 'block';
+    if (nativeBtn && window.__bip) nativeBtn.style.display = 'flex';
+    window.addEventListener('beforeinstallprompt', function() {
+      if (nativeBtn) nativeBtn.style.display = 'flex';
+    });
+    window.addEventListener('appinstalled', function() {
+      window.__bip = null;
+      if (mobileBtn) mobileBtn.style.display = 'none';
+      if (nativeBtn) nativeBtn.style.display = 'none';
+      closeGuide();
+    });
 
-    if (nativeInstallBtn) {
-      nativeInstallBtn.style.display = 'flex';
+    function closeGuide() {
+      const g = document.getElementById('installGuide');
+      if (g) g.remove();
     }
 
-    if (window.innerWidth <= 768) {
-      showMobileInstallPopup();
-    }
-  });
-
-  function triggerInstallPrompt() {
-    if (deferredInstallPrompt) {
-      if (activeStaff) {
-        updateDynamicPwaManifestForStaff(activeStaff);
-        try { localStorage.setItem(LAST_SAVED_STAFF_KEY, String(activeStaff.empId)); } catch (e) {}
+    function showGuide() {
+      closeGuide();
+      let title, body;
+      if (isIos) {
+        title = '🍎 Install the App on iPhone';
+        body = (isInApp ? '<p><b>First open this link in Safari</b> (copy the link below).</p>' : '') +
+          '<ol><li>First search your <b>Staff ID</b></li>' +
+          '<li>Tap the <b>Share</b> button ⬆️ (if you do not see it, open the <b>•••</b> menu)</li>' +
+          '<li>Scroll down and choose <b>Add to Home Screen</b></li>' +
+          '<li>Tap <b>Add</b> at the top</li></ol>';
+      } else {
+        title = '🤖 Install the App on Android';
+        body = (isInApp ? '<p><b>Installing does not work in this browser.</b> Open it in Chrome first.</p>' : '') +
+          '<ol><li><b>Chrome:</b> top <b>⋮</b> menu → <b>Add to Home screen</b> or <b>Install app</b></li>' +
+          '<li><b>Edge:</b> bottom <b>☰</b> menu → <b>Add to phone</b></li>' +
+          '<li><b>Samsung Internet:</b> <b>☰</b> menu → <b>Add page to</b> → <b>Home screen</b></li></ol>' +
+          '<p>If you do not see the option, the app may already be installed — check your apps list.</p>';
       }
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt.userChoice.then(function() {
-        deferredInstallPrompt = null;
-        if (nativeInstallBtn) nativeInstallBtn.style.display = 'none';
-        const popup = document.getElementById('mobile-auto-popup');
-        if (popup) popup.remove();
-      }).catch(function() {});
-    } else {
-      triggerOneTapHomeScreenInstall();
+      const chromeUrl = 'intent://' + location.host + location.pathname + location.search +
+        '#Intent;scheme=https;package=com.android.chrome;end';
+      const g = document.createElement('div');
+      g.id = 'installGuide';
+      g.className = 'install-guide-backdrop';
+      g.innerHTML = '<div class="install-guide-card"><h3>' + title + '</h3>' + body +
+        (isAndroid && location.protocol === 'https:' ? '<a class="ig-btn" id="igChrome">🌐 Open in Chrome</a>' : '') +
+        '<button type="button" id="igCopy">🔗 Copy Link</button>' +
+        '<button type="button" id="igClose">✖ Close</button></div>';
+      document.body.appendChild(g);
+      const chromeLink = g.querySelector('#igChrome');
+      if (chromeLink) chromeLink.href = chromeUrl;
+      g.querySelector('#igClose').onclick = closeGuide;
+      g.querySelector('#igCopy').onclick = function() {
+        const btn = this;
+        const manual = function() { prompt('Copy this link:', location.href); };
+        if (!navigator.clipboard) return manual();
+        navigator.clipboard.writeText(location.href).then(function() { btn.textContent = '✅ Link copied'; }, manual);
+      };
+      g.addEventListener('click', function(e) { if (e.target === g) closeGuide(); });
     }
-  }
 
-  function showMobileInstallPopup() {
-    if (document.getElementById('mobile-auto-popup')) return;
-    const staffLabel = activeStaff ? (activeStaff.name + ' (' + activeStaff.empId + ')') : 'My Roster';
+    // One-tap install where the browser allows it, otherwise a step-by-step guide
+    window.installRosterApp = function() {
+      const evt = window.__bip;
+      if (!evt) return showGuide();
+      window.__bip = null;
+      if (nativeBtn) nativeBtn.style.display = 'none';
+      evt.prompt();
+    };
 
-    const popup = document.createElement('div');
-    popup.id = 'mobile-auto-popup';
-    popup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:14px 16px; border-radius:14px; border:1px solid #334155; box-shadow:0 10px 28px rgba(0,0,0,0.48); z-index:99999; width:92%; max-width:380px; text-align:center; font-family:inherit;';
-    popup.innerHTML =
-      '<p style="margin:0 0 10px 0; font-size:13.5px; line-height:1.4;">📲 Add <b>' + staffLabel + '</b> to your Home Screen as an App</p>' +
-      '<button type="button" onclick="triggerInstallPrompt()" style="background:#16a34a; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:800; cursor:pointer; font-size:13px;">Add to Home Screen</button>' +
-      '<button type="button" onclick="this.parentElement.remove()" style="background:transparent; color:#94a3b8; border:none; margin-left:10px; cursor:pointer; font-size:12.5px; font-weight:700;">Close</button>';
-    document.body.appendChild(popup);
-  }
-
-  // iPhone / iPad (Safari) Auto Popup (URL already has ?staff=ID so Home Screen icon opens directly!)
-  const isIosDevice = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-  const isIosStandalone = ('standalone' in window.navigator) && (window.navigator.standalone);
-
-  if (isIosDevice && !isIosStandalone && window.innerWidth <= 768) {
-    setTimeout(function() {
-      if (document.getElementById('ios-auto-popup')) return;
-      const staffTag = activeStaff ? (' (' + activeStaff.empId + ')') : '';
-      const iosPopup = document.createElement('div');
-      iosPopup.id = 'ios-auto-popup';
-      iosPopup.style.cssText = 'position:fixed; bottom:15px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:14px 16px; border-radius:14px; border:1px solid #334155; box-shadow:0 10px 28px rgba(0,0,0,0.48); z-index:99999; width:92%; max-width:380px; text-align:center; font-family:inherit;';
-      iosPopup.innerHTML =
-        '<p style="margin:0 0 9px 0; font-size:13px; line-height:1.45;">📲 Save <b>My Roster' + staffTag + '</b> to iPhone Home Screen:<br>1) Select your Staff ID above<br>2) Tap Safari <b>Share (⍐)</b> → <b>"Add to Home Screen"</b></p>' +
-        '<button type="button" onclick="this.parentElement.remove()" style="background:#2563eb; color:#fff; border:none; padding:6px 14px; border-radius:7px; cursor:pointer; font-size:12px; font-weight:800;">Got It</button>';
-      document.body.appendChild(iosPopup);
-    }, 1500);
-  }
+    if (mobileBtn) mobileBtn.addEventListener('click', window.installRosterApp);
+  })();
 </script>
 
 
